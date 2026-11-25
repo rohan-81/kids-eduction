@@ -1,0 +1,268 @@
+{
+  "stickers": [
+    {
+      "slug": "stk-lion",
+      "emoji": "🦁",
+      "category": "animals",
+      "name_en": "Brave Lion",
+      "name_gu": "બહાદુર સિંહ",
+      "name_hi": "बहादुर शेर",
+      "default_unlocked": true,
+      "order": 0,
+      "is_active": true
+    },
+    {
+      "slug": "stk-elephant",
+      "emoji": "🐘",
+      "category": "animals",
+      "name_en": "Happy Elephant",
+      "name_gu": "મોટો હાથી",
+      "name_hi": "नटखट हाथी",
+      "default_unlocked": true,
+      "order": 1,
+      "is_active": true
+    },
+    {
+      "slug": "stk-bunny",
+      "emoji": "🐰",
+      "category": "animals",
+      "name_en": "Cute Bunny",
+      "name_gu": "સફેદ સસલું",
+      "name_hi": "प्यारा खरगोश",
+      "default_unlocked": true,
+      "order": 2,
+      "is_active": true
+    },
+    {
+      "slug": "stk-butterfly",
+      "emoji": "🦋",
+      "category": "animals",
+      "name_en": "Color Butterfly",
+      "name_gu": "રંગબેરંગી પતંગિયું",
+      "name_hi": "रंग-बिरंगी तितली",
+      "default_unlocked": true,
+      "order": 3,
+      "is_active": true
+    },
+    {
+      "slug": "stk-fox",
+      "emoji": "🦊",
+      "category": "animals",
+      "name_en": "Clever Fox",
+      "name_gu": "ચતુર શિયાળ",
+      "name_hi": "चालाक लोमड़ी",
+      "default_unlocked": false,
+      "order": 4,
+      "is_active": true
+    },
+    {
+      "slug": "stk-panda",
+      "emoji": "🐼",
+      "category": "animals",
+      "name_en": "Cuddly Panda",
+      "name_gu": "પાંડા રીંછ",
+      "name_hi": "प्यारा पांडा",
+      "default_unlocked": false,
+      "order": 5,
+      "is_active": true
+    },
+    {
+      "slug": "stk-monkey",
+      "emoji": "🐵",
+      "category": "animals",
+      "name_en": "Playful Monkey",
+      "name_gu": "મસ્તીખોર વાંદરો",
+      "name_hi": "नटखट बंदर",
+      "default_unlocked": false,
+      "order": 6,
+      "is_active": true
+    },
+    {
+      "slug": "stk-parrot",
+      "emoji": "🦜",
+      "category": "animals",
+      "name_en": "Talking Parrot",
+      "name_gu": "મીઠો પોપટ",
+      "name_hi": "मीठा तोता",
+      "default_unlocked": false,
+      "order": 7,
+      "is_active": true
+    },
+    {
+      "slug": "stk-rocket",
+      "emoji": "🚀",
+      "category": "space",
+      "name_en": "Speed Rocket",
+      "name_gu": "રોકેટ વિમાન",
+      "name_hi": "स्पीड रॉकेट",
+      "default_unlocked": true,
+      "order": 8,
+      "is_active": true
+    },
+    {
+      "slug": "stk-star",
+      "emoji": "⭐",
+      "category": "space",
+      "name_en": "Golden Star",
+      "name_gu": "સોનેરી તારો",
+      "name_hi": "चमकता तारा",
+      "default_unlocked": true,
+      "order": 9,
+      "is_active": true
+    },
+    {
+      "slug": "stk-moon",
+      "emoji": "🌙",
+      "category": "space",
+      "name_en": "Crescent Moon",
+      "name_gu": "ચંદામામા",
+      "name_hi": "चंदा मामा",
+      "default_unlocked": true,
+      "order": 10,
+      "is_active": true
+    },
+    {
+      "slug": "stk-astronaut",
+      "emoji": "🧑‍🚀",
+      "category": "space",
+      "name_en": "Star Astronaut",
+      "name_gu": "અંતરિક્ષ યાત્રી",
+      "name_hi": "अंतरिक्ष यात्री",
+      "default_unlocked": false,
+      "order": 11,
+      "is_active": true
+    },
+    {
+      "slug": "stk-ufo",
+      "emoji": "🛸",
+      "category": "space",
+      "name_en": "Flying Saucer",
+      "name_gu": "ઉડતી રકાબી",
+      "name_hi": "उड़न तश्तरी",
+      "default_unlocked": false,
+      "order": 12,
+      "is_active": true
+    },
+    {
+      "slug": "stk-saturn",
+      "emoji": "🪐",
+      "category": "space",
+      "name_en": "Ring Planet",
+      "name_gu": "શનિ ગ્રહ",
+      "name_hi": "शनि ग्रह",
+      "default_unlocked": false,
+      "order": 13,
+      "is_active": true
+    },
+    {
+      "slug": "stk-crown",
+      "emoji": "👑",
+      "category": "magic",
+      "name_en": "Golden Crown",
+      "name_gu": "સોનાનો મુગટ",
+      "name_hi": "सोने का ताज",
+      "default_unlocked": true,
+      "order": 14,
+      "is_active": true
+    },
+    {
+      "slug": "stk-rainbow",
+      "emoji": "🌈",
+      "category": "magic",
+      "name_en": "Magic Rainbow",
+      "name_gu": "મેઘધનુષ",
+      "name_hi": "इंद्रधनुष",
+      "default_unlocked": true,
+      "order": 15,
+      "is_active": true
+    },
+    {
+      "slug": "stk-unicorn",
+      "emoji": "🦄",
+      "category": "magic",
+      "name_en": "Magic Unicorn",
+      "name_gu": "જાદુઈ ઘોડો",
+      "name_hi": "जादुई यूनिकॉर्न",
+      "default_unlocked": false,
+      "order": 16,
+      "is_active": true
+    },
+    {
+      "slug": "stk-wand",
+      "emoji": "🪄",
+      "category": "magic",
+      "name_en": "Fairy Wand",
+      "name_gu": "જાદુઈ લાકડી",
+      "name_hi": "जादुई छड़ी",
+      "default_unlocked": false,
+      "order": 17,
+      "is_active": true
+    },
+    {
+      "slug": "stk-gem",
+      "emoji": "💎",
+      "category": "magic",
+      "name_en": "Sparkle Diamond",
+      "name_gu": "ચમકતો હીરો",
+      "name_hi": "चमकता हीरा",
+      "default_unlocked": false,
+      "order": 18,
+      "is_active": true
+    },
+    {
+      "slug": "stk-icecream",
+      "emoji": "🍦",
+      "category": "treats",
+      "name_en": "Yummy Ice Cream",
+      "name_gu": "મીઠી આઈસ્ક્રીમ",
+      "name_hi": "स्वादिष्ट आइसक्रीम",
+      "default_unlocked": true,
+      "order": 19,
+      "is_active": true
+    },
+    {
+      "slug": "stk-teddy",
+      "emoji": "🧸",
+      "category": "treats",
+      "name_en": "Teddy Bear",
+      "name_gu": "વ્હાલો ટેડી બેર",
+      "name_hi": "प्यारा टेडी बियर",
+      "default_unlocked": true,
+      "order": 20,
+      "is_active": true
+    },
+    {
+      "slug": "stk-cake",
+      "emoji": "🎂",
+      "category": "treats",
+      "name_en": "Birthday Cake",
+      "name_gu": "કેક",
+      "name_hi": "केक",
+      "default_unlocked": false,
+      "order": 21,
+      "is_active": true
+    },
+    {
+      "slug": "stk-balloon",
+      "emoji": "🎈",
+      "category": "treats",
+      "name_en": "Party Balloon",
+      "name_gu": "ફુગ્ગો",
+      "name_hi": "गुब्बारा",
+      "default_unlocked": false,
+      "order": 22,
+      "is_active": true
+    },
+    {
+      "slug": "stk-guitar",
+      "emoji": "🎸",
+      "category": "treats",
+      "name_en": "Music Guitar",
+      "name_gu": "ગીત ગિટાર",
+      "name_hi": "संगीत गिटार",
+      "default_unlocked": false,
+      "order": 23,
+      "is_active": true
+    }
+  ]
+}

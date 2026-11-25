@@ -1,0 +1,41 @@
+# Native folders (allow EAS to do clean Continuous Native Generation)
+android/
+ios/
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Backend and virtualenv
+backend/
+venv/
+.venv/
+env/
+ENV/
+*.py
+*.pyc
+__pycache__/
+db.sqlite3
+db.sqlite3-journal
+
+# Tests and scripts
+tests/
+scripts/
+
+# Expo and builds
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# OS & Logs
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,4 @@
+type,language,age_group,question_text,audio_text,display_visual,option_1,option_2,option_3,option_4,correct_option,category
+missing-letter,gu,all,ખૂટતો અક્ષર મૂકો: પ _ ંગ,પતંગ શબ્દ પૂરો કરો,🪁,ત,દ,ન,ગ,1,spelling
+find-letter,gu,all,આમાંથી 'ખ' (ખલ નો ખ) શોધો:,ખલ નો ખ શોધો,🥣,ખ,ક,ગ,ઘ,1,alphabet
+counting,en,2-4,How many apples do you see?,Count the apples,🍎🍎🍎,3,2,4,1,1,numbers

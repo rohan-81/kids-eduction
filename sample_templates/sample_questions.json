@@ -1,0 +1,70 @@
+{
+  "questions": [
+    {
+      "stable_id": "sample-ml-gu-patang",
+      "question_type": "missing-letter",
+      "language": "gu",
+      "category": "spelling",
+      "age_group": "all",
+      "difficulty": 1,
+      "points": 10,
+      "question_text": "ખૂટતો અક્ષર મૂકો: પ _ ંગ",
+      "audio_text": "પતંગ શબ્દ પૂરો કરો",
+      "display_visual": "🪁",
+      "options": [
+        {
+          "id": "1",
+          "label": "ત"
+        },
+        {
+          "id": "2",
+          "label": "દ"
+        },
+        {
+          "id": "3",
+          "label": "ન"
+        },
+        {
+          "id": "4",
+          "label": "ગ"
+        }
+      ],
+      "correct_answer": "1",
+      "correct_option_id": "1",
+      "explanation": "પતંગ શબ્દમાં 'ત' ખૂટે છે."
+    },
+    {
+      "stable_id": "sample-fl-gu-khal",
+      "question_type": "find-letter",
+      "language": "gu",
+      "category": "alphabet",
+      "age_group": "all",
+      "difficulty": 1,
+      "points": 10,
+      "question_text": "આમાંથી 'ખ' (ખલ નો ખ) શોધો:",
+      "audio_text": "ખલ નો ખ શોધો",
+      "display_visual": "🥣",
+      "options": [
+        {
+          "id": "1",
+          "label": "ખ"
+        },
+        {
+          "id": "2",
+          "label": "ક"
+        },
+        {
+          "id": "3",
+          "label": "ગ"
+        },
+        {
+          "id": "4",
+          "label": "ઘ"
+        }
+      ],
+      "correct_answer": "1",
+      "correct_option_id": "1",
+      "explanation": "આ ખલ નો ખ છે."
+    }
+  ]
+}

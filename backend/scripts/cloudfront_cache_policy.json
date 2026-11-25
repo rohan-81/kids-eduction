@@ -1,0 +1,20 @@
+{
+  "Name": "KidsZone-Media-CachePolicy",
+  "Comment": "Forward all query strings to bust cache on asset version bump",
+  "DefaultTTL": 86400,
+  "MaxTTL": 31536000,
+  "MinTTL": 0,
+  "ParametersInCacheKeyAndForwardedToOrigin": {
+    "EnableAcceptEncodingGzip": true,
+    "EnableAcceptEncodingBrotli": true,
+    "HeadersConfig": {
+      "HeaderBehavior": "none"
+    },
+    "CookiesConfig": {
+      "CookieBehavior": "none"
+    },
+    "QueryStringsConfig": {
+      "QueryStringBehavior": "all"
+    }
+  }
+}

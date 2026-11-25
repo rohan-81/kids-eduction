@@ -1,0 +1,26 @@
+{
+  "stories": [
+    {
+      "slug": "sample-lion-mouse",
+      "title": "The Lion and the Mouse",
+      "title_gujarati": "સિંહ અને ઉંદર",
+      "title_hindi": "शेर और चूहा",
+      "category": "moral",
+      "moral": "Even the smallest friend can be of great help.",
+      "moral_gujarati": "કોઈ પણ નાનો મિત્ર પણ મોટી મદદ કરી શકે છે.",
+      "moral_hindi": "छोटा मित्र भी बहुत बड़ा काम कर सकता है।",
+      "reading_time_mins": 3,
+      "age_group": "all",
+      "scenes": [
+        {
+          "scene_number": 1,
+          "text_english": "Once upon a time, a lion was sleeping peacefully in the forest.",
+          "text_gujarati": "એક વખત જંગલમાં એક સિંહ શાંતિથી ઊંઘતો હતો.",
+          "text_hindi": "एक बार जंगल में एक शेर शांति से सो रहा था।",
+          "illustration": "",
+          "audio_prompt": "A lion was sleeping."
+        }
+      ]
+    }
+  ]
+}
