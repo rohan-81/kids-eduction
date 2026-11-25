@@ -6,13 +6,14 @@ Production-ready configuration with PostgreSQL, Token Auth, CORS, and Cloud Sync
 from pathlib import Path
 import os
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 try:
     from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
     load_dotenv()
 except ImportError:
     pass
-
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = os.environ.get(
