@@ -124,7 +124,7 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
     metadata: { phonetic: 'Teen', transliteration: '3' },
   },
 
-  // ४ - चार (Four): Ribbon loop with two upright horns: top-left swooping into bottom loop and rising to top-right
+  // ४ - चार (Four): Curved U-bowl horns crossing smoothly at waist into a round circular bottom loop
   '४': {
     character: '४',
     language: 'hi',
@@ -134,20 +134,24 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
         'hi_num_4_s1',
         1,
         sampleCurve([
-          { x: 34, y: 22 },
-          { x: 40, y: 38 },
-          { x: 46, y: 50 },
-          { x: 38, y: 64 },
-          { x: 42, y: 78 },
-          { x: 50, y: 84 },
-          { x: 58, y: 78 },
-          { x: 62, y: 64 },
-          { x: 54, y: 50 },
-          { x: 60, y: 38 },
-          { x: 66, y: 22 },
-        ], 18),
+          { x: 34, y: 26 },
+          { x: 33, y: 35 },
+          { x: 40, y: 44 },
+          { x: 50, y: 49 },
+          { x: 61, y: 56 },
+          { x: 64, y: 67 },
+          { x: 58, y: 76 },
+          { x: 50, y: 78 },
+          { x: 42, y: 76 },
+          { x: 36, y: 67 },
+          { x: 39, y: 56 },
+          { x: 50, y: 49 },
+          { x: 60, y: 44 },
+          { x: 67, y: 35 },
+          { x: 66, y: 26 },
+        ], 16),
         'forward',
-        'Top-left horn swooping into bottom teardrop loop and rising to top-right horn'
+        'Top-left curved horn crossing through waist into round bottom loop and rising to top-right curved horn'
       ),
     ],
     totalStrokes: 1,
