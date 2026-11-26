@@ -14,7 +14,7 @@
 import { safeGetApiBaseUrl } from '../services/apiConfig';
 
 /** Bump when renders are re-exported under the same names, to bust app + CDN caches. */
-export const CHARACTER_ASSET_VERSION = 'v1';
+export const CHARACTER_ASSET_VERSION = 'v3';
 export const APP_ASSET_VERSION = 'v1';
 
 /** A bundled `require()`d image (module id) or a remote, disk-cached `{ uri }` render. */

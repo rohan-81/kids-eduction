@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface GateChallenge {
   a: number;
   b: number;
+  op?: '+' | '×';
   answer: number;
 }
 
@@ -18,9 +19,9 @@ export const GATE_MAX_ATTEMPTS = 3;
 export const GATE_LOCKOUT_MS = 30_000;
 
 export function createGateChallenge(random: () => number = Math.random): GateChallenge {
-  const a = 12 + Math.floor(random() * 8); // 12..19
-  const b = 3 + Math.floor(random() * 7); // 3..9
-  return { a, b, answer: a * b };
+  const a = 11 + Math.floor(random() * 9); // 11..19
+  const b = 2 + Math.floor(random() * 8);  // 2..9
+  return { a, b, op: '+', answer: a + b };
 }
 
 export function checkGateAnswer(challenge: GateChallenge, input: string): boolean {

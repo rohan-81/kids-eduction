@@ -44,11 +44,6 @@ import {
 } from '../../src/components/art3d/Art3D';
 import { HOME_CARD_ART } from '../../src/utils/imageHelper';
 import { GuestLimitationModal, GuestLimitType } from '../../src/components/common/GuestLimitationModal';
-import {
-  getDailyGuestGamesPlayed,
-  incrementDailyGuestGames,
-  GUEST_DAILY_GAMES_MAX,
-} from '../../src/utils/guestLimits';
 import * as Art from '../../src/components/art3d/Art3D';
 import { webStyle } from '../../src/utils/webStyle';
 import type { AppRoute } from '../../src/utils/navigationHelper';
@@ -436,15 +431,8 @@ export default function GamesHubScreen() {
 
   const { type } = useLocalSearchParams<{ type?: string }>();
   const { progress, ageGroup, clearWrongAnswer, language, isGuest } = useApp();
-  const [guestGamesPlayed, setGuestGamesPlayed] = useState<number>(0);
   const [showGuestLimitModal, setShowGuestLimitModal] = useState<boolean>(false);
-  const [guestLimitType, setGuestLimitType] = useState<GuestLimitType>('games');
-
-  useEffect(() => {
-    if (isGuest) {
-      getDailyGuestGamesPlayed().then((cnt) => setGuestGamesPlayed(cnt));
-    }
-  }, [isGuest]);
+  const [guestLimitType, setGuestLimitType] = useState<GuestLimitType>('duel');
 
   useEffect(() => {
     if (type) {
@@ -675,48 +663,6 @@ export default function GamesHubScreen() {
           </View>
         )}
 
-        {/* Guest Mode Gaming Screen-Time Notice */}
-        {isGuest && (
-          <View style={styles.guestNoticeCard}>
-            <View style={styles.guestNoticeIconCol}>
-              <Art.GamepadArt size={34} />
-            </View>
-            <View style={styles.guestNoticeContentCol}>
-              <View style={styles.guestNoticeBadgeRow}>
-                <View style={styles.guestNoticeBadge}>
-                  <Text style={styles.guestNoticeBadgeText}>
-                    {language === 'gu'
-                      ? `ગેસ્ટ મોડ: ${Math.max(0, GUEST_DAILY_GAMES_MAX - guestGamesPlayed)} બાકી (કુલ ${GUEST_DAILY_GAMES_MAX}/દિવસ)`
-                      : language === 'hi'
-                        ? `गेस्ट मोड: ${Math.max(0, GUEST_DAILY_GAMES_MAX - guestGamesPlayed)} शेष (कुल ${GUEST_DAILY_GAMES_MAX}/दिन)`
-                        : `Guest Mode: ${Math.max(0, GUEST_DAILY_GAMES_MAX - guestGamesPlayed)} of ${GUEST_DAILY_GAMES_MAX} left today`}
-                  </Text>
-                </View>
-              </View>
-              <Text style={styles.guestNoticeTitle}>
-                {language === 'gu'
-                  ? 'બાળકના સંતુલિત સ્ક્રીન ટાઈમ માટે દૈનિક ૫ ફ્રી રમતો'
-                  : language === 'hi'
-                    ? 'संतुलित स्क्रीन समय के लिए प्रतिदिन ५ फ्री खेल'
-                    : 'Daily 5 free games for healthy balanced screen time'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.guestNoticeActionBtn}
-              onPress={() => {
-                soundEffects.playBubblePop();
-                setGuestLimitType('games');
-                setShowGuestLimitModal(true);
-              }}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.guestNoticeActionText}>
-                {language === 'gu' ? 'અમર્યાદિત અનલોક' : language === 'hi' ? 'असीमित अनलॉक' : 'Unlock All'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* Responsive Tactile Grid of Games with 3D Squircles & Unified Play Buttons */}
         <View style={styles.grid}>
           {filteredGames.map((game) => {
@@ -749,19 +695,10 @@ export default function GamesHubScreen() {
                     document.activeElement.blur();
                   }
                   soundEffects.playBubblePop();
-                  if (isGuest) {
-                    if (game.id === 'duel') {
-                      setGuestLimitType('duel');
-                      setShowGuestLimitModal(true);
-                      return;
-                    }
-                    if (guestGamesPlayed >= GUEST_DAILY_GAMES_MAX) {
-                      setGuestLimitType('games');
-                      setShowGuestLimitModal(true);
-                      return;
-                    }
-                    const nextCount = await incrementDailyGuestGames();
-                    setGuestGamesPlayed(nextCount);
+                  if (isGuest && game.id === 'duel') {
+                    setGuestLimitType('duel');
+                    setShowGuestLimitModal(true);
+                    return;
                   }
                   router.push(game.route);
                 }}

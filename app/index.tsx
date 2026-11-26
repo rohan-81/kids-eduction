@@ -20,7 +20,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { isLoading, isAuthenticated } = useApp();
+  const { isLoading, isAuthenticated, isGuest } = useApp();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -59,7 +59,7 @@ export default function SplashScreen() {
     ]).start(() => {
       if (Platform.OS !== 'web' && !boot.packInstalled) {
         router.replace('/setup');
-      } else if (isAuthenticated) {
+      } else if (isAuthenticated || isGuest) {
         router.replace('/home');
       } else if (boot.online) {
         router.replace('/login');

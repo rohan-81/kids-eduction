@@ -12,23 +12,24 @@ import {
 import { getRoundStars, getNextGameRoute } from '../src/utils/gameRound';
 
 describe('Parental math gate', () => {
-  test('always a two-digit multiplication in the 12-19 x 3-9 range', () => {
+  test('always a simple addition in the 11-19 + 2-9 range', () => {
     for (let i = 0; i < 500; i++) {
       const c = createGateChallenge();
-      expect(c.a).toBeGreaterThanOrEqual(12);
+      expect(c.a).toBeGreaterThanOrEqual(11);
       expect(c.a).toBeLessThanOrEqual(19);
-      expect(c.b).toBeGreaterThanOrEqual(3);
+      expect(c.b).toBeGreaterThanOrEqual(2);
       expect(c.b).toBeLessThanOrEqual(9);
-      expect(c.answer).toBe(c.a * c.b);
+      expect(c.op).toBe('+');
+      expect(c.answer).toBe(c.a + c.b);
     }
   });
 
   test('covers the extremes of the range deterministically', () => {
-    expect(createGateChallenge(() => 0)).toEqual({ a: 12, b: 3, answer: 36 });
-    expect(createGateChallenge(() => 0.999)).toEqual({ a: 19, b: 9, answer: 171 });
+    expect(createGateChallenge(() => 0)).toEqual({ a: 11, b: 2, op: '+', answer: 13 });
+    expect(createGateChallenge(() => 0.999)).toEqual({ a: 19, b: 9, op: '+', answer: 28 });
   });
 
-  test('never asks a 1-10 times-table question the app teaches to children', () => {
+  test('never asks a trivial single-digit + single-digit question', () => {
     for (let i = 0; i < 500; i++) {
       expect(createGateChallenge().a).toBeGreaterThan(10);
     }

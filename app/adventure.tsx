@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   Modal,
   Image,
@@ -244,7 +244,23 @@ const LevelNodeItem: React.FC<LevelNodeItemProps> = React.memo(({
     language === 'gu' ? lvl.titleGu : language === 'hi' ? lvl.titleHi : lvl.titleEn;
 
   return (
-    <View key={`level-node-${lvl.level}`} style={styles.nodeColumnWrapper}>
+    <View
+      style={[
+        styles.nodeColumnWrapper,
+        styles.mapTrackRow,
+        isMobile && styles.mapTrackMobile,
+        { backgroundColor: index % 2 === 0 ? '#38A149' : '#339643' },
+        index === 0 && styles.mapTrackRowFirst,
+        index === 49 && styles.mapTrackRowLast,
+      ]}
+    >
+      <View style={styles.terrainHillBand} pointerEvents="none">
+        <View style={[styles.terrainFleckRow, { top: 22 }]}>
+          <Text style={styles.terrainFleckEmoji}>🌸</Text>
+          <Text style={styles.terrainFleckEmoji}>✨</Text>
+          <Text style={styles.terrainFleckEmoji}>🌿</Text>
+        </View>
+      </View>
       {/* 3D MILESTONE WORLD GATEWAY */}
       {gateConfig && (
         <View
@@ -393,7 +409,7 @@ const LevelNodeItem: React.FC<LevelNodeItemProps> = React.memo(({
                 ]}
               >
                 {isCompleted ? (
-                  <Text style={styles.stepDotCheck}>✓</Text>
+                  <View style={[styles.stepDotCheck, { marginTop: -1 }]}><Glyph name="check" size={12} color={'#FFFFFF'} strokeWidth={3} /></View>
                 ) : (
                   <View style={styles.stepDotCore} />
                 )}
@@ -472,21 +488,23 @@ const LevelNodeItem: React.FC<LevelNodeItemProps> = React.memo(({
           {/* 3 Stars on top of completed level */}
           {isCompleted && (
             <View style={styles.completedStarsRow}>
-              <Text style={styles.miniStar}>⭐</Text>
-              <Text style={[styles.miniStar, styles.miniStarCenter]}>⭐</Text>
-              <Text style={styles.miniStar}>⭐</Text>
+              <Art.StarArt size={13} />
+              <View style={{ marginTop: -3 }}><Art.StarArt size={17} /></View>
+              <Art.StarArt size={13} />
             </View>
           )}
 
-          <Text style={styles.nodeIcon}>
-            {isClassLocked
-              ? (lvl.level > 35 ? '🏆' : '🎓')
-              : !isUnlocked
-                ? '🔒'
-                : isCompleted
-                  ? '✓'
-                  : lvl.icon}
-          </Text>
+          <View style={styles.nodeIcon}>
+            {isClassLocked ? (
+              lvl.level > 35 ? <Art.TrophyArt size={26} /> : <Art.MedalArt size={26} />
+            ) : !isUnlocked ? (
+              <Glyph name="lock" size={22} color="#94A3B8" strokeWidth={2.8} />
+            ) : isCompleted ? (
+              <Glyph name="check" size={22} color="#10B981" strokeWidth={3.8} />
+            ) : (
+              <Text style={styles.nodeIconText}>{lvl.icon}</Text>
+            )}
+          </View>
 
           <Text style={[styles.nodeNum, (!isUnlocked || isClassLocked) && styles.nodeNumLocked, isCompleted && styles.nodeNumCompleted]}>
             {formatNumberDigits(lvl.level, language)}
@@ -525,16 +543,22 @@ export default function AdventureMapScreen() {
     completedLevel: number;
   } | null>(null);
   const nextTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // Progressive level rendering: initial batch loads in <40ms, remaining levels expand smoothly
-  const initialBatch = Math.min(ADVENTURE_LEVELS.length, Math.max(14, currentLevelUnlocked + 6));
+  // Progressive level rendering: initial batch loads instantly, remaining levels expand after transition
+  const initialBatch = Math.min(ADVENTURE_LEVELS.length, Math.max(8, currentLevelUnlocked + 4));
   const [renderedLevelCount, setRenderedLevelCount] = useState<number>(initialBatch);
 
   useEffect(() => {
     if (renderedLevelCount < ADVENTURE_LEVELS.length) {
-      const timer = setTimeout(() => {
-        setRenderedLevelCount(ADVENTURE_LEVELS.length);
-      }, 50);
-      return () => clearTimeout(timer);
+      let timer: ReturnType<typeof setTimeout> | null = null;
+      const raf = requestAnimationFrame(() => {
+        timer = setTimeout(() => {
+          setRenderedLevelCount(ADVENTURE_LEVELS.length);
+        }, 60);
+      });
+      return () => {
+        cancelAnimationFrame(raf);
+        if (timer) clearTimeout(timer);
+      };
     }
   }, [renderedLevelCount]);
 
@@ -542,13 +566,16 @@ export default function AdventureMapScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    apiService.fetchAdventureLevels().then((fetched) => {
-      if (!cancelled && fetched && fetched.length > 0) {
-        setAdventureLevels(fetched);
-      }
-    });
+    const timer = setTimeout(() => {
+      apiService.fetchAdventureLevels().then((fetched) => {
+        if (!cancelled && fetched && fetched.length > 0 && fetched.length !== ADVENTURE_LEVELS.length) {
+          setAdventureLevels(fetched);
+        }
+      });
+    }, 120);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, []);
 
@@ -561,6 +588,9 @@ export default function AdventureMapScreen() {
     return list;
   };
 
+  const stopSpeakingRef = useRef(stopSpeaking);
+  stopSpeakingRef.current = stopSpeaking;
+
   useEffect(() => {
     return () => {
       if (nextTimeoutRef.current) {
@@ -568,10 +598,10 @@ export default function AdventureMapScreen() {
         nextTimeoutRef.current = null;
       }
       audioService.stop();
-      stopSpeaking();
+      stopSpeakingRef.current();
       soundEffects.stopAll();
     };
-  }, [stopSpeaking]);
+  }, []);
 
   // Silence all audio immediately when this screen loses focus or user navigates to another page
   useFocusEffect(
@@ -582,10 +612,36 @@ export default function AdventureMapScreen() {
           nextTimeoutRef.current = null;
         }
         audioService.stop();
-        stopSpeaking();
+        stopSpeakingRef.current();
         soundEffects.stopAll();
       };
-    }, [stopSpeaking])
+    }, [])
+  );
+
+  const levelPressRef = useRef<(lvl: AdventureLevel) => void>(() => {});
+  const stableLevelPress = useCallback((lvl: AdventureLevel) => {
+    levelPressRef.current(lvl);
+  }, []);
+
+  const visibleLevels = React.useMemo(
+    () => ADVENTURE_LEVELS.slice(0, renderedLevelCount),
+    [renderedLevelCount]
+  );
+
+  const renderLevelItem = useCallback(
+    ({ item, index }: { item: AdventureLevel; index: number }) => (
+      <LevelNodeItem
+        lvl={item}
+        index={index}
+        currentLevelUnlocked={currentLevelUnlocked}
+        ageGroup={ageGroup}
+        language={language}
+        isMobile={isMobile}
+        progress={progress}
+        onLevelPress={stableLevelPress}
+      />
+    ),
+    [currentLevelUnlocked, ageGroup, language, isMobile, progress, stableLevelPress]
   );
 
   const handleCloseQuizModal = () => {
@@ -960,18 +1016,10 @@ export default function AdventureMapScreen() {
             ? 'कक्षा ३ - ५ (स्तर ३६ - ५०)'
             : 'Class 3 - 5 (Levels 36 - 50)';
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <AppGlobalBackground id="adventureBgGrad" />
-      <Header title={headerTitle} showBack={true} backHref="/home" />
+  levelPressRef.current = handleLevelPress;
 
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
-        removeClippedSubviews={Platform.OS !== 'web'}
-        scrollEventThrottle={16}
-      >
+  const listHeader = (
+    <View style={styles.listHeaderWrap}>
         {/* 1. 3D CARTOON HERO BANNER */}
         <View style={[styles.heroPosterCard, shadows.card]}>
           <Image
@@ -1110,321 +1158,27 @@ export default function AdventureMapScreen() {
             </View>
           </View>
         </View>
+    </View>
+  );
 
-        {/* 3. WINDING 3D CARTOON ADVENTURE PATH (50 LEVELS) */}
-        <View style={[styles.mapTrack, isMobile && styles.mapTrackMobile]}>
-          {/* Continuous Seamless Fantasy Island Meadow Terrain Covering All 50 Levels */}
-          <View style={styles.mapBackgroundLayer} pointerEvents="none">
-            {Array.from({ length: 32 }).map((_, i) => (
-              <View
-                key={`terrain-hill-band-${i}`}
-                style={[
-                  styles.terrainHillBand,
-                  { backgroundColor: i % 2 === 0 ? '#38A149' : '#339643' },
-                ]}
-              >
-                <View style={[styles.terrainFleckRow, { top: 30 }]}>
-                  <Text style={styles.terrainFleckEmoji}>🌸</Text>
-                  <Text style={styles.terrainFleckEmoji}>✨</Text>
-                  <Text style={styles.terrainFleckEmoji}>🌿</Text>
-                </View>
-                <View style={[styles.terrainFleckRow, { top: 160 }]}>
-                  <Text style={styles.terrainFleckEmoji}>🌱</Text>
-                  <Text style={styles.terrainFleckEmoji}>🌼</Text>
-                  <Text style={styles.terrainFleckEmoji}>🌿</Text>
-                </View>
-              </View>
-            ))}
-            <View style={styles.mapBgWashOverlay} />
-          </View>
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <AppGlobalBackground id="adventureBgGrad" />
+      <Header title={headerTitle} showBack={true} backHref="/home" />
 
-          {ADVENTURE_LEVELS.slice(0, renderedLevelCount).map((lvl, index) => {
-            const isUnlocked = lvl.level <= currentLevelUnlocked;
-            const isCurrent = lvl.level === currentLevelUnlocked;
-            const isCompleted = lvl.level < currentLevelUnlocked;
-
-            // Check if level is locked by Class Tier
-            const isClassLocked =
-              (ageGroup === '2-4' && lvl.level > 20) ||
-              (ageGroup === '4-6' && lvl.level > 35);
-
-            // S-Curve sine wave translation for natural winding path
-            const prevCurveOffset =
-              index === 0 ? 0 : Math.sin(((index - 1) / 2) * Math.PI) * (isMobile ? 54 : 80);
-            const curveOffset = Math.sin((index / 2) * Math.PI) * (isMobile ? 54 : 80);
-
-            const gateConfig = WORLD_GATES_CONFIG[lvl.level];
-            const openSide = curveOffset >= 0 ? 'left' : 'right';
-            const scenery = AMBIENT_SCENERY_PRESETS[index % AMBIENT_SCENERY_PRESETS.length];
-
-            return (
-              <View key={`level-node-${lvl.level}`} style={styles.nodeColumnWrapper}>
-                {/* 3D MILESTONE WORLD GATEWAY */}
-                {gateConfig && (
-                  <View
-                    style={[
-                      styles.worldGateCard,
-                      {
-                        borderColor: gateConfig.border,
-                        borderBottomColor: gateConfig.borderBottom,
-                      },
-                      gateConfig.isClassGate && styles.classGateSpecial,
-                      shadows.card,
-                    ]}
-                  >
-                    {/* Top Golden Ribbon Bar */}
-                    <View style={styles.worldGateTopBar}>
-                      <View
-                        style={[
-                          styles.worldPillTag,
-                          {
-                            backgroundColor: gateConfig.bg,
-                            borderColor: gateConfig.border,
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.worldPillTagText, { color: gateConfig.borderBottom }]}>
-                          {language === 'gu'
-                            ? `વિશ્વ ${lvl.level <= 5 ? '૧' : lvl.level <= 10 ? '૨' : lvl.level <= 15 ? '૩' : lvl.level <= 20 ? '૪' : lvl.level <= 25 ? '૫' : lvl.level <= 30 ? '૬' : lvl.level <= 35 ? '૭' : lvl.level <= 40 ? '૮' : lvl.level <= 45 ? '૯' : '૧૦'}`
-                            : language === 'hi'
-                              ? `विश्व ${Math.floor((lvl.level - 1) / 5) + 1}`
-                              : `World ${Math.floor((lvl.level - 1) / 5) + 1}`}
-                        </Text>
-                      </View>
-                      <View style={styles.rewardPillTag}>
-                        <Text style={styles.rewardPillTagText}>
-                          {language === 'gu'
-                            ? 'ખજાનો: +૫૦ સિક્કા'
-                            : language === 'hi'
-                              ? 'खजाना: +५० सिक्के'
-                              : '+50 Coins Reward'}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Main Landmark Content Row */}
-                    <View style={styles.worldGateMainRow}>
-                      <View
-                        style={[
-                          styles.worldGateIcon3DBadge,
-                          {
-                            backgroundColor: gateConfig.bg,
-                            borderColor: gateConfig.border,
-                            borderBottomColor: gateConfig.borderBottom,
-                          },
-                        ]}
-                      >
-                        <Text style={styles.worldGateEmojiLarge}>{gateConfig.emoji}</Text>
-                      </View>
-
-                      <View style={styles.worldGateTextCol}>
-                        {gateConfig.isClassGate && (
-                          <View style={styles.classGateBadgePill}>
-                            <Text style={styles.classGateBadgeText}>
-                              {language === 'gu'
-                                ? gateConfig.classBadgeGu
-                                : language === 'hi'
-                                  ? gateConfig.classBadgeHi
-                                  : gateConfig.classBadgeEn}
-                            </Text>
-                          </View>
-                        )}
-                        <Text style={styles.worldGateTitle}>
-                          {language === 'gu'
-                            ? gateConfig.titleGu
-                            : language === 'hi'
-                              ? gateConfig.titleHi
-                              : gateConfig.titleEn}
-                        </Text>
-                        <Text style={styles.worldGateSub}>
-                          {language === 'gu'
-                            ? gateConfig.subGu
-                            : language === 'hi'
-                              ? gateConfig.subHi
-                              : gateConfig.subEn}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Bottom Status / Range Strip */}
-                    <View style={styles.worldGateBottomStrip}>
-                      <Text style={styles.worldGateLevelRange}>
-                        {language === 'gu'
-                          ? `લેવલ ${formatNumberDigits(lvl.level, language)} - ${formatNumberDigits(lvl.level + 4, language)}`
-                          : language === 'hi'
-                            ? `स्तर ${formatNumberDigits(lvl.level, language)} - ${formatNumberDigits(lvl.level + 4, language)}`
-                            : `Levels ${lvl.level} - ${lvl.level + 4}`}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.worldGateStatusBadge,
-                          currentLevelUnlocked >= lvl.level + 5
-                            ? styles.statusCompleted
-                            : currentLevelUnlocked >= lvl.level
-                              ? styles.statusActive
-                              : styles.statusLocked,
-                        ]}
-                      >
-                        {currentLevelUnlocked >= lvl.level + 5
-                          ? (language === 'gu' ? 'પૂર્ણ થયેલ' : language === 'hi' ? 'पूर्ण' : 'Completed')
-                          : currentLevelUnlocked >= lvl.level
-                            ? (language === 'gu' ? 'ચાલુ સાહસ' : language === 'hi' ? 'सक्रिय' : 'In Progress')
-                            : (language === 'gu' ? 'લૉક' : language === 'hi' ? 'लॉक' : 'Locked')}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-
-                {/* Ambient Nature Scenery along outer margin framing the winding trail */}
-                {!gateConfig && (
-                  <View
-                    style={[
-                      styles.ambientSceneryWrap,
-                      openSide === 'left' ? styles.sceneryLeft : styles.sceneryRight,
-                    ]}
-                    pointerEvents="none"
-                  >
-                    <View style={[styles.sceneryShadowPatch, { backgroundColor: scenery.bg }]} />
-                    <Text style={styles.sceneryEmojiPrimary}>{scenery.emoji1}</Text>
-                    <Text style={styles.sceneryEmojiSecondary}>{scenery.emoji2}</Text>
-                  </View>
-                )}
-
-                {/* 3D Cobblestone Stepping Stones path smoothly connecting from previous node */}
-                {index > 0 && !gateConfig && (
-                  <View style={styles.steppingDotsRow}>
-                    {[0, 1, 2].map((d) => {
-                      const dotOffset =
-                        prevCurveOffset + (curveOffset - prevCurveOffset) * ((d + 1) / 4);
-                      return (
-                        <View
-                          key={`step-dot-${lvl.level}-${d}`}
-                          style={[
-                            styles.stepDot,
-                            isCompleted && styles.stepDotCompleted,
-                            isCurrent && !isClassLocked && styles.stepDotCurrent,
-                            { transform: [{ translateX: dotOffset }] },
-                          ]}
-                        >
-                          {isCompleted ? (
-                            <View style={[styles.stepDotCheck, { marginTop: -1 }]}><Glyph name="check" size={12} color={'#FFFFFF'} strokeWidth={3} /></View>
-                          ) : (
-                            <View style={styles.stepDotCore} />
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
-
-                {/* Node with horizontal S-curve transform */}
-                <View style={[styles.nodeContentWrap, { transform: [{ translateX: curveOffset }] }]}>
-                  {/* Current Player Character Pin on Active Level */}
-                  {isCurrent && !isClassLocked && (
-                    <View style={styles.playerAvatarBadge}>
-                      <View style={styles.playerSpeechBubble}>
-                        <Text style={styles.playerSpeechText}>
-                          {language === 'gu' ? 'તમે અહીં છો!' : language === 'hi' ? 'आप यहाँ हैं!' : 'YOU ARE HERE!'}
-                        </Text>
-                        <View style={styles.playerSpeechTail} />
-                      </View>
-                      <View style={[styles.playerAvatarPill, shadows.card]}>
-                        {is3DAvatar(progress.currentAvatar?.character) ? (
-                          <Image
-                            source={AVATAR_3D_BOY}
-                            style={styles.playerAvatar3DImage}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <Text style={styles.playerAvatarEmoji}>
-                            {normalizeAvatarEmoji(progress.currentAvatar?.character)}
-                          </Text>
-                        )}
-                        {progress.currentAvatar?.hat && progress.currentAvatar.hat !== '❌' ? (
-                          <Text style={styles.playerAvatarHat}>{progress.currentAvatar.hat}</Text>
-                        ) : null}
-                      </View>
-                      {progress.childName ? (
-                        <View style={styles.playerNamePill}>
-                          <Text style={styles.playerNameText} numberOfLines={1}>
-                            {formatChildName(progress.childName, language)}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  )}
-
-                  {/* Special Landmark Banner if landmark level */}
-                  {lvl.isLandmark && (
-                    <View style={[styles.landmarkBadge, shadows.soft]}>
-                      <Text style={styles.landmarkBadgeText}>
-                        {language === 'gu' ? lvl.landmarkLabelGu : language === 'hi' ? lvl.landmarkLabelHi : lvl.landmarkLabelEn}
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* 3D Cartoon Node Button */}
-                  <TouchableOpacity
-                    style={[
-                      styles.nodeButton,
-                      isCompleted
-                        ? styles.nodeButtonCompleted
-                        : isCurrent && !isClassLocked
-                          ? styles.nodeButtonCurrent
-                          : isClassLocked
-                            ? styles.nodeButtonClassLocked
-                            : styles.nodeButtonLocked,
-                      shadows.card,
-                    ]}
-                    onPress={() => handleLevelPress(lvl)}
-                    activeOpacity={0.82}
-                  >
-                    {/* Glowing Aura for Current Active Quest */}
-                    {isCurrent && !isClassLocked && (
-                      <View style={styles.nodeCurrentGlowRing} pointerEvents="none" />
-                    )}
-                    {/* 3 Stars on top of completed level */}
-                    {isCompleted && (
-                      <View style={styles.completedStarsRow}>
-                        <Art.StarArt size={13} />
-                        <View style={{ marginTop: -3 }}><Art.StarArt size={17} /></View>
-                        <Art.StarArt size={13} />
-                      </View>
-                    )}
-
-                    <View style={styles.nodeIcon}>
-                      {isClassLocked ? (
-                        lvl.level > 35 ? <Art.TrophyArt size={26} /> : <Art.MedalArt size={26} />
-                      ) : !isUnlocked ? (
-                        <Glyph name="lock" size={22} color="#94A3B8" strokeWidth={2.8} />
-                      ) : isCompleted ? (
-                        <Glyph name="check" size={22} color="#10B981" strokeWidth={3.8} />
-                      ) : (
-                        <Text style={styles.nodeIconText}>{lvl.icon}</Text>
-                      )}
-                    </View>
-
-                    <Text style={[styles.nodeNum, (!isUnlocked || isClassLocked) && styles.nodeNumLocked, isCompleted && styles.nodeNumCompleted]}>
-                      {formatNumberDigits(lvl.level, language)}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Node Subtitle Pill */}
-                  <View style={[styles.nodeTitlePill, isCurrent && !isClassLocked && styles.nodeTitlePillCurrent]}>
-                    <Text style={[styles.nodeTitleText, isCurrent && !isClassLocked && styles.nodeTitleTextCurrent]} numberOfLines={1}>
-                      {isClassLocked
-                        ? (language === 'gu' ? 'વર્ગ અપગ્રેડ કરો' : language === 'hi' ? 'कक्षा अपग्रेड करें' : 'Upgrade Class')
-                        : getLevelTitle(lvl)}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            );
-          })}
-        </View>
-
-        <View style={{ height: 90 }} />
-      </ScrollView>
+      <FlatList
+        data={visibleLevels}
+        keyExtractor={(lvl) => `level-node-${lvl.level}`}
+        renderItem={renderLevelItem}
+        ListHeaderComponent={listHeader}
+        ListFooterComponent={<View style={{ height: 90 }} />}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS !== 'web'}
+      />
 
       {/* 4. CARTOON LEVEL CHALLENGE MODAL */}
       <Modal visible={showQuizModal} transparent animationType="fade" onRequestClose={handleCloseQuizModal}>
@@ -1621,7 +1375,29 @@ const styles = StyleSheet.create({
   container: {
     padding: spacing.md,
     paddingBottom: 110,
-    alignItems: 'center',
+  },
+  listHeaderWrap: {
+    width: '100%',
+    maxWidth: 580,
+    alignSelf: 'center',
+  },
+  mapTrackRow: {
+    width: '100%',
+    maxWidth: 580,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  mapTrackRowFirst: {
+    paddingTop: 24,
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+  },
+  mapTrackRowLast: {
+    paddingBottom: 24,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
   },
 
   /* 1. HERO POSTER BANNER */
@@ -1853,9 +1629,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#38A149',
   },
   terrainHillBand: {
-    width: '100%',
-    height: 320,
-    position: 'relative',
+    ...(StyleSheet.absoluteFill as any),
     overflow: 'hidden',
   },
   terrainFleckRow: {

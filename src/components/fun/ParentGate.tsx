@@ -148,8 +148,11 @@ export const ParentGate: React.FC<ParentGateProps> = ({ language, onSuccess, onC
       </Text>
 
       <Animated.View style={[styles.questionCard, { transform: [{ translateX }] }]}>
-        <Text style={styles.questionText} accessibilityLabel={`${challenge.a} times ${challenge.b}`}>
-          {formatNumberDigits(challenge.a, language)} × {formatNumberDigits(challenge.b, language)} = ?
+        <Text
+          style={styles.questionText}
+          accessibilityLabel={`${challenge.a} ${challenge.op === '+' ? 'plus' : 'times'} ${challenge.b}`}
+        >
+          {formatNumberDigits(challenge.a, language)} {challenge.op === '+' ? '+' : '×'} {formatNumberDigits(challenge.b, language)} = ?
         </Text>
       </Animated.View>
 
@@ -213,35 +216,39 @@ const styles = StyleSheet.create({
   gate: {
     width: '100%',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   reason: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontWeight: '700',
     color: kidPalette.inkMuted,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 19,
   },
   questionCard: {
     width: '100%',
-    backgroundColor: kidTones.lavender.fill,
-    borderRadius: 24,
-    borderBottomWidth: 7,
-    borderBottomColor: kidTones.lavender.edge,
-    paddingVertical: 18,
+    maxWidth: 252,
+    backgroundColor: kidTones.lavender.tint,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: kidTones.lavender.tintBorder,
+    borderBottomWidth: 5,
+    borderBottomColor: kidTones.lavender.fill,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   questionText: {
-    fontSize: 36,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
     fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
-    color: '#FFFFFF',
+    color: kidTones.lavender.text,
     letterSpacing: 1,
   },
   display: {
-    width: '70%',
-    minHeight: 56,
-    borderRadius: 18,
+    width: '56%',
+    maxWidth: 190,
+    minHeight: 42,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: kidTones.sky.tintBorder,
     backgroundColor: kidTones.sky.tint,
@@ -253,59 +260,60 @@ const styles = StyleSheet.create({
     backgroundColor: kidTones.coral.tint,
   },
   displayText: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
     color: kidPalette.ink,
-    letterSpacing: 3,
+    letterSpacing: 2,
   },
   displayPlaceholder: {
-    fontSize: 18,
+    fontSize: 15,
     color: kidPalette.inkFaint,
     letterSpacing: 0,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     color: kidTones.coral.text,
   },
   keypad: {
     width: '100%',
-    maxWidth: 300,
+    maxWidth: 244,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 10,
+    rowGap: 7,
   },
   keypadLocked: {
     opacity: 0.4,
   },
   keyWrap: {
     width: '31%',
-    height: 58 + CLAY_DEPTH,
+    height: 44 + (CLAY_DEPTH - 2),
   },
   keyLip: {
     position: 'absolute',
-    top: CLAY_DEPTH,
+    top: CLAY_DEPTH - 2,
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 20,
+    borderRadius: 14,
   },
   keyFace: {
-    height: 58,
-    borderRadius: 20,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   keyText: {
-    fontSize: 26,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
   },
   cancel: {
     alignSelf: 'center',
-    minWidth: 170,
-    marginTop: 4,
+    width: '100%',
+    maxWidth: 244,
+    marginTop: 6,
   },
 });

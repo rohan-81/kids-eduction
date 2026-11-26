@@ -132,6 +132,7 @@ let cachedWebVoices: SpeechSynthesisVoice[] = [];
 const voiceCache = new Map<string, SpeechSynthesisVoice>();
 let cachedNativeVoices: Speech.Voice[] = [];
 let isNativeVoicesLoaded = false;
+let nativeVoicesInFlightPromise: Promise<Speech.Voice[]> | null = null;
 let currentSpeechRequestId = 0;
 
 export interface WordBoundaryEvent {
@@ -228,7 +229,7 @@ export async function ensureNativeAudioMode(): Promise<void> {
     try {
       await setAudioModeAsyncFn({
         playsInSilentMode: true,
-        interruptionMode: 'doNotMix',
+        interruptionMode: 'duckOthers',
       });
       isAudioModeConfigured = true;
     } catch {}
@@ -1010,11 +1011,24 @@ export const audioService = {
     }
     try {
       if (Platform.OS !== 'web') {
-        const voices = await Speech.getAvailableVoicesAsync();
-        if (voices && voices.length > 0) {
-          cachedNativeVoices = voices;
-          isNativeVoicesLoaded = true;
+        if (!nativeVoicesInFlightPromise) {
+          nativeVoicesInFlightPromise = Speech.getAvailableVoicesAsync()
+            .then((voices) => {
+              if (voices && voices.length > 0) {
+                cachedNativeVoices = voices;
+                isNativeVoicesLoaded = true;
+              }
+              return cachedNativeVoices;
+            })
+            .catch(() => cachedNativeVoices)
+            .finally(() => {
+              nativeVoicesInFlightPromise = null;
+            });
         }
+        const timeoutPromise = new Promise<Speech.Voice[]>((resolve) =>
+          setTimeout(() => resolve(cachedNativeVoices), 1500)
+        );
+        await Promise.race([nativeVoicesInFlightPromise, timeoutPromise]);
       }
     } catch {
       // Native voices unavailable or mocked in testing environment
@@ -1327,7 +1341,10 @@ export const audioService = {
     doneCb?: () => void
   ): Promise<void> {
     try {
-      const voices = await this.loadNativeVoices();
+      const voices =
+        isNativeVoicesLoaded && cachedNativeVoices.length > 0
+          ? cachedNativeVoices
+          : await this.loadNativeVoices();
       if (requestId !== currentSpeechRequestId) {
         if (doneCb) {
           try {
@@ -1395,8 +1412,12 @@ export const audioService = {
         }
       };
 
+      // Android SpeechModule.kt passes options.language to Locale.Builder().setLanguage(it),
+      // which throws IllformedLocaleException for hyphenated tags like "hi-IN" / "gu-IN".
+      const nativeLocale = Platform.OS === 'android' ? targetLocale.split('-')[0] : targetLocale;
+
       const speechOptions: Speech.SpeechOptions = {
-        language: targetLocale,
+        language: nativeLocale,
         pitch: speechPitch,
         rate: speechRate,
         onStart: () => {
@@ -1482,7 +1503,7 @@ export const audioService = {
             if (effectiveLang === 'gu' && targetLocale !== 'hi-IN') {
               try {
                 Speech.speak(gujaratiToDevanagari(normalizedText), {
-                  language: 'hi-IN',
+                  language: Platform.OS === 'android' ? 'hi' : 'hi-IN',
                   pitch: speechPitch,
                   rate: speechRate,
                   onStart: () => {
@@ -1510,7 +1531,7 @@ export const audioService = {
             if (selectedVoiceIdentifier) {
               try {
                 Speech.speak(targetText, {
-                  language: targetLocale,
+                  language: nativeLocale,
                   pitch: speechPitch,
                   rate: speechRate,
                   onBoundary: (event: SpeechBoundaryEvent) => {
@@ -2507,17 +2528,15 @@ export const audioService = {
       }
 
       // --- PATH B: NATIVE MOBILE (Sentence-by-sentence via Speech.speak with verified onDone) ---
-      let voices = cachedNativeVoices;
-      if (!voices || voices.length === 0) {
-        try {
-          voices = await Speech.getAvailableVoicesAsync();
-          if (voices && voices.length > 0) cachedNativeVoices = voices;
-        } catch {}
-      }
+      const voices =
+        isNativeVoicesLoaded && cachedNativeVoices.length > 0
+          ? cachedNativeVoices
+          : await this.loadNativeVoices();
 
       const bestVoice = selectBestVoice(voices || [], effectiveLang, currentVoiceGender);
       const selectedVoiceIdentifier = bestVoice?.identifier || undefined;
-      const targetLocale = bestVoice?.language || this.getLanguageLocale(effectiveLang);
+      const rawLocale = bestVoice?.language || this.getLanguageLocale(effectiveLang);
+      const targetLocale = Platform.OS === 'android' ? String(rawLocale).split('-')[0] : rawLocale;
       const voiceIsActuallyMale = bestVoice ? isMaleVoiceName(bestVoice.name || bestVoice.identifier || '') : false;
       const speechPitch = getCalibratedPitch(currentVoiceGender, currentVoicePitch, voiceIsActuallyMale);
       const speechRate = effectiveRate;
@@ -2563,8 +2582,12 @@ export const audioService = {
         }
       };
 
+      // Android SpeechModule.kt passes options.language to Locale.Builder().setLanguage(it),
+      // which throws IllformedLocaleException for hyphenated tags like "hi-IN" / "gu-IN".
+      const nativeLocale = Platform.OS === 'android' ? targetLocale.split('-')[0] : targetLocale;
+
       const speechOptions: Speech.SpeechOptions = {
-        language: targetLocale,
+        language: nativeLocale,
         pitch: speechPitch,
         rate: speechRate,
         voice: selectedVoiceIdentifier,

@@ -377,16 +377,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setProgress(updated);
   };
 
-  const speak = (text: string, langOverride?: AppLanguage | (() => void), onDone?: () => void) => {
-    let effectiveLang: AppLanguage = preferences.language;
+  const prefsRef = React.useRef(preferences);
+  prefsRef.current = preferences;
+
+  const speak = React.useCallback((text: string, langOverride?: AppLanguage | (() => void), onDone?: () => void) => {
+    const curPrefs = prefsRef.current;
+    let effectiveLang: AppLanguage = curPrefs.language;
     let doneCb: (() => void) | undefined = onDone;
     if (typeof langOverride === 'function') {
       doneCb = langOverride;
     } else if (typeof langOverride === 'string') {
       effectiveLang = langOverride;
     }
-    audioService.speak(text, effectiveLang, preferences.soundEnabled, doneCb);
-  };
+    audioService.speak(text, effectiveLang, curPrefs.soundEnabled, doneCb);
+  }, []);
 
   const setVoiceGender = async (gender: 'male' | 'female' | 'child'): Promise<void> => {
     setVoiceGenderState(gender);
@@ -403,9 +407,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await audioService.setVoicePitch(pitch);
   };
 
-  const stopSpeaking = () => {
+  const stopSpeaking = React.useCallback(() => {
     audioService.stop();
-  };
+  }, []);
 
   const resetProgress = async () => {
     const current = await storageService.getProgress();

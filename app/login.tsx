@@ -412,6 +412,7 @@ export default function LoginScreen() {
             sound={false}
             style={styles.guestButton}
             onPress={handleContinueAsGuest}
+            icon={<UserIcon size={18} color={kidPalette.inkSoft} />}
             title={
               language === 'gu'
                 ? 'હમણાં માટે મહેમાન તરીકે રમો →'
@@ -658,7 +659,8 @@ const styles = StyleSheet.create({
   },
   guestButton: {
     alignSelf: 'center',
-    minWidth: 260,
+    width: '100%',
+    maxWidth: 340,
   },
   guestButtonText: {
     fontSize: 15,

@@ -122,8 +122,25 @@ const CoinCounter: React.FC<{ amount: number; active: boolean; language: string 
 
 export default function LessonDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, dir } = useLocalSearchParams<{ id: string; dir?: string }>();
   const { speak, completeLesson, addCoins, t, language, ageGroup } = useApp();
+  const cardSlideX = useRef(
+    new Animated.Value(dir === 'prev' ? -70 : dir === 'next' ? 70 : 0)
+  ).current;
+
+  useEffect(() => {
+    if (dir === 'prev' || dir === 'next') {
+      cardSlideX.setValue(dir === 'prev' ? -70 : 70);
+      Animated.spring(cardSlideX, {
+        toValue: 0,
+        friction: 8,
+        tension: 95,
+        useNativeDriver: Platform.OS !== 'web',
+      }).start();
+    } else {
+      cardSlideX.setValue(0);
+    }
+  }, [id, dir, cardSlideX]);
 
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
   const [showTracing, setShowTracing] = useState(false);
@@ -372,7 +389,7 @@ export default function LessonDetailScreen() {
     audioService.stop();
     soundEffects.stopAnimalSound();
     if (nextLesson) {
-      router.replace(`/lessons/${nextLesson.id}`);
+      router.replace({ pathname: '/lessons/[id]', params: { id: nextLesson.id, dir: 'next' } });
     } else if (router.canGoBack()) {
       router.back();
     } else {
@@ -587,9 +604,10 @@ export default function LessonDetailScreen() {
         </View>
 
         {/* Main Card with Big Symbol & Illustration (Unified Screenshot 1 Style) */}
-        <View
+        <Animated.View
           style={[
             styles.card,
+            { transform: [{ translateX: cardSlideX }] },
             webStyle({
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.05)',
             }),
@@ -728,18 +746,18 @@ export default function LessonDetailScreen() {
             onPrevious={() => {
               if (prevLesson) {
                 soundEffects.stopAnimalSound();
-                router.replace(`/lessons/${prevLesson.id}`);
+                router.replace({ pathname: '/lessons/[id]', params: { id: prevLesson.id, dir: 'prev' } });
               }
             }}
             onComplete={() => handleFinish()}
             onNext={() => {
               if (nextLesson) {
                 soundEffects.stopAnimalSound();
-                router.replace(`/lessons/${nextLesson.id}`);
+                router.replace({ pathname: '/lessons/[id]', params: { id: nextLesson.id, dir: 'next' } });
               }
             }}
           />
-        </View>
+        </Animated.View>
 
         {/* Finger Tracing Canvas (Opened on demand beneath main card) */}
         {canShowTracing && showTracing && (

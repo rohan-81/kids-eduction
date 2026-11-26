@@ -17,6 +17,31 @@ import { audioService } from '../src/services/audioService';
 import { CoinLabel } from '../src/components/common/GoldCoinIcon';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
 import type { TimerHandle } from '../src/utils/runtime';
+import { Remote3DImage } from '../src/components/common/Remote3DImage';
+import { characterAsset } from '../src/utils/remoteAssets';
+
+const PUZZLE_3D_KEY_BY_ICON: Record<string, string> = {
+  '🐱': '3d_cat',
+  '🐶': '3d_dog',
+  '☀️': '3d_sun',
+  '🚗': '3d_car',
+  '🐟': '3d_fish',
+  '⭐': '3d_twinkling_star',
+  '⚽': '3d_ball',
+  '🐦': '3d_sparrow',
+  '🌳': '3d_banyan_tree',
+  '📖': '3d_book',
+  '🦁': '3d_lion',
+  '🍎': '3d_fr_apple',
+  '🌸': '3d_lotus',
+  '🏠': '3d_house',
+  '🐊': '3d_crocodile',
+  '🚌': '3d_bus',
+  '🦆': '3d_duck',
+  '✏️': '3d_pencil',
+  '🐘': '3d_elephant',
+  '🚰': '3d_water_tap',
+};
 
 interface WordPuzzle {
   id: string;
@@ -238,7 +263,15 @@ export default function WordBuilderScreen() {
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
         {/* Puzzle Picture Card */}
         <View style={[styles.pictureCard, shadows.card]}>
-          <Text style={styles.pictureEmoji}>{currentPuzzle.icon}</Text>
+          {PUZZLE_3D_KEY_BY_ICON[currentPuzzle.icon] ? (
+            <Remote3DImage
+              source={characterAsset(PUZZLE_3D_KEY_BY_ICON[currentPuzzle.icon])}
+              style={styles.picture3DImage}
+              fallback={<Text style={styles.pictureEmoji}>{currentPuzzle.icon}</Text>}
+            />
+          ) : (
+            <Text style={styles.pictureEmoji}>{currentPuzzle.icon}</Text>
+          )}
           <Text style={styles.pictureTitle}>{currentPuzzle.displayTitle}</Text>
           <Text style={styles.pictureSubtitle}>{tUI.subtitle}</Text>
         </View>
@@ -320,6 +353,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#EAEDED',
     marginBottom: spacing.xl,
+  },
+  picture3DImage: {
+    width: 112,
+    height: 112,
+    marginBottom: spacing.sm,
   },
   pictureEmoji: {
     fontSize: 72,
