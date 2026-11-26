@@ -27,6 +27,7 @@ import { soundEffects } from '../src/services/soundEffects';
 import { ScreenWellnessOverlay } from '../src/components/ScreenWellnessOverlay';
 import { schedulePrefetchCharacterAssets } from '../src/services/assetPrefetchService';
 import { apiService } from '../src/services/apiService';
+import { contentPackService } from '../src/services/contentPackService';
 
 function GlobalAudioRouteWatcher() {
   const pathname = usePathname();
@@ -121,10 +122,14 @@ function GlobalAudioRouteWatcher() {
 }
 
 export default function RootLayout() {
-  // Wake Render backend + download remote renders/assets/audio into local disk cache in the background
+  // Initialize permanent offline media pack, wake Render backend, and prefetch if needed
   useEffect(() => {
-    apiService.warmUpBackend();
-    schedulePrefetchCharacterAssets();
+    contentPackService.init().then((installed) => {
+      apiService.warmUpBackend();
+      if (!installed) {
+        schedulePrefetchCharacterAssets();
+      }
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -282,6 +287,8 @@ export default function RootLayout() {
               }}
             >
           <Stack.Screen name="index" />
+          <Stack.Screen name="setup" />
+          <Stack.Screen name="offline-warning" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="login" />
           <Stack.Screen name="register" />

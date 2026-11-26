@@ -8,6 +8,7 @@
  *   3. null -> <StoryIllustration> draws an illustrated SVG scene (never a bare emoji box)
  */
 import { StoryBook, StoryScene } from '../data/storiesData';
+import { resolveOfflineMediaSource } from './remoteAssets';
 
 export type SceneSetting = 'desert' | 'river' | 'forest' | 'rain' | 'home' | 'meadow';
 
@@ -46,26 +47,26 @@ export function withArtVersion(url: string, version: string = STORY_ART_VERSION)
 type ImageMap = Record<string, { cover?: any; scenes?: Record<number, any> }>;
 
 export function resolveStoryCover(story: StoryBook, map: ImageMap): any | null {
-  if (story.coverImage) return { uri: story.coverImage };
+  if (story.coverImage) return resolveOfflineMediaSource({ uri: story.coverImage });
   const id = String(story.id || '');
-  return (
+  const found =
     map[id]?.cover ??
     map[`story-${id}`]?.cover ??
     map[id.replace(/^story-/, '')]?.cover ??
-    null
-  );
+    null;
+  return resolveOfflineMediaSource(found);
 }
 
 export function resolveStoryScene(story: StoryBook, page: number, map: ImageMap): any | null {
   const scene = story.scenes[page - 1];
-  if (scene?.image) return { uri: scene.image };
+  if (scene?.image) return resolveOfflineMediaSource({ uri: scene.image });
   const id = String(story.id || '');
-  return (
+  const found =
     map[id]?.scenes?.[page] ??
     map[`story-${id}`]?.scenes?.[page] ??
     map[id.replace(/^story-/, '')]?.scenes?.[page] ??
-    null
-  );
+    null;
+  return resolveOfflineMediaSource(found);
 }
 
 // Glyphs that become part of the drawn landscape instead of floating characters.

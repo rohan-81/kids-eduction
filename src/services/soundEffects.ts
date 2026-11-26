@@ -1,13 +1,18 @@
 import { Platform } from 'react-native';
 import { safeGetApiBaseUrl } from './apiConfig';
-import { getMediaBaseUrl } from '../utils/remoteAssets';
+import { getMediaBaseUrl, resolvePackFileUri } from '../utils/remoteAssets';
 
 let ExpoFileSystem: any = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  ExpoFileSystem = require('expo-file-system');
+  ExpoFileSystem = require('expo-file-system/legacy');
 } catch {
-  ExpoFileSystem = null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    ExpoFileSystem = require('expo-file-system');
+  } catch {
+    ExpoFileSystem = null;
+  }
 }
 
 function getAnimalAudioCachePath(key: string): string | null {
@@ -18,6 +23,16 @@ function getAnimalAudioCachePath(key: string): string | null {
 }
 
 async function resolveCachedAnimalAudioUri(key: string): Promise<string | null> {
+  // Priority 1: Check permanently unpacked offline content pack
+  const packUri = resolvePackFileUri(`audio/animals/${key}.mp3`);
+  if (packUri && typeof ExpoFileSystem?.getInfoAsync === 'function') {
+    try {
+      const packInfo = await ExpoFileSystem.getInfoAsync(packUri);
+      if (packInfo?.exists && (packInfo.size ?? 0) > 500) return packUri;
+    } catch {}
+  }
+
+  // Priority 2: Check on-demand per-file cache
   const path = getAnimalAudioCachePath(key);
   if (!path || typeof ExpoFileSystem?.getInfoAsync !== 'function') return null;
   try {

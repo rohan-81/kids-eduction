@@ -31,6 +31,36 @@ export function getMediaBaseUrl(): string {
 
 const registry = new Map<string, RemoteImageSource>();
 const appAssetRegistry = new Map<string, RemoteImageSource>();
+let localPackBaseUri: string | null = null;
+
+/** Called once the permanently downloaded offline content pack is ready on device storage. */
+export function setLocalPackBaseUri(baseUri: string | null): void {
+  localPackBaseUri = baseUri ? (baseUri.endsWith('/') ? baseUri : `${baseUri}/`) : null;
+}
+
+export function getLocalPackBaseUri(): string | null {
+  return localPackBaseUri;
+}
+
+/** Resolves a relative media path (e.g. `audio/animals/lion.mp3`) to the local pack `file://` URI if installed. */
+export function resolvePackFileUri(relativePath: string): string | null {
+  if (!localPackBaseUri) return null;
+  const clean = relativePath.replace(/^\/+/, '').split('?')[0];
+  return `${localPackBaseUri}${clean}`;
+}
+
+/** Converts a remote `/media/<relPath>` source to its local `file://` source when the offline pack is installed. */
+export function resolveOfflineMediaSource<T>(source: T): T {
+  if (!localPackBaseUri || !source || typeof source !== 'object') return source;
+  const uri = (source as { uri?: unknown }).uri;
+  if (typeof uri !== 'string') return source;
+  const marker = '/media/';
+  const idx = uri.indexOf(marker);
+  if (idx === -1) return source;
+  const rel = uri.slice(idx + marker.length).split('?')[0];
+  if (!rel) return source;
+  return { uri: `${localPackBaseUri}${rel}` } as unknown as T;
+}
 
 /** Image source for a 3D render by key, e.g. characterAsset('3d_lion'). */
 export function characterAsset(key: string): RemoteImageSource {

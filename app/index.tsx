@@ -13,12 +13,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
 import { useApp } from '../src/context/AppContext';
+import { contentPackService } from '../src/services/contentPackService';
+import { checkInternetAvailable } from '../src/utils/networkCheck';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { isLoading, hasCompletedOnboarding, isAuthenticated, isGuest } = useApp();
+  const { isLoading, isAuthenticated } = useApp();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -26,10 +28,19 @@ export default function SplashScreen() {
   const starPulseAnim = useRef(new Animated.Value(1)).current;
 
   const hasNavigated = useRef(false);
+  const bootCheckRef = useRef<Promise<{ packInstalled: boolean; online: boolean }> | null>(null);
+  if (!bootCheckRef.current) {
+    bootCheckRef.current = Promise.all([
+      contentPackService.init().catch(() => false),
+      checkInternetAvailable(2800).catch(() => false),
+    ]).then(([packInstalled, online]) => ({ packInstalled, online }));
+  }
 
-  const navigateToOnboarding = () => {
+  const navigateToOnboarding = async () => {
     if (hasNavigated.current) return;
     hasNavigated.current = true;
+
+    const boot = await (bootCheckRef.current || Promise.resolve({ packInstalled: true, online: true }));
 
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -43,12 +54,14 @@ export default function SplashScreen() {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      if (isAuthenticated || isGuest) {
+      if (Platform.OS !== 'web' && !boot.packInstalled) {
+        router.replace('/setup');
+      } else if (isAuthenticated) {
         router.replace('/home');
-      } else if (hasCompletedOnboarding) {
+      } else if (boot.online) {
         router.replace('/login');
       } else {
-        router.replace('/onboarding');
+        router.replace('/offline-warning');
       }
     });
   };

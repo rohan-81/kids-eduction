@@ -2,7 +2,7 @@
 // Ensures all animal, bird, and fruit photos are 100% authentic, verified, and bundled locally
 import { EXTRA_RENDERS_BY_LESSON } from './extraRenders';
 import { ANIMAL_RENDERS_BY_LESSON } from './animalRenders';
-import { characterAsset, appAsset, isBackendCharacterUrl } from './remoteAssets';
+import { characterAsset, appAsset, isBackendCharacterUrl, resolveOfflineMediaSource } from './remoteAssets';
 
 export const CARTOON_HERO_IMAGE = appAsset('cartoon_hero.webp');
 export const CARTOON_BATTLE_IMAGE = appAsset('cartoon_battle.webp');
@@ -376,6 +376,21 @@ const NON_IMAGE_CATEGORIES = new Set([
 ]);
 
 export function getLessonImageSource(
+  item: {
+    id?: string;
+    categoryId?: string;
+    imageUrl?: string;
+    title?: string;
+    exampleWord?: string;
+    exampleMeaning?: string;
+    exampleMeaningGu?: string;
+    exampleMeaningHi?: string;
+  } | null | undefined
+): any {
+  return resolveOfflineMediaSource(getLessonImageSourceRaw(item));
+}
+
+function getLessonImageSourceRaw(
   item: {
     id?: string;
     categoryId?: string;

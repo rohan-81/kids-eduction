@@ -1,14 +1,19 @@
 import { Platform } from 'react-native';
 import { RhymeItem } from '../data/rhymesData';
 import { safeGetApiBaseUrl, API_BASE_URL } from './apiConfig';
-import { getMediaBaseUrl } from '../utils/remoteAssets';
+import { getMediaBaseUrl, resolvePackFileUri } from '../utils/remoteAssets';
 
 let ExpoFileSystem: any = null;
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  ExpoFileSystem = require('expo-file-system');
+  ExpoFileSystem = require('expo-file-system/legacy');
 } catch {
-  ExpoFileSystem = null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    ExpoFileSystem = require('expo-file-system');
+  } catch {
+    ExpoFileSystem = null;
+  }
 }
 
 function getRhymeCachePath(rhymeId: string): string | null {
@@ -16,6 +21,26 @@ function getRhymeCachePath(rhymeId: string): string | null {
   if (!baseDir) return null;
   const safeId = rhymeId.replace(/[^a-zA-Z0-9_-]/g, '_');
   return `${baseDir}kidszone_audio/rhymes/${safeId}.mp3`;
+}
+
+async function resolveExistingRhymeLocalUri(rhymeId: string): Promise<string | null> {
+  if (typeof ExpoFileSystem?.getInfoAsync !== 'function') return null;
+  const safeId = rhymeId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const packUri = resolvePackFileUri(`rhymes/audio/${safeId}.mp3`);
+  if (packUri) {
+    try {
+      const pInfo = await ExpoFileSystem.getInfoAsync(packUri);
+      if (pInfo?.exists && (pInfo.size ?? 0) > 1000) return packUri;
+    } catch {}
+  }
+  const cachePath = getRhymeCachePath(rhymeId);
+  if (cachePath) {
+    try {
+      const cInfo = await ExpoFileSystem.getInfoAsync(cachePath);
+      if (cInfo?.exists && (cInfo.size ?? 0) > 1000) return cachePath;
+    } catch {}
+  }
+  return null;
 }
 
 // Safely obtain native audio player factory if available (Expo SDK 53+ uses expo-audio)
@@ -251,41 +276,39 @@ class RhymeAudioService {
 
     // 2. Native Playback via expo-audio
     if (createAudioPlayerFn) {
-      // Check local mobile storage cache first for instant offline playback
+      // Check permanently unpacked pack or local cache first for instant offline playback
       const cachePath = getRhymeCachePath(rhyme.id);
-      if (cachePath && typeof ExpoFileSystem?.getInfoAsync === 'function') {
+      const localRhymeUri = await resolveExistingRhymeLocalUri(rhyme.id);
+      if (localRhymeUri) {
         try {
-          const info = await ExpoFileSystem.getInfoAsync(cachePath);
-          if (info?.exists && (info.size ?? 0) > 1000) {
-            const cachedPlayer = createAudioPlayerFn({ uri: cachePath });
-            if (cachedPlayer) {
-              this.currentNativePlayer = cachedPlayer;
-              try { cachedPlayer.volume = 1.0; } catch {}
-              if (typeof cachedPlayer.addListener === 'function') {
-                this.currentNativeSubscription = cachedPlayer.addListener('playbackStatusUpdate', (status: any) => {
-                  if (this.currentNativePlayer !== cachedPlayer) return;
-                  if (status?.duration) this.durationState = status.duration;
-                  if (status?.currentTime !== undefined) this.currentTimeState = status.currentTime;
-                  if (status?.didJustFinish) {
-                    this.isPlayingState = false;
-                    this.isPausedState = false;
-                    this.emitStatus({ didJustFinish: true, isPlaying: false });
-                    this.stop();
-                    return;
-                  }
-                  this.emitStatus();
-                });
-              }
-              cachedPlayer.play();
-              if (this.playRequestId !== requestId) {
-                try { cachedPlayer.pause(); } catch {}
-                return 'superseded';
-              }
-              this.isPlayingState = true;
-              this.isPausedState = false;
-              this.emitStatus();
-              return 'started';
+          const cachedPlayer = createAudioPlayerFn({ uri: localRhymeUri });
+          if (cachedPlayer) {
+            this.currentNativePlayer = cachedPlayer;
+            try { cachedPlayer.volume = 1.0; } catch {}
+            if (typeof cachedPlayer.addListener === 'function') {
+              this.currentNativeSubscription = cachedPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                if (this.currentNativePlayer !== cachedPlayer) return;
+                if (status?.duration) this.durationState = status.duration;
+                if (status?.currentTime !== undefined) this.currentTimeState = status.currentTime;
+                if (status?.didJustFinish) {
+                  this.isPlayingState = false;
+                  this.isPausedState = false;
+                  this.emitStatus({ didJustFinish: true, isPlaying: false });
+                  this.stop();
+                  return;
+                }
+                this.emitStatus();
+              });
             }
+            cachedPlayer.play();
+            if (this.playRequestId !== requestId) {
+              try { cachedPlayer.pause(); } catch {}
+              return 'superseded';
+            }
+            this.isPlayingState = true;
+            this.isPausedState = false;
+            this.emitStatus();
+            return 'started';
           }
         } catch {}
       }

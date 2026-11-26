@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ImageStyle, StyleProp, StyleSheet, View } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
-import { isRemoteImageSource } from '../../utils/remoteAssets';
+import { isRemoteImageSource, resolveOfflineMediaSource } from '../../utils/remoteAssets';
 
 export interface Remote3DImageProps {
   /** `{ uri }` from characterAsset(), a backend URL source, or a bundled require() number. */
@@ -69,7 +69,8 @@ export const Remote3DImage: React.FC<Remote3DImageProps> = ({
   fallback = null,
   accessibilityLabel,
 }) => {
-  const key = isRemoteImageSource(source) ? source.uri : String(source ?? '');
+  const resolvedSource = resolveOfflineMediaSource(source);
+  const key = isRemoteImageSource(resolvedSource) ? resolvedSource.uri : String(resolvedSource ?? '');
   const [failed, setFailed] = useState(false);
   const [retryAttempt, setRetryAttempt] = useState(0);
   const schedulerRef = useRef<ReturnType<typeof createImageRetryScheduler> | null>(null);
@@ -91,7 +92,7 @@ export const Remote3DImage: React.FC<Remote3DImageProps> = ({
     schedulerRef.current?.fail();
   };
 
-  if (!source) {
+  if (!resolvedSource) {
     return <View style={[style, styles.center]}>{fallback}</View>;
   }
 
@@ -103,7 +104,7 @@ export const Remote3DImage: React.FC<Remote3DImageProps> = ({
           // Invisible until loaded: onLoad swaps back to the normal image path (now cached).
           <ExpoImage
             key={`${key}#retry${retryAttempt}`}
-            source={source as never}
+            source={resolvedSource as never}
             style={[StyleSheet.absoluteFill, styles.hidden]}
             contentFit={contentFit}
             cachePolicy="memory-disk"
@@ -117,7 +118,7 @@ export const Remote3DImage: React.FC<Remote3DImageProps> = ({
 
   return (
     <ExpoImage
-      source={source as never}
+      source={resolvedSource as never}
       style={style}
       contentFit={contentFit}
       cachePolicy="memory-disk"

@@ -16,6 +16,7 @@ import {
   getAllAppAssets,
   getMediaBaseUrl,
 } from '../utils/remoteAssets';
+import { contentPackService } from './contentPackService';
 // Importing the registries populates the remote asset lists.
 import '../utils/animalRenders';
 import '../utils/natureRenders';
@@ -74,6 +75,7 @@ async function prefetchImageUrls(urls: string[], doneKey: string, marker: string
 }
 
 export async function prefetchCharacterAssets(): Promise<boolean> {
+  if (Platform.OS !== 'web' && contentPackService.isPackInstalled()) return true;
   const urls = getAllCharacterAssets().map((s) => s.uri);
   const marker = `${CHARACTER_ASSET_VERSION}:${urls.length}`;
   return prefetchImageUrls(urls, DONE_KEY, marker);
@@ -81,6 +83,7 @@ export async function prefetchCharacterAssets(): Promise<boolean> {
 
 /** Downloads compressed app images (animals, stories, currency, magic) into disk cache for offline use. */
 export async function prefetchAppAssets(): Promise<boolean> {
+  if (Platform.OS !== 'web' && contentPackService.isPackInstalled()) return true;
   const urls = getAllAppAssets().map((s) => s.uri);
   if (urls.length === 0) return true;
   const marker = `${APP_ASSET_VERSION}:${urls.length}`;
@@ -89,7 +92,7 @@ export async function prefetchAppAssets(): Promise<boolean> {
 
 /** Downloads compressed animal MP3s (~1 MB total) to local mobile storage once for instant offline playback. */
 export async function prefetchAnimalAudio(): Promise<boolean> {
-  if (Platform.OS === 'web') return true;
+  if (Platform.OS === 'web' || contentPackService.isPackInstalled()) return true;
   const marker = `v1:${ANIMAL_KEYS_TO_PREFETCH.length}`;
   try {
     if ((await AsyncStorage.getItem(ANIMAL_AUDIO_DONE_KEY)) === marker) return true;
@@ -98,9 +101,14 @@ export async function prefetchAnimalAudio(): Promise<boolean> {
   let FileSystem: any = null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    FileSystem = require('expo-file-system');
+    FileSystem = require('expo-file-system/legacy');
   } catch {
-    return false;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      FileSystem = require('expo-file-system');
+    } catch {
+      return false;
+    }
   }
   const baseDir = FileSystem?.documentDirectory || FileSystem?.cacheDirectory;
   if (!baseDir || typeof FileSystem?.downloadAsync !== 'function') return false;
