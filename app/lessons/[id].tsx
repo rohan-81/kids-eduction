@@ -19,6 +19,7 @@ import { Header } from '../../src/components/Header';
 import { AudioSpeakerButton } from '../../src/components/AudioSpeakerButton';
 import { LessonActionSection } from '../../src/components/LessonActionSection';
 import { AppIcon } from '../../src/components/AppIcon';
+import { TracingCanvas } from '../../src/components/TracingCanvas';
 import { PastelButton } from '../../src/components/PastelButton';
 import { LESSONS, getLessonAudio, getLessonDisplayLabels } from '../../src/data/lessons';
 import { LessonItem } from '../../src/types';
@@ -142,7 +143,12 @@ export default function LessonDetailScreen() {
   }, [id, dir, cardSlideX]);
 
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
+  const [showTracing, setShowTracing] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  /** True when the lesson was completed by tracing (affects popup copy and what "Retry" does). */
+  const [finishedViaTracing, setFinishedViaTracing] = useState(false);
+  const [traceResult, setTraceResult] = useState<{ pct: number; stars: number } | null>(null);
+  const [tracingKey, setTracingKey] = useState<number>(0);
   const [speechFeedback, setSpeechFeedback] = useState<{
     status: 'idle' | 'success';
     msg?: string;
@@ -192,6 +198,9 @@ export default function LessonDetailScreen() {
     // 1) Instant render from the offline bundle (never substitute a different lesson).
     setCurrentLesson(bundled || null);
     setLookupState(bundled ? 'ready' : 'loading');
+    setShowTracing(false);
+    setFinishedViaTracing(false);
+    setTraceResult(null);
 
     // Auto-play name audio with instant response time
     if (bundled) {
@@ -334,19 +343,36 @@ export default function LessonDetailScreen() {
   };
 
   const handleFinish = async (customResult?: { pct: number; stars: number }) => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     audioService.stop();
     soundEffects.stopAnimalSound();
     soundEffects.playTadaaa();
 
-    const stars = 3;
-    addCoins(coinsForStars(stars));
+    const result = customResult || { pct: 100, stars: 3 };
+    setTraceResult(result);
+
+    setFinishedViaTracing(!!customResult);
+    addCoins(coinsForStars(result.stars));
 
     const praise =
-      language === 'gu'
-        ? 'અદ્ભુત! તમને ૩ સ્ટાર મળ્યા!'
-        : language === 'hi'
-          ? 'शानदार! आपको ३ स्टार मिले!'
-          : 'Superb! You got 3 stars!';
+      result.stars === 3
+        ? language === 'gu'
+          ? 'અદ્ભુત! તમને ૩ સ્ટાર મળ્યા!'
+          : language === 'hi'
+            ? 'शानदार! आपको ३ स्टार मिले!'
+            : 'Superb! You got 3 stars!'
+        : result.stars === 2
+          ? language === 'gu'
+            ? 'ખૂબ સરસ! તમને ૨ સ્ટાર મળ્યા!'
+            : language === 'hi'
+              ? 'बहुत बढ़िया! आपको २ स्टार मिले!'
+              : 'Great job! You got 2 stars!'
+          : language === 'gu'
+            ? 'સરસ પ્રયાસ! તમને ૧ સ્ટાર મળ્યો!'
+            : language === 'hi'
+              ? 'अच्छा प्रयास! आपको १ स्टार मिला!'
+              : 'Good effort! You got 1 star!';
     speak(praise, language);
 
     if (currentLesson) {
@@ -423,6 +449,17 @@ export default function LessonDetailScreen() {
         `${currentLesson.id} ${currentLesson.soundKey || ''} ${currentLesson.exampleWord || ''} ${currentLesson.title || ''} ${currentLesson.exampleMeaning || ''}`
       )
     );
+
+  // Tracing is strictly kept only for English Alphabet (ABCD) and Numbers (1-100),
+  // and removed from English Phonics (Aa, Bb...), Gujarati Kakko (ક ખ ગ), and Hindi Vyanjan (क ख ग)
+  const isEnglishAlphabetCategory = currentLesson.categoryId === 'en-alphabet';
+
+  const canShowTracing =
+    (isEnglishAlphabetCategory || isNumberCategory) &&
+    currentLesson.categoryId !== 'animals' &&
+    Boolean(currentLesson.symbol) &&
+    currentLesson.symbol.trim().length > 0 &&
+    currentLesson.symbol.trim().length <= 3;
 
   const animalSoundInfo = isAnimalOrBird
     ? getAnimalSoundInfo(
@@ -694,6 +731,10 @@ export default function LessonDetailScreen() {
             characterImage={getLessonImageSource(currentLesson) ?? undefined}
             phonicsPrompt={phonicsPrompt}
             onPlayPhonics={handlePlayPhonicsSound}
+            canTrace={canShowTracing}
+            isTracingOpen={showTracing}
+            onToggleTracing={() => setShowTracing(!showTracing)}
+            isNumberLesson={isNumberCategory}
             speechFeedback={speechFeedback}
             hasPrevious={Boolean(prevLesson)}
             hasNext={Boolean(nextLesson)}
@@ -712,25 +753,47 @@ export default function LessonDetailScreen() {
             }}
           />
         </Animated.View>
+
+        {/* Finger Tracing Canvas (Opened on demand beneath main card) */}
+        {canShowTracing && showTracing && (
+          <View style={styles.tracingSection}>
+            <TracingCanvas
+              key={tracingKey}
+              symbol={displayedSymbol}
+              language={language}
+              onTraceComplete={async (result) => {
+                await handleFinish(result);
+              }}
+            />
+          </View>
+        )}
       </ScrollView>
 
       {/* Celebration popup when the lesson is completed */}
-      <ConfettiCelebration visible={showCelebration} language={language} speakPraise={false} />
+      <ConfettiCelebration visible={showCelebration && (traceResult?.stars ?? 3) >= 2} language={language} speakPraise={false} />
       {(() => {
-        const stars = 3;
+        const stars = traceResult?.stars ?? 3;
         const coins = coinsForStars(stars);
         return (
           <KidModal
             visible={showCelebration}
-            emblem="🏆"
+            emblem={stars === 3 ? '🏆' : stars === 2 ? '🌟' : '👍'}
             tone="sun"
             sparkles
             onClose={() => setShowCelebration(false)}
             title={
-              language === 'gu' ? 'શાનદાર! ઉત્તમ કામ!' : language === 'hi' ? 'शानदार! उत्तम काम!' : 'Superb! Excellent!'
+              stars === 3
+                ? language === 'gu' ? 'શાનદાર! ઉત્તમ કામ!' : language === 'hi' ? 'शानदार! उत्तम काम!' : 'Superb! Excellent!'
+                : stars === 2
+                  ? language === 'gu' ? 'ખૂબ સરસ પ્રયાસ!' : language === 'hi' ? 'बहुत बढ़िया प्रयास!' : 'Great Effort!'
+                  : language === 'gu' ? 'સરસ શરૂઆત!' : language === 'hi' ? 'अच्छी शुरुआत!' : 'Good Start!'
             }
             subtitle={
-              language === 'gu' ? 'તમે આ પાઠ પૂરો કર્યો!' : language === 'hi' ? 'आपने यह पाठ पूरा किया!' : 'You finished this lesson!'
+              finishedViaTracing
+                ? stars === 3
+                  ? language === 'gu' ? 'તમે અક્ષર એકદમ સાચો ઘૂંટ્યો છે!' : language === 'hi' ? 'आपने बिल्कुल सही ट्रेस किया है!' : 'You traced it wonderfully!'
+                  : language === 'gu' ? 'ફરીથી ઘૂંટો અને બધા ૩ સ્ટાર મેળવો!' : language === 'hi' ? 'फिर से ट्रेस करें और ३ स्टार पाएं!' : 'Trace again to earn all 3 stars!'
+                : language === 'gu' ? 'તમે આ પાઠ પૂરો કર્યો!' : language === 'hi' ? 'आपने यह पाठ पूरा किया!' : 'You finished this lesson!'
             }
           >
             <View style={styles.celebrateStars}>
@@ -740,6 +803,18 @@ export default function LessonDetailScreen() {
             </View>
 
             <View style={styles.celebrateStatsRow}>
+              {finishedViaTracing && traceResult ? (
+                <View style={styles.celebratePct}>
+                  <Text style={styles.celebratePctText}>
+                    🎯{' '}
+                    {language === 'gu'
+                      ? `${toGujDigits(traceResult.pct)}%`
+                      : language === 'hi'
+                        ? `${toHiDigits(traceResult.pct)}%`
+                        : `${traceResult.pct}%`}
+                  </Text>
+                </View>
+              ) : null}
               <CoinCounter amount={coins} active={showCelebration} language={language} />
             </View>
 
@@ -754,9 +829,14 @@ export default function LessonDetailScreen() {
                 onPress={() => {
                   // Retry THIS lesson (previously this jumped to the first lesson of the category).
                   setShowCelebration(false);
+                  setTraceResult(null);
                   setSpeechFeedback({ status: 'idle', msg: '' });
                   audioService.stop();
                   soundEffects.stopAnimalSound();
+                  if (finishedViaTracing) {
+                    setTracingKey((prev) => prev + 1);
+                    setShowTracing(true);
+                  }
                   const audio = getLessonAudio(currentLesson, language);
                   speak(audio.text, audio.lang);
                 }}
@@ -1111,6 +1191,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#78350F',
     lineHeight: 20,
+  },
+  tracingSection: {
+    width: '100%',
+    marginVertical: spacing.md,
+    alignItems: 'center',
   },
   navRow: {
     flexDirection: 'row',
