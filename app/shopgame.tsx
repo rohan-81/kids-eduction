@@ -19,6 +19,8 @@ import { formatNumberDigits, toHiDigits, toGujDigits } from '../src/utils/langua
 import { GoldCoinIcon, GoldCoinStack, CoinLabel } from '../src/components/common/GoldCoinIcon';
 import { Glyph } from '../src/components/fun/KidIcons';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import { Remote3DImage } from '../src/components/common/Remote3DImage';
+import { characterAsset } from '../src/utils/remoteAssets';
 import * as Art from '../src/components/art3d/Art3D';
 
 interface ShopItem {
@@ -27,18 +29,19 @@ interface ShopItem {
   nameHi: string;
   nameEn: string;
   icon: string;
+  renderKey: string;
   price: number;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
-  { id: 'item-apple', nameGu: 'સફરજન', nameHi: 'सेब', nameEn: 'Apple', icon: '🍎', price: 2 },
-  { id: 'item-banana', nameGu: 'કેળું', nameHi: 'केला', nameEn: 'Banana', icon: '🍌', price: 3 },
-  { id: 'item-milk', nameGu: 'દૂધ', nameHi: 'दूध', nameEn: 'Milk', icon: '🥛', price: 5 },
-  { id: 'item-choco', nameGu: 'ચોકલેટ', nameHi: 'चॉकलेट', nameEn: 'Chocolate', icon: '🍫', price: 4 },
-  { id: 'item-pencil', nameGu: 'પેન્સિલ', nameHi: 'पेंसिल', nameEn: 'Pencil', icon: '✏️', price: 1 },
-  { id: 'item-toy', nameGu: 'રમકડું', nameHi: 'खिलौना', nameEn: 'Toy', icon: '🧸', price: 10 },
-  { id: 'item-bread', nameGu: 'બ્રેડ', nameHi: 'ब्रेड', nameEn: 'Bread', icon: '🍞', price: 6 },
-  { id: 'item-biscuit', nameGu: 'બિસ્કીટ', nameHi: 'बिस्कुट', nameEn: 'Biscuit', icon: '🍪', price: 5 },
+  { id: 'item-apple', nameGu: 'સફરજન', nameHi: 'सेब', nameEn: 'Apple', icon: '🍎', renderKey: '3d_fr_apple', price: 2 },
+  { id: 'item-banana', nameGu: 'કેળું', nameHi: 'केला', nameEn: 'Banana', icon: '🍌', renderKey: '3d_fr_banana', price: 3 },
+  { id: 'item-milk', nameGu: 'દૂધ', nameHi: 'दूध', nameEn: 'Milk', icon: '🥛', renderKey: '3d_milk_glass', price: 5 },
+  { id: 'item-choco', nameGu: 'ચોકલેટ', nameHi: 'चॉकलेट', nameEn: 'Chocolate', icon: '🍫', renderKey: '3d_chocolate', price: 4 },
+  { id: 'item-pencil', nameGu: 'પેન્સિલ', nameHi: 'पेंसिल', nameEn: 'Pencil', icon: '✏️', renderKey: '3d_pencil', price: 1 },
+  { id: 'item-toy', nameGu: 'રમકડું', nameHi: 'खिलौना', nameEn: 'Toy', icon: '🧸', renderKey: '3d_teddy_toy', price: 10 },
+  { id: 'item-bread', nameGu: 'બ્રેડ', nameHi: 'ब्रेड', nameEn: 'Bread', icon: '🍞', renderKey: '3d_bread', price: 6 },
+  { id: 'item-biscuit', nameGu: 'બિસ્કીટ', nameHi: 'बिस्कुट', nameEn: 'Biscuit', icon: '🍪', renderKey: '3d_biscuit', price: 5 },
 ];
 
 const COINS = [1, 2, 5, 10];
@@ -236,7 +239,11 @@ export default function ShopGameScreen() {
               onPress={() => addToCart(item)}
               activeOpacity={0.8}
             >
-              <Text style={styles.itemEmoji}>{item.icon}</Text>
+              <Remote3DImage
+                source={characterAsset(item.renderKey)}
+                style={styles.item3DImage}
+                fallback={<Text style={styles.itemEmoji}>{item.icon}</Text>}
+              />
               <Text style={styles.itemName}>{getItemName(item)}</Text>
               <Text style={styles.itemPriceBadge}>₹{formatPrice(item.price)}</Text>
               <View style={styles.addBtn}>
@@ -259,7 +266,13 @@ export default function ShopGameScreen() {
             <View style={styles.cartItemsList}>
               {cart.map((cItem, idx) => (
                 <View key={`cart-${idx}`} style={styles.cartItemRow}>
-                  <Text style={styles.cartItemIcon}>{cItem.icon}</Text>
+                  <View style={styles.cartItem3DWrap}>
+                    <Remote3DImage
+                      source={characterAsset(cItem.renderKey)}
+                      style={styles.cartItem3DImage}
+                      fallback={<Text style={styles.cartItemIcon}>{cItem.icon}</Text>}
+                    />
+                  </View>
                   <Text style={styles.cartItemName}>{getItemName(cItem)}</Text>
                   <Text style={styles.cartItemPrice}>₹{formatPrice(cItem.price)}</Text>
                   <TouchableOpacity
@@ -404,6 +417,11 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E8E8E4',
   },
+  item3DImage: {
+    width: 68,
+    height: 68,
+    marginBottom: spacing.xs,
+  },
   itemEmoji: {
     fontSize: 42,
     marginBottom: spacing.xs,
@@ -474,6 +492,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     borderBottomWidth: 1,
     borderBottomColor: '#F8F9F9',
+  },
+  cartItem3DWrap: {
+    width: 32,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+  },
+  cartItem3DImage: {
+    width: 28,
+    height: 28,
   },
   cartItemIcon: {
     fontSize: 22,

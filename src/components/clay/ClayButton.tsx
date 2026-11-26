@@ -146,7 +146,7 @@ export const ClayButton: React.FC<ClayButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    alignItems: 'center',
+    alignItems: 'stretch',
     justifyContent: 'center',
   },
   lip: {
@@ -175,7 +175,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
   },
   gloss: {
     position: 'absolute',

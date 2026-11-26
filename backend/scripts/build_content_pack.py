@@ -26,7 +26,9 @@ INCLUDE_SUBDIRS = [
 def build_pack() -> Path:
     tmp_zip = OUT_ZIP.with_suffix('.tmp.zip')
     manifest_files = []
-    with zipfile.ZipFile(tmp_zip, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+    # Media files (.webp, .mp3) are already compressed; ZIP_STORED gives near-identical size
+    # while eliminating slow inflate decompression in JS on mobile.
+    with zipfile.ZipFile(tmp_zip, 'w', compression=zipfile.ZIP_STORED) as zf:
         for sub in INCLUDE_SUBDIRS:
             sub_dir = MEDIA_DIR / sub
             if not sub_dir.exists():

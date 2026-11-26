@@ -21,7 +21,7 @@ import { soundEffects } from '../src/services/soundEffects';
 
 export default function SetupScreen() {
   const router = useRouter();
-  const { language, setLanguage, isAuthenticated } = useApp();
+  const { language, setLanguage, isAuthenticated, isGuest } = useApp();
 
   const [status, setStatus] = useState<'checking' | 'offline' | 'downloading' | 'error'>('checking');
   const [progress, setProgress] = useState<DownloadPackProgress>({ percent: 1, stage: 'downloading' });
@@ -91,7 +91,7 @@ export default function SetupScreen() {
       setDisplayPercent(100);
       soundEffects.playTadaaa();
       setTimeout(() => {
-        router.replace(isAuthenticated ? '/home' : '/login');
+        router.replace(isAuthenticated || isGuest ? '/home' : '/login');
       }, 350);
     } else {
       setStatus('error');

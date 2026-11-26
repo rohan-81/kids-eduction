@@ -584,6 +584,9 @@ export default function AdventureMapScreen() {
     return list;
   };
 
+  const stopSpeakingRef = useRef(stopSpeaking);
+  stopSpeakingRef.current = stopSpeaking;
+
   useEffect(() => {
     return () => {
       if (nextTimeoutRef.current) {
@@ -591,10 +594,10 @@ export default function AdventureMapScreen() {
         nextTimeoutRef.current = null;
       }
       audioService.stop();
-      stopSpeaking();
+      stopSpeakingRef.current();
       soundEffects.stopAll();
     };
-  }, [stopSpeaking]);
+  }, []);
 
   // Silence all audio immediately when this screen loses focus or user navigates to another page
   useFocusEffect(
@@ -605,10 +608,10 @@ export default function AdventureMapScreen() {
           nextTimeoutRef.current = null;
         }
         audioService.stop();
-        stopSpeaking();
+        stopSpeakingRef.current();
         soundEffects.stopAll();
       };
-    }, [stopSpeaking])
+    }, [])
   );
 
   const levelPressRef = useRef<(lvl: AdventureLevel) => void>(() => {});

@@ -98,42 +98,57 @@ export const contentPackService = {
       return { success: false, error: 'Device storage unavailable.' };
     }
 
-    const zipUrl = `${getMediaBaseUrl()}/content_pack_${CONTENT_PACK_VERSION}.zip`;
+    const cdnUrl = `https://raw.githubusercontent.com/rohan-81/kids-eduction/main/backend/media/content_pack_${CONTENT_PACK_VERSION}.zip`;
+    const mediaUrl = `${getMediaBaseUrl()}/content_pack_${CONTENT_PACK_VERSION}.zip`;
+    const candidateUrls = mediaUrl === cdnUrl ? [cdnUrl] : [cdnUrl, mediaUrl];
     const tempZipUri = `${(FileSystemLegacy.cacheDirectory || packDir)}kidszone_pack_tmp.zip`;
 
     try {
       onProgress?.({ percent: 2, stage: 'downloading' });
       await FileSystemLegacy.makeDirectoryAsync(packDir, { intermediates: true }).catch(() => {});
 
-      // 1. Download single ZIP archive with progress tracking
-      let lastReportedPct = 2;
-      if (typeof FileSystemLegacy.createDownloadResumable === 'function') {
-        const task = FileSystemLegacy.createDownloadResumable(
-          zipUrl,
-          tempZipUri,
-          {},
-          (dp: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => {
-            const expected =
-              dp.totalBytesExpectedToWrite > 0 ? dp.totalBytesExpectedToWrite : FALLBACK_PACK_BYTES;
-            if (expected > 0 && dp.totalBytesWritten > 0) {
-              const rawRatio = Math.min(1, dp.totalBytesWritten / expected);
-              const pct = Math.min(70, Math.max(2, Math.round(2 + rawRatio * 68)));
-              if (pct > lastReportedPct) {
-                lastReportedPct = pct;
-                onProgress?.({ percent: pct, stage: 'downloading' });
+      // 1. Download single ZIP archive at full CDN speed (with backend mirror fallback)
+      let downloaded = false;
+      let lastErr: Error | null = null;
+      for (const zipUrl of candidateUrls) {
+        let lastReportedPct = 2;
+        try {
+          if (typeof FileSystemLegacy.createDownloadResumable === 'function') {
+            const task = FileSystemLegacy.createDownloadResumable(
+              zipUrl,
+              tempZipUri,
+              {},
+              (dp: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => {
+                const expected =
+                  dp.totalBytesExpectedToWrite > 0 ? dp.totalBytesExpectedToWrite : FALLBACK_PACK_BYTES;
+                if (expected > 0 && dp.totalBytesWritten > 0) {
+                  const rawRatio = Math.min(1, dp.totalBytesWritten / expected);
+                  const pct = Math.min(70, Math.max(2, Math.round(2 + rawRatio * 68)));
+                  if (pct > lastReportedPct) {
+                    lastReportedPct = pct;
+                    onProgress?.({ percent: pct, stage: 'downloading' });
+                  }
+                }
               }
+            );
+            const result = await task.downloadAsync();
+            if (!result || (result.status && result.status >= 400)) {
+              throw new Error(`HTTP ${result?.status || 500}`);
+            }
+          } else {
+            const res = await FileSystemLegacy.downloadAsync(zipUrl, tempZipUri);
+            if (res?.status && res.status >= 400) {
+              throw new Error(`HTTP ${res.status}`);
             }
           }
-        );
-        const result = await task.downloadAsync();
-        if (!result || (result.status && result.status >= 400)) {
-          throw new Error(`HTTP ${result?.status || 500}`);
+          downloaded = true;
+          break;
+        } catch (err: any) {
+          lastErr = err instanceof Error ? err : new Error(err?.message || 'Download failed');
         }
-      } else {
-        const res = await FileSystemLegacy.downloadAsync(zipUrl, tempZipUri);
-        if (res?.status && res.status >= 400) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+      }
+      if (!downloaded) {
+        throw lastErr || new Error('Download failed');
       }
 
       // 2. Read ZIP bytes and extract cleanly into permanent app document storage
@@ -214,15 +229,19 @@ export const contentPackService = {
         () => apiService.fetchColoringTemplates(),
       ];
       let doneSync = 0;
-      await Promise.allSettled(
-        syncTasks.map((fn) =>
-          fn().finally(() => {
-            doneSync += 1;
-            const syncPct = 93 + Math.round((doneSync / syncTasks.length) * 6);
-            onProgress?.({ percent: Math.min(99, syncPct), stage: 'syncing' });
-          })
-        )
-      );
+      // Bundled catalogs are already inside the app; cap setup wait at 2.2s so 94% never stalls
+      await Promise.race([
+        Promise.allSettled(
+          syncTasks.map((fn) =>
+            fn().finally(() => {
+              doneSync += 1;
+              const syncPct = 93 + Math.round((doneSync / syncTasks.length) * 6);
+              onProgress?.({ percent: Math.min(99, syncPct), stage: 'syncing' });
+            })
+          )
+        ),
+        new Promise<void>((resolve) => setTimeout(resolve, 2200)),
+      ]);
 
       setLocalPackBaseUri(packDir);
       await Promise.all([

@@ -590,7 +590,12 @@ export default function ParentsScreen() {
         <ScrollView contentContainerStyle={styles.gateWrapper} keyboardShouldPersistTaps="handled">
           <View style={styles.gateCardFun}>
             <View style={styles.gateEmblem}>
-              <Art.ShieldArt size={52} />
+              <Art.ShieldArt size={42} />
+            </View>
+            <View style={styles.gatePillBadge}>
+              <Text style={styles.gatePillBadgeText}>
+                {language === 'gu' ? '🛡️ સુરક્ષા ચકાસણી' : language === 'hi' ? '🛡️ सुरक्षा जांच' : '🛡️ Grown-Up Check'}
+              </Text>
             </View>
             <Text style={styles.gateTitle}>
               {language === 'gu'
@@ -1817,41 +1822,55 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.lg,
-    paddingTop: 64,
+    padding: spacing.md,
+    paddingTop: 50,
     backgroundColor: 'transparent',
   },
   gateCardFun: {
     width: '100%',
-    maxWidth: 430,
+    maxWidth: 370,
     backgroundColor: '#FFFFFF',
-    borderRadius: 30,
+    borderRadius: 28,
     borderWidth: 2,
     borderColor: '#E2E8F0',
-    borderBottomWidth: 7,
+    borderBottomWidth: 6,
     borderBottomColor: kidTones.sky.tintBorder,
-    padding: 26,
-    paddingTop: 64,
+    padding: 20,
+    paddingTop: 48,
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     ...(Platform.OS === 'web'
-      ? ({ boxShadow: '0 20px 45px rgba(0, 0, 0, 0.22)' } as any)
-      : { shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.22, shadowRadius: 22, elevation: 12 }),
+      ? ({ boxShadow: '0 16px 38px rgba(0, 0, 0, 0.16)' } as any)
+      : { shadowColor: '#000', shadowOffset: { width: 0, height: 14 }, shadowOpacity: 0.16, shadowRadius: 18, elevation: 10 }),
   },
   gateEmblem: {
     position: 'absolute',
-    top: -46,
+    top: -38,
     alignSelf: 'center',
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: kidTones.sky.tint,
-    borderWidth: 4,
+    borderWidth: 3.5,
     borderColor: kidTones.sky.fill,
-    borderBottomWidth: 8,
+    borderBottomWidth: 7,
     borderBottomColor: kidTones.sky.edge,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  gatePillBadge: {
+    backgroundColor: kidTones.lavender.tint,
+    borderWidth: 1,
+    borderColor: kidTones.lavender.tintBorder,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    marginBottom: 4,
+  },
+  gatePillBadgeText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: kidTones.lavender.text,
   },
   gateCard: {
     backgroundColor: '#FFFFFF',
@@ -1881,10 +1900,10 @@ const styles = StyleSheet.create({
     fontSize: 40,
   },
   gateTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
     color: '#1E293B',
-    marginBottom: 6,
+    marginBottom: 2,
     textAlign: 'center',
     letterSpacing: -0.3,
   },

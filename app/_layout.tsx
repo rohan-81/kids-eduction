@@ -296,7 +296,12 @@ export default function RootLayout() {
           <Stack.Screen name="home" />
           <Stack.Screen name="language" />
           <Stack.Screen name="lessons/index" />
-          <Stack.Screen name="lessons/[id]" />
+          <Stack.Screen
+            name="lessons/[id]"
+            options={({ route }) => ({
+              animation: (route?.params as any)?.dir === 'prev' ? 'slide_from_left' : 'slide_from_right',
+            })}
+          />
           <Stack.Screen name="games/index" />
           <Stack.Screen name="games/[type]" />
           <Stack.Screen name="rewards" />

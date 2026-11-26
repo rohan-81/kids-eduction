@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -1357,19 +1357,26 @@ export default function CategoryLessonsScreen() {
     speak(audio.text, audio.lang);
   };
 
+  const navigatingToChildRef = useRef(false);
+
   useEffect(() => {
     return () => {
-      audioService.stop();
-      soundEffects.stopAnimalSound();
+      if (!navigatingToChildRef.current) {
+        audioService.stop();
+        soundEffects.stopAnimalSound();
+      }
     };
   }, []);
 
   // Silence all audio immediately when screen loses focus in stack navigation
   useFocusEffect(
     useCallback(() => {
+      navigatingToChildRef.current = false;
       return () => {
-        audioService.stop();
-        soundEffects.stopAnimalSound();
+        if (!navigatingToChildRef.current) {
+          audioService.stop();
+          soundEffects.stopAnimalSound();
+        }
       };
     }, [])
   );
@@ -1764,6 +1771,7 @@ export default function CategoryLessonsScreen() {
                         } as any),
                       ]}
                       onPress={() => {
+                        navigatingToChildRef.current = true;
                         audioService.stop();
                         soundEffects.stopAnimalSound();
                         soundEffects.stopBgm();
