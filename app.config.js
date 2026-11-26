@@ -46,6 +46,10 @@ module.exports = ({ config }) => {
 
   return {
     ...config,
+    plugins: [
+      ...(config.plugins || []),
+      './plugins/withSmallAndroidApk',
+    ],
     android: {
       ...config.android,
       // Cleartext HTTP enabled in development for local LAN testing over Wi-Fi (e.g. 192.168.x.x:8000);

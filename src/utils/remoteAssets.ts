@@ -15,6 +15,7 @@ import { safeGetApiBaseUrl } from '../services/apiConfig';
 
 /** Bump when renders are re-exported under the same names, to bust app + CDN caches. */
 export const CHARACTER_ASSET_VERSION = 'v1';
+export const APP_ASSET_VERSION = 'v1';
 
 export interface RemoteImageSource {
   /** Versioned URL. expo-image caches by URL, which is also what Image.prefetch() fills. */
@@ -29,6 +30,7 @@ export function getMediaBaseUrl(): string {
 }
 
 const registry = new Map<string, RemoteImageSource>();
+const appAssetRegistry = new Map<string, RemoteImageSource>();
 
 /** Image source for a 3D render by key, e.g. characterAsset('3d_lion'). */
 export function characterAsset(key: string): RemoteImageSource {
@@ -40,9 +42,25 @@ export function characterAsset(key: string): RemoteImageSource {
   return src;
 }
 
+/** Image source for an on-demand downloaded app asset under /media/app_assets/. */
+export function appAsset(relPath: string): RemoteImageSource {
+  const clean = relPath.replace(/^\/+/, '');
+  let src = appAssetRegistry.get(clean);
+  if (!src) {
+    src = { uri: `${getMediaBaseUrl()}/app_assets/${clean}?v=${APP_ASSET_VERSION}` };
+    appAssetRegistry.set(clean, src);
+  }
+  return src;
+}
+
 /** Every remote render referenced by the app (registries are built at import time). */
 export function getAllCharacterAssets(): RemoteImageSource[] {
   return Array.from(registry.values());
+}
+
+/** Every remote app asset (animal photos, story covers, currency, magic art) for background caching. */
+export function getAllAppAssets(): RemoteImageSource[] {
+  return Array.from(appAssetRegistry.values());
 }
 
 /** True for `{ uri }` image sources (remote), false for bundled `require()` numbers. */

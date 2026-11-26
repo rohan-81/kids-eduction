@@ -26,6 +26,7 @@ import { rhymeAudioService } from '../src/services/rhymeAudioService';
 import { soundEffects } from '../src/services/soundEffects';
 import { ScreenWellnessOverlay } from '../src/components/ScreenWellnessOverlay';
 import { schedulePrefetchCharacterAssets } from '../src/services/assetPrefetchService';
+import { apiService } from '../src/services/apiService';
 
 function GlobalAudioRouteWatcher() {
   const pathname = usePathname();
@@ -120,8 +121,9 @@ function GlobalAudioRouteWatcher() {
 }
 
 export default function RootLayout() {
-  // Download remote 3D renders into the disk cache in the background (once per asset version)
+  // Wake Render backend + download remote renders/assets/audio into local disk cache in the background
   useEffect(() => {
+    apiService.warmUpBackend();
     schedulePrefetchCharacterAssets();
   }, []);
 

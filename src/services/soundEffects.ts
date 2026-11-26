@@ -1,5 +1,41 @@
 import { Platform } from 'react-native';
 import { safeGetApiBaseUrl } from './apiConfig';
+import { getMediaBaseUrl } from '../utils/remoteAssets';
+
+let ExpoFileSystem: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ExpoFileSystem = require('expo-file-system');
+} catch {
+  ExpoFileSystem = null;
+}
+
+function getAnimalAudioCachePath(key: string): string | null {
+  const baseDir = ExpoFileSystem?.documentDirectory || ExpoFileSystem?.cacheDirectory;
+  if (!baseDir) return null;
+  const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return `${baseDir}kidszone_audio/animals/${safeKey}.mp3`;
+}
+
+async function resolveCachedAnimalAudioUri(key: string): Promise<string | null> {
+  const path = getAnimalAudioCachePath(key);
+  if (!path || typeof ExpoFileSystem?.getInfoAsync !== 'function') return null;
+  try {
+    const info = await ExpoFileSystem.getInfoAsync(path);
+    if (info?.exists && (info.size ?? 0) > 500) return path;
+  } catch {}
+  return null;
+}
+
+function cacheRemoteAnimalAudioInBackground(key: string, url: string): void {
+  const path = getAnimalAudioCachePath(key);
+  if (!path || typeof ExpoFileSystem?.downloadAsync !== 'function') return;
+  const dir = path.slice(0, path.lastIndexOf('/') + 1);
+  ExpoFileSystem.makeDirectoryAsync(dir, { intermediates: true })
+    .catch(() => {})
+    .then(() => ExpoFileSystem.downloadAsync(url, path))
+    .catch(() => {});
+}
 
 // Safely obtain native audio player factory if available (Expo SDK 53+ uses expo-audio)
 let createAudioPlayerFn: ((source: any) => any) | null = null;
@@ -22,58 +58,19 @@ try {
   // Native module not linked or not supported
 }
 
+const ANIMAL_AUDIO_KEYS = [
+  'lion', 'tiger', 'cat', 'dog', 'cow', 'peacock', 'bird', 'sparrow',
+  'elephant', 'horse', 'parrot', 'rabbit', 'monkey', 'duck', 'camel', 'deer',
+  'giraffe', 'zebra', 'bear', 'pigeon', 'rooster', 'sheep', 'goat', 'frog',
+  'donkey', 'crow', 'owl', 'bee', 'buffalo', 'fox', 'wolf', 'leopard',
+  'cheetah', 'panda', 'kangaroo', 'hippo', 'rhino', 'squirrel', 'ox', 'turtle',
+  'crocodile', 'koel', 'eagle', 'swan', 'flamingo', 'crane', 'woodpecker',
+  'kingfisher', 'penguin', 'ostrich', 'vulture',
+] as const;
+
+// Minimal bundled fallback; all other compressed animal MP3s stream from backend/media and cache on device storage.
 const ANIMAL_AUDIO_MAP: Record<string, any> = {
-  lion: require('../../assets/audio/animals/lion.mp3'),
-  tiger: require('../../assets/audio/animals/tiger.wav'),
   cat: require('../../assets/audio/animals/cat.mp3'),
-  dog: require('../../assets/audio/animals/dog.mp3'),
-  cow: require('../../assets/audio/animals/cow.mp3'),
-  peacock: require('../../assets/audio/animals/peacock.mp3'),
-  bird: require('../../assets/audio/animals/sparrow.mp3'),
-  sparrow: require('../../assets/audio/animals/sparrow.mp3'),
-  elephant: require('../../assets/audio/animals/elephant.mp3'),
-  horse: require('../../assets/audio/animals/horse.mp3'),
-  parrot: require('../../assets/audio/animals/parrot.wav'),
-  rabbit: require('../../assets/audio/animals/rabbit.mp3'),
-  monkey: require('../../assets/audio/animals/monkey.mp3'),
-  duck: require('../../assets/audio/animals/duck.mp3'),
-  camel: require('../../assets/audio/animals/camel.wav'),
-  deer: require('../../assets/audio/animals/deer.mp3'),
-  giraffe: require('../../assets/audio/animals/giraffe.mp3'),
-  zebra: require('../../assets/audio/animals/zebra.mp3'),
-  bear: require('../../assets/audio/animals/bear.mp3'),
-  pigeon: require('../../assets/audio/animals/pigeon.mp3'),
-  rooster: require('../../assets/audio/animals/rooster.mp3'),
-  sheep: require('../../assets/audio/animals/sheep.mp3'),
-  goat: require('../../assets/audio/animals/goat.mp3'),
-  frog: require('../../assets/audio/animals/frog.mp3'),
-  donkey: require('../../assets/audio/animals/donkey.wav'),
-  crow: require('../../assets/audio/animals/crow.mp3'),
-  owl: require('../../assets/audio/animals/owl.mp3'),
-  bee: require('../../assets/audio/animals/bee.mp3'),
-  buffalo: require('../../assets/audio/animals/buffalo.mp3'),
-  fox: require('../../assets/audio/animals/fox.mp3'),
-  wolf: require('../../assets/audio/animals/wolf.mp3'),
-  leopard: require('../../assets/audio/animals/leopard.mp3'),
-  cheetah: require('../../assets/audio/animals/cheetah.mp3'),
-  panda: require('../../assets/audio/animals/panda.mp3'),
-  kangaroo: require('../../assets/audio/animals/kangaroo.mp3'),
-  hippo: require('../../assets/audio/animals/hippo.mp3'),
-  rhino: require('../../assets/audio/animals/rhino.mp3'),
-  squirrel: require('../../assets/audio/animals/squirrel.mp3'),
-  ox: require('../../assets/audio/animals/ox.mp3'),
-  turtle: require('../../assets/audio/animals/turtle.wav'),
-  crocodile: require('../../assets/audio/animals/crocodile.mp3'),
-  koel: require('../../assets/audio/animals/koel.mp3'),
-  eagle: require('../../assets/audio/animals/eagle.mp3'),
-  swan: require('../../assets/audio/animals/swan.mp3'),
-  flamingo: require('../../assets/audio/animals/flamingo.mp3'),
-  crane: require('../../assets/audio/animals/crane.mp3'),
-  woodpecker: require('../../assets/audio/animals/woodpecker.mp3'),
-  kingfisher: require('../../assets/audio/animals/kingfisher.mp3'),
-  penguin: require('../../assets/audio/animals/penguin.mp3'),
-  ostrich: require('../../assets/audio/animals/ostrich.mp3'),
-  vulture: require('../../assets/audio/animals/vulture.mp3'),
 };
 
 const WEB_AUDIO_FILE_MAP: Record<string, string> = {
@@ -442,7 +439,7 @@ class SoundEffectsService {
 
       const key = (animalKey || '').toLowerCase();
       let matchedKey: string | null = null;
-      for (const k of Object.keys(ANIMAL_AUDIO_MAP)) {
+      for (const k of ANIMAL_AUDIO_KEYS) {
         if (key.includes(k)) {
           matchedKey = k;
           break;
@@ -506,6 +503,8 @@ class SoundEffectsService {
       const bundledSource = ANIMAL_AUDIO_MAP[matchedKey];
       const apiBase = safeGetApiBaseUrl();
       const serverOrigin = apiBase.replace(/\/api\/?$/, '');
+      const canonicalAudioKey = matchedKey === 'bird' ? 'sparrow' : matchedKey;
+      const mediaBase = getMediaBaseUrl();
 
       let streamUrl: string;
       if (customAudioUrl && (customAudioUrl.startsWith('http://') || customAudioUrl.startsWith('https://'))) {
@@ -513,8 +512,11 @@ class SoundEffectsService {
       } else if (customAudioUrl && customAudioUrl.startsWith('/')) {
         streamUrl = `${serverOrigin}${customAudioUrl}`;
       } else {
-        streamUrl = `${apiBase}/lessons/animal-audio/${matchedKey}/`;
+        streamUrl = `${mediaBase}/audio/animals/${canonicalAudioKey}.mp3`;
       }
+
+      const cachedLocalUri = Platform.OS !== 'web' ? await resolveCachedAnimalAudioUri(canonicalAudioKey) : null;
+      const nativeCachedSource = cachedLocalUri ? { uri: cachedLocalUri } : null;
 
       // Ensure native audio mode supports playback in silent/vibrate mode
       if (setAudioModeAsyncFn && Platform.OS !== 'web') {
@@ -581,12 +583,12 @@ class SoundEffectsService {
         return false;
       }
 
-      // Native Audio playback via expo-audio (Priority 1: Pre-bundled local asset)
+      // Native Audio playback via expo-audio (Priority 1: Local disk cache / bundled asset)
       if (createAudioPlayerFn) {
-        // Priority 1: Instant bundled offline asset (zero network latency, offline-ready)
-        if (bundledSource) {
+        const localSource = nativeCachedSource || bundledSource;
+        if (localSource) {
           try {
-            const player = createAudioPlayerFn(bundledSource);
+            const player = createAudioPlayerFn(localSource);
             if (player) {
               this.currentAnimalSound = player;
               try { player.volume = 1.0; } catch {}
@@ -600,13 +602,14 @@ class SoundEffectsService {
               return true;
             }
           } catch (err) {
-            console.warn('[soundEffects] Bundled native animal sound threw, trying remote:', err);
+            console.warn('[soundEffects] Local native animal sound threw, trying remote:', err);
           }
         }
 
-        // Priority 2: Remote stream fallback
+        // Priority 2: Remote stream + cache to local storage for instant offline replay
         if (streamUrl) {
           try {
+            cacheRemoteAnimalAudioInBackground(canonicalAudioKey, streamUrl);
             const remoteSource = { uri: streamUrl };
             const player = createAudioPlayerFn(remoteSource);
             if (player) {
@@ -629,11 +632,12 @@ class SoundEffectsService {
 
       // Priority 3: Fallback via expo-av Sound (for Expo Go & broad device compatibility)
       if (!this.currentAnimalSound && ExpoAvAudio?.Sound) {
-        if (bundledSource) {
+        const localAvSource = nativeCachedSource || bundledSource;
+        if (localAvSource) {
           try {
             const soundInstance = new ExpoAvAudio.Sound();
             this.currentAnimalSound = soundInstance;
-            await soundInstance.loadAsync(bundledSource, { shouldPlay: true, volume: 1.0 });
+            await soundInstance.loadAsync(localAvSource, { shouldPlay: true, volume: 1.0 });
 
             this.animalStopTimeout = setTimeout(() => {
               if (this.currentAnimalSound === soundInstance) {
@@ -642,12 +646,13 @@ class SoundEffectsService {
             }, maxDurationMs);
             return true;
           } catch (avErr) {
-            console.warn('[soundEffects] expo-av bundled animal sound failed:', avErr);
+            console.warn('[soundEffects] expo-av local animal sound failed:', avErr);
           }
         }
 
         if (streamUrl) {
           try {
+            cacheRemoteAnimalAudioInBackground(canonicalAudioKey, streamUrl);
             const soundInstance = new ExpoAvAudio.Sound();
             this.currentAnimalSound = soundInstance;
             await soundInstance.loadAsync({ uri: streamUrl }, { shouldPlay: true, volume: 1.0 });

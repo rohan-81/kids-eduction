@@ -1,7 +1,7 @@
 import { StoryBook, StoryScene } from '../data/storiesData';
 import { formatChildName } from './nameTransliterator';
 import { AppLanguage } from '../types';
-import { characterAsset } from './remoteAssets';
+import { characterAsset, appAsset } from './remoteAssets';
 
 export interface MagicCompanion {
   id: string;
@@ -55,7 +55,7 @@ export const MAGIC_COMPANIONS: MagicCompanion[] = [
   {
     id: 'elephant',
     emoji: '🐘',
-    image: require('../../assets/images/magic/3d_elephant.webp'),
+    image: appAsset('magic/3d_elephant.webp'),
     nameGu: 'હાથી ગજ્જુ',
     nameHi: 'हाथी गज्जू',
     nameEn: 'Gajju the Elephant',
@@ -88,7 +88,7 @@ export const MAGIC_COMPANIONS: MagicCompanion[] = [
   {
     id: 'parrot',
     emoji: '🦜',
-    image: require('../../assets/images/magic/3d_parrot.webp'),
+    image: appAsset('magic/3d_parrot.webp'),
     nameGu: 'પોપટ મીઠુ',
     nameHi: 'तोता मीठू',
     nameEn: 'Mithu the Parrot',
@@ -99,7 +99,7 @@ export const MAGIC_COMPANIONS: MagicCompanion[] = [
   {
     id: 'puppy',
     emoji: '🐶',
-    image: require('../../assets/images/magic/3d_puppy.webp'),
+    image: appAsset('magic/3d_puppy.webp'),
     nameGu: 'ગલૂડિયું ટોમી',
     nameHi: 'पिल्ला टॉमी',
     nameEn: 'Tommy the Puppy',
@@ -110,7 +110,7 @@ export const MAGIC_COMPANIONS: MagicCompanion[] = [
   {
     id: 'unicorn',
     emoji: '🦄',
-    image: require('../../assets/images/magic/3d_unicorn.webp'),
+    image: appAsset('magic/3d_unicorn.webp'),
     nameGu: 'જાદુઈ યુનિકોર્ન',
     nameHi: 'जादुई यूनिकॉर्न',
     nameEn: 'Sparkle the Unicorn',
@@ -121,7 +121,7 @@ export const MAGIC_COMPANIONS: MagicCompanion[] = [
   {
     id: 'dolphin',
     emoji: '🐬',
-    image: require('../../assets/images/magic/3d_dolphin.webp'),
+    image: appAsset('magic/3d_dolphin.webp'),
     nameGu: 'ડોલ્ફિન ફ્લિપી',
     nameHi: 'डॉल्फ़िन फ़्लिप्पी',
     nameEn: 'Flippy the Dolphin',
@@ -135,7 +135,7 @@ export const MAGIC_THEMES: MagicTheme[] = [
   {
     id: 'rainbow',
     emoji: '🌈',
-    image: require('../../assets/images/magic/quest_rainbow.webp'),
+    image: appAsset('magic/quest_rainbow.webp'),
     titleGu: 'મેઘધનુષ રત્નનું રહસ્ય',
     titleHi: 'इंद्रधनुष रत्न का रहस्य',
     titleEn: 'The Rainbow Crystal Quest',
@@ -147,7 +147,7 @@ export const MAGIC_THEMES: MagicTheme[] = [
   {
     id: 'space',
     emoji: '🚀',
-    image: require('../../assets/images/magic/quest_rocket.webp'),
+    image: appAsset('magic/quest_rocket.webp'),
     titleGu: 'ચાંદામામા અને તારાઓની સફર',
     titleHi: 'चंदा मामा और तारों की सैर',
     titleEn: 'Rocket Journey to the Moon',
@@ -159,7 +159,7 @@ export const MAGIC_THEMES: MagicTheme[] = [
   {
     id: 'icecream',
     emoji: '🍦',
-    image: require('../../assets/images/magic/quest_icecream.webp'),
+    image: appAsset('magic/quest_icecream.webp'),
     titleGu: 'જાદુઈ ચોકલેટ અને આઈસ્ક્રીમ મહેલ',
     titleHi: 'जादुई चॉकलेट व आइसक्रीम महल',
     titleEn: 'The Secret Ice Cream Castle',
@@ -171,7 +171,7 @@ export const MAGIC_THEMES: MagicTheme[] = [
   {
     id: 'dino',
     emoji: '🦕',
-    image: require('../../assets/images/magic/quest_dino.webp'),
+    image: appAsset('magic/quest_dino.webp'),
     titleGu: 'બેબી ડાયનાસોરનું રહસ્યમય જંગલ',
     titleHi: 'बेबी डायनासोर का जादुई जंगल',
     titleEn: 'The Friendly Dino Forest',
@@ -183,7 +183,7 @@ export const MAGIC_THEMES: MagicTheme[] = [
   {
     id: 'ocean',
     emoji: '🌊',
-    image: require('../../assets/images/magic/quest_ocean.webp'),
+    image: appAsset('magic/quest_ocean.webp'),
     titleGu: 'દરિયાઈ મોતી અને સુવર્ણ ખજાનો',
     titleHi: 'समुद्र का जादुई मोती और खजाना',
     titleEn: 'Deep Ocean Golden Treasure',
@@ -195,7 +195,7 @@ export const MAGIC_THEMES: MagicTheme[] = [
   {
     id: 'cloud',
     emoji: '🏰',
-    image: require('../../assets/images/magic/quest_cloud.webp'),
+    image: appAsset('magic/quest_cloud.webp'),
     titleGu: 'વાદળોનો સ્વપ્ન મહેલ',
     titleHi: 'बादलों का उड़ता हुआ महल',
     titleEn: 'The Floating Cloud Castle',
@@ -210,7 +210,7 @@ export const MAGIC_TOOLS: MagicTool[] = [
   {
     id: 'wand',
     emoji: '✨',
-    image: require('../../assets/images/magic/tool_wand.webp'),
+    image: appAsset('magic/tool_wand.webp'),
     nameGu: 'દયાની જાદુઈ લાકડી',
     nameHi: 'दया की जादुई छड़ी',
     nameEn: 'Magic Star Wand',
@@ -218,7 +218,7 @@ export const MAGIC_TOOLS: MagicTool[] = [
   {
     id: 'balloon',
     emoji: '🎈',
-    image: require('../../assets/images/magic/tool_balloon.webp'),
+    image: appAsset('magic/tool_balloon.webp'),
     nameGu: 'ઉડતો જાદુઈ ફુગ્ગો',
     nameHi: 'उड़ता जादुई गुब्बारा',
     nameEn: 'Flying Dream Balloon',
@@ -226,7 +226,7 @@ export const MAGIC_TOOLS: MagicTool[] = [
   {
     id: 'shoes',
     emoji: '👟',
-    image: require('../../assets/images/magic/tool_shoes.webp'),
+    image: appAsset('magic/tool_shoes.webp'),
     nameGu: 'ઝડપી દોડતા સુપર શૂઝ',
     nameHi: 'सुपर स्पीड वाले जूते',
     nameEn: 'Super Speed Star Shoes',
@@ -234,7 +234,7 @@ export const MAGIC_TOOLS: MagicTool[] = [
   {
     id: 'cape',
     emoji: '🦸',
-    image: require('../../assets/images/magic/tool_cape.webp'),
+    image: appAsset('magic/tool_cape.webp'),
     nameGu: 'સુવર્ણ સુપરહીરો કેપ',
     nameHi: 'स्वर्ण जादुई केप',
     nameEn: 'Golden Superhero Cape',
@@ -242,7 +242,7 @@ export const MAGIC_TOOLS: MagicTool[] = [
   {
     id: 'compass',
     emoji: '🧭',
-    image: require('../../assets/images/magic/tool_compass.webp'),
+    image: appAsset('magic/tool_compass.webp'),
     nameGu: 'રહસ્ય શોધક જાદુઈ હોકાયંત્ર',
     nameHi: 'जादुई दिशा-सूचक कम्पास',
     nameEn: 'Magic Star Compass',

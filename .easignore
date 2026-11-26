@@ -19,6 +19,28 @@ __pycache__/
 db.sqlite3
 db.sqlite3-journal
 
+# Non-mobile / build-unused folders (cuts EAS upload archive from ~160 MB to ~4 MB)
+public/
+docs/
+dummy/
+--only/
+scratch/
+sample_templates/
+*.md
+
+# Unused / remote-migrated media in assets/
+assets/images/*.jpg
+assets/images/*.png
+assets/images/*.webp
+!assets/images/splash_boy_pencil.webp
+!assets/images/onboard_boy_jump.webp
+assets/images/currency/
+assets/images/magic/
+assets/images/stories/
+assets/audio/animals/*.wav
+assets/audio/animals/*.mp3
+!assets/audio/animals/cat.mp3
+
 # Tests and scripts
 tests/
 scripts/

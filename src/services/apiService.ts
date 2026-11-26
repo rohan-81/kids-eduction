@@ -85,7 +85,49 @@ export function mergeLesson(bundled: LessonItem | undefined, fresh: LessonItem):
   return merged as LessonItem;
 }
 
+const inFlightRefreshes = new Map<string, Promise<any>>();
+let backendWarmed = false;
+
+async function readJsonCache<T>(key: string): Promise<T | null> {
+  try {
+    const raw = await AsyncStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function dedupedRefresh<T>(key: string, fetcher: () => Promise<T | null>): Promise<T | null> {
+  const existing = inFlightRefreshes.get(key);
+  if (existing) return existing as Promise<T | null>;
+  const promise = fetcher().finally(() => {
+    inFlightRefreshes.delete(key);
+  });
+  inFlightRefreshes.set(key, promise);
+  return promise;
+}
+
 export const apiService = {
+  /** Non-blocking ping at app startup so Render Free tier wakes up before the user taps a cloud screen. */
+  warmUpBackend(): void {
+    if (backendWarmed) return;
+    backendWarmed = true;
+    if (typeof process !== 'undefined' && process.env?.JEST_WORKER_ID) return;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      if (typeof timeoutId === 'object' && typeof (timeoutId as any).unref === 'function') {
+        (timeoutId as any).unref();
+      }
+      fetch(`${safeGetApiBaseUrl()}/lessons/categories/`, {
+        method: 'GET',
+        headers: authService.getAuthHeaders(),
+        signal: controller.signal,
+      })
+        .catch(() => {})
+        .finally(() => clearTimeout(timeoutId));
+    } catch {}
+  },
   /**
    * Single lesson for the detail screen.
    * Order: live backend (/lessons/by-slug/<id>/) -> cached backend lists -> bundled LESSONS.
@@ -132,175 +174,171 @@ export const apiService = {
     category?: string
   ): Promise<LessonItem[]> {
     const cacheKey = `${CACHE_KEYS.LESSONS}_${language || 'all'}_${category || 'all'}`;
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-      const params = new URLSearchParams();
-      if (language) params.append('language', language);
-      if (ageGroup && !category) params.append('age_group', ageGroup);
-      if (category) params.append('category', category);
-
-      const response = await fetch(`${API_BASE_URL}/lessons/?${params.toString()}`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
+    const filterCached = (list: LessonItem[]) => {
+      let filtered = list.filter((lesson) => {
+        const matchLang = !language || lesson.language === 'all' || lesson.language === language;
+        const matchCat = !category || lesson.categoryId === category;
+        const matchAge = category ? true : (!ageGroup || lesson.ageGroup === 'all' || lesson.ageGroup === ageGroup);
+        return matchLang && matchAge && matchCat;
       });
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        if (results.length > 0) {
-          const mapped: LessonItem[] = results.map(mapBackendLesson);
-
-          // Cache fresh lessons for offline instant boot
-          try {
-            await AsyncStorage.setItem(cacheKey, JSON.stringify(mapped));
-            await AsyncStorage.setItem(CACHE_KEYS.LESSONS, JSON.stringify(mapped));
-          } catch { }
-
-          let filtered = mapped;
-          if (ageGroup && category) {
-            filtered = filterLessonsForClass(filtered, ageGroup, category);
-          }
-          return filtered;
-        }
+      if (ageGroup && category) {
+        filtered = filterLessonsForClass(filtered, ageGroup, category);
       }
-    } catch {
-      // Backend offline or timeout - proceed to stale cache
-    }
+      return filtered;
+    };
 
-    // Try stale AsyncStorage cache
-    try {
-      const cached = (await AsyncStorage.getItem(cacheKey)) || (await AsyncStorage.getItem(CACHE_KEYS.LESSONS));
-      if (cached) {
-        const cachedLessons: LessonItem[] = JSON.parse(cached);
-        if (Array.isArray(cachedLessons) && cachedLessons.length > 0) {
-          let filtered = cachedLessons.filter((lesson) => {
-            const matchLang = !language || lesson.language === 'all' || lesson.language === language;
-            const matchCat = !category || lesson.categoryId === category;
-            const matchAge = category ? true : (!ageGroup || lesson.ageGroup === 'all' || lesson.ageGroup === ageGroup);
-            return matchLang && matchAge && matchCat;
+    const refreshFromNetwork = () =>
+      dedupedRefresh(cacheKey, async (): Promise<LessonItem[] | null> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          const params = new URLSearchParams();
+          if (language) params.append('language', language);
+          if (ageGroup && !category) params.append('age_group', ageGroup);
+          if (category) params.append('category', category);
+
+          const response = await fetch(`${API_BASE_URL}/lessons/?${params.toString()}`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
           });
-          if (ageGroup && category) {
-            filtered = filterLessonsForClass(filtered, ageGroup, category);
-          }
-          return filtered;
-        }
-      }
-    } catch { }
+          clearTimeout(timeoutId);
 
-    // Fallback to local bundled lessons
-    let filtered = LESSONS.filter((lesson) => {
-      const matchLang = !language || lesson.language === 'all' || lesson.language === language;
-      const matchCat = !category || lesson.categoryId === category;
-      const matchAge = category ? true : (!ageGroup || lesson.ageGroup === 'all' || lesson.ageGroup === ageGroup);
-      return matchLang && matchAge && matchCat;
-    });
-    if (ageGroup && category) {
-      filtered = filterLessonsForClass(filtered, ageGroup, category);
+          if (response.ok) {
+            const data = await response.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            if (results.length > 0) {
+              const mapped: LessonItem[] = results.map(mapBackendLesson);
+              try {
+                await AsyncStorage.setItem(cacheKey, JSON.stringify(mapped));
+                await AsyncStorage.setItem(CACHE_KEYS.LESSONS, JSON.stringify(mapped));
+              } catch {}
+              return mapped;
+            }
+          }
+        } catch {}
+        return null;
+      });
+
+    // Cache-first for instant UI; refresh quietly in background
+    const cached =
+      (await readJsonCache<LessonItem[]>(cacheKey)) ||
+      (await readJsonCache<LessonItem[]>(CACHE_KEYS.LESSONS));
+    if (Array.isArray(cached) && cached.length > 0) {
+      const hit = filterCached(cached);
+      if (hit.length > 0) {
+        void refreshFromNetwork();
+        return hit;
+      }
     }
-    return filtered;
+
+    const fresh = await refreshFromNetwork();
+    if (fresh && fresh.length > 0) {
+      return ageGroup && category ? filterLessonsForClass(fresh, ageGroup, category) : fresh;
+    }
+
+    return filterCached(LESSONS);
   },
 
   async fetchCategories(): Promise<any[]> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const res = await fetch(`${safeGetApiBaseUrl()}/lessons/categories/`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
+    const refresh = () =>
+      dedupedRefresh(CACHE_KEYS.CATEGORIES, async (): Promise<any[] | null> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+          const res = await fetch(`${safeGetApiBaseUrl()}/lessons/categories/`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const data = await res.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            if (results.length > 0) {
+              try {
+                await AsyncStorage.setItem(CACHE_KEYS.CATEGORIES, JSON.stringify(results));
+              } catch {}
+              return results;
+            }
+          }
+        } catch {}
+        return null;
       });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        if (results.length > 0) {
-          try {
-            await AsyncStorage.setItem(CACHE_KEYS.CATEGORIES, JSON.stringify(results));
-          } catch { }
-          return results;
-        }
-      }
-    } catch { }
 
-    // Try cache
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEYS.CATEGORIES);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch { }
+    const cached = await readJsonCache<any[]>(CACHE_KEYS.CATEGORIES);
+    if (Array.isArray(cached) && cached.length > 0) {
+      void refresh();
+      return cached;
+    }
 
-    return CATEGORIES;
+    const fresh = await refresh();
+    return fresh && fresh.length > 0 ? fresh : CATEGORIES;
   },
 
   async fetchStories(language?: AppLanguage): Promise<StoryBook[]> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
-      const res = await fetch(`${safeGetApiBaseUrl()}/stories/`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        if (results.length > 0) {
-          const mapped: StoryBook[] = results.map((item: any) => {
-            const slug = item.slug || String(item.id);
-            // Bundled copy supplies the drawn-scene composition when the backend holds image URLs.
-            const bundled = STORIES_DATA.find((s) => s.id === slug);
-            const coverIsImage = isImageRef(item.cover_image);
-            return {
-              id: slug,
-              titleGu: item.title_gujarati || item.title,
-              titleHi: item.title_hindi || item.title,
-              titleEn: item.title,
-              coverEmoji: coverIsImage ? bundled?.coverEmoji || '📖' : item.cover_image || bundled?.coverEmoji || '📖',
-              coverImage: coverIsImage ? withArtVersion(toAbsoluteImageUrl(item.cover_image, API_BASE_URL)) : undefined,
-              bgColor: '#E8F8F5',
-              moralGu: item.moral_gujarati || item.moral,
-              moralHi: item.moral_hindi || item.moral,
-              moralEn: item.moral,
-              category: item.category || undefined,
-              ageGroup: item.age_group || undefined,
-              scenes: (item.scenes || []).map((sc: any) => ({
-                page: sc.scene_number,
-                image: isImageRef(sc.illustration) ? withArtVersion(toAbsoluteImageUrl(sc.illustration, API_BASE_URL)) : undefined,
-                illustration: isImageRef(sc.illustration)
-                  ? bundled?.scenes[(sc.scene_number || 1) - 1]?.illustration || bundled?.coverEmoji || '📖'
-                  : sc.illustration || '📖',
-                textGu: sc.text_gujarati || sc.text_english,
-                textHi: sc.text_hindi || sc.text_english,
-                textEn: sc.text_english,
-                choice: Array.isArray(sc.choices)
-                  ? (sc.choices.length > 0 ? sc.choices[0] : undefined)
-                  : (sc.choices?.options ? sc.choices : undefined),
-              })),
-            };
+    const refresh = () =>
+      dedupedRefresh(CACHE_KEYS.STORIES, async (): Promise<StoryBook[] | null> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+          const res = await fetch(`${safeGetApiBaseUrl()}/stories/`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
           });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const data = await res.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            if (results.length > 0) {
+              const mapped: StoryBook[] = results.map((item: any) => {
+                const slug = item.slug || String(item.id);
+                const bundled = STORIES_DATA.find((s) => s.id === slug);
+                const coverIsImage = isImageRef(item.cover_image);
+                return {
+                  id: slug,
+                  titleGu: item.title_gujarati || item.title,
+                  titleHi: item.title_hindi || item.title,
+                  titleEn: item.title,
+                  coverEmoji: coverIsImage ? bundled?.coverEmoji || '📖' : item.cover_image || bundled?.coverEmoji || '📖',
+                  coverImage: coverIsImage ? withArtVersion(toAbsoluteImageUrl(item.cover_image, API_BASE_URL)) : undefined,
+                  bgColor: '#E8F8F5',
+                  moralGu: item.moral_gujarati || item.moral,
+                  moralHi: item.moral_hindi || item.moral,
+                  moralEn: item.moral,
+                  category: item.category || undefined,
+                  ageGroup: item.age_group || undefined,
+                  scenes: (item.scenes || []).map((sc: any) => ({
+                    page: sc.scene_number,
+                    image: isImageRef(sc.illustration) ? withArtVersion(toAbsoluteImageUrl(sc.illustration, API_BASE_URL)) : undefined,
+                    illustration: isImageRef(sc.illustration)
+                      ? bundled?.scenes[(sc.scene_number || 1) - 1]?.illustration || bundled?.coverEmoji || '📖'
+                      : sc.illustration || '📖',
+                    textGu: sc.text_gujarati || sc.text_english,
+                    textHi: sc.text_hindi || sc.text_english,
+                    textEn: sc.text_english,
+                    choice: Array.isArray(sc.choices)
+                      ? (sc.choices.length > 0 ? sc.choices[0] : undefined)
+                      : (sc.choices?.options ? sc.choices : undefined),
+                  })),
+                };
+              });
+              try {
+                await AsyncStorage.setItem(CACHE_KEYS.STORIES, JSON.stringify(mapped));
+              } catch {}
+              return mapped;
+            }
+          }
+        } catch {}
+        return null;
+      });
 
-          try {
-            await AsyncStorage.setItem(CACHE_KEYS.STORIES, JSON.stringify(mapped));
-          } catch { }
-          return mapped;
-        }
-      }
-    } catch { }
+    const cached = await readJsonCache<StoryBook[]>(CACHE_KEYS.STORIES);
+    if (Array.isArray(cached) && cached.length > 0) {
+      void refresh();
+      return cached;
+    }
 
-    // Stale cache
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEYS.STORIES);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch { }
-
-    return STORIES_DATA;
+    const fresh = await refresh();
+    return fresh && fresh.length > 0 ? fresh : STORIES_DATA;
   },
 
   async fetchGameQuestions(
@@ -309,74 +347,74 @@ export const apiService = {
     ageGroup?: AgeGroup
   ): Promise<GameQuestion[]> {
     const cacheKey = `${CACHE_KEYS.GAME_QUESTIONS_PREFIX}${gameType}_${language}_${ageGroup || 'all'}`;
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const refresh = () =>
+      dedupedRefresh(cacheKey, async (): Promise<GameQuestion[] | null> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+          const params = new URLSearchParams();
+          params.append('question_type', gameType);
+          params.append('language', language);
+          if (ageGroup) params.append('age_group', ageGroup);
 
-      const params = new URLSearchParams();
-      params.append('question_type', gameType);
-      params.append('language', language);
-      if (ageGroup) params.append('age_group', ageGroup);
+          const res = await fetch(`${API_BASE_URL}/questions/game-questions/?${params.toString()}`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
 
-      const res = await fetch(`${API_BASE_URL}/questions/game-questions/?${params.toString()}`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+          if (res.ok) {
+            const data = await res.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            if (results.length > 0) {
+              const mapped: GameQuestion[] = results
+                .filter((item: any) => {
+                  if (!item || !item.question_text) return false;
+                  if (!Array.isArray(item.options) || item.options.length < (gameType === 'picture-puzzle' ? 1 : 2)) return false;
+                  return true;
+                })
+                .map((item: any) => ({
+                  id: String(item.stable_id || item.id),
+                  gameType: (item.question_type || gameType) as GameType,
+                  prompt: item.question_text || '',
+                  audioText: item.audio_text || item.question_text || '',
+                  displayVisual: item.display_visual,
+                  countTarget: item.count_target,
+                  options: Array.isArray(item.options) ? item.options : [],
+                  correctOptionId: String(item.correct_option_id || item.correct_answer || '1'),
+                  ageGroup: item.age_group,
+                  explanation: item.explanation,
+                  hint: item.hint,
+                  image: item.image,
+                  audio: item.audio,
+                }));
 
-      if (res.ok) {
-        const data = await res.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        if (results.length > 0) {
-          const mapped: GameQuestion[] = results
-            .filter((item: any) => {
-              if (!item || !item.question_text) return false;
-              if (!Array.isArray(item.options) || item.options.length < (gameType === 'picture-puzzle' ? 1 : 2)) return false;
-              return true;
-            })
-            .map((item: any) => ({
-              id: String(item.stable_id || item.id),
-              gameType: (item.question_type || gameType) as GameType,
-              prompt: item.question_text || '',
-              audioText: item.audio_text || item.question_text || '',
-              displayVisual: item.display_visual,
-              countTarget: item.count_target,
-              options: Array.isArray(item.options) ? item.options : [],
-              correctOptionId: String(item.correct_option_id || item.correct_answer || '1'),
-              ageGroup: item.age_group,
-              explanation: item.explanation,
-              hint: item.hint,
-              image: item.image,
-              audio: item.audio,
-            }));
-
-          if (mapped.length > 0) {
-            try {
-              await AsyncStorage.setItem(cacheKey, JSON.stringify(mapped));
-            } catch { }
-            return mapped;
+              if (mapped.length > 0) {
+                try {
+                  await AsyncStorage.setItem(cacheKey, JSON.stringify(mapped));
+                } catch {}
+                return mapped;
+              }
+            } else {
+              try {
+                await AsyncStorage.removeItem(cacheKey);
+              } catch {}
+              return [];
+            }
           }
-        } else {
-          // Empty 200 response: server explicitly has 0 active questions.
-          // Clear stale cache so deactivated content does not reappear.
-          try {
-            await AsyncStorage.removeItem(cacheKey);
-          } catch { }
-          return [];
-        }
-      }
-    } catch { }
+        } catch {}
+        return null;
+      });
 
-    // Stale cache (only on network failure)
-    try {
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      }
-    } catch { }
+    const cached = await readJsonCache<GameQuestion[]>(cacheKey);
+    if (Array.isArray(cached) && cached.length > 0) {
+      void refresh();
+      return cached;
+    }
 
-    // Local bundled fallback
+    const fresh = await refresh();
+    if (fresh !== null) return fresh;
+
     const rawList =
       GAME_QUESTIONS[gameType]?.[language] ||
       GAME_QUESTIONS[gameType]?.en ||
@@ -385,214 +423,232 @@ export const apiService = {
   },
 
   async fetchBadges(language?: AppLanguage): Promise<BadgeItemDef[]> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const res = await fetch(`${API_BASE_URL}/rewards/badges/`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
+    const attachFunctions = (items: any[]): BadgeItemDef[] => {
+      const defaultMap = new Map(BADGE_DEFINITIONS.map((b) => [b.id, b]));
+      return items.map((item: any) => {
+        const def = defaultMap.get(item.id);
+        return {
+          ...item,
+          checkUnlocked: def?.checkUnlocked || ((_p: any) => true),
+          getProgress: def?.getProgress || ((_p: any) => ({ current: 1, total: 1 })),
+        };
       });
-      clearTimeout(timeoutId);
+    };
 
-      if (res.ok) {
-        const data = await res.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        if (results.length > 0) {
-          const defaultMap = new Map(BADGE_DEFINITIONS.map((b) => [b.id, b]));
-          const mapped: BadgeItemDef[] = results.map((item: any) => {
-            const def = defaultMap.get(item.slug);
-            return {
-              id: item.slug,
-              emoji: item.icon || def?.emoji || '🏆',
-              nameGu: item.name_gu || def?.nameGu || item.title,
-              nameHi: item.name_hi || def?.nameHi || item.title,
-              nameEn: item.name_en || def?.nameEn || item.title,
-              descGu: item.desc_gu || def?.descGu || item.description || '',
-              descHi: item.desc_hi || def?.descHi || item.description || '',
-              descEn: item.desc_en || def?.descEn || item.description || '',
-              reqGu: item.req_gu || def?.reqGu || '',
-              reqHi: item.req_hi || def?.reqHi || '',
-              reqEn: item.req_en || def?.reqEn || '',
-              rewardCoins: item.reward_coins || def?.rewardCoins || 20,
-              iconBg: def?.iconBg || '#FEF3C7',
-              iconBorder: def?.iconBorder || '#FDE68A',
-              checkUnlocked: def?.checkUnlocked || ((p: any) => (p.completedLessons?.length || 0) >= (item.requirement_value || 1)),
-              getProgress: def?.getProgress || ((p: any) => ({
-                current: Math.min(p.completedLessons?.length || 0, item.requirement_value || 1),
-                total: item.requirement_value || 1,
-              })),
-            };
+    const refresh = () =>
+      dedupedRefresh(CACHE_KEYS.BADGES, async (): Promise<BadgeItemDef[] | null> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`${API_BASE_URL}/rewards/badges/`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
           });
+          clearTimeout(timeoutId);
 
-          try {
-            await AsyncStorage.setItem(CACHE_KEYS.BADGES, JSON.stringify(mapped));
-          } catch { }
-          return mapped;
-        }
-      }
-    } catch { }
+          if (res.ok) {
+            const data = await res.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            if (results.length > 0) {
+              const defaultMap = new Map(BADGE_DEFINITIONS.map((b) => [b.id, b]));
+              const mapped: BadgeItemDef[] = results.map((item: any) => {
+                const def = defaultMap.get(item.slug);
+                return {
+                  id: item.slug,
+                  emoji: item.icon || def?.emoji || '🏆',
+                  nameGu: item.name_gu || def?.nameGu || item.title,
+                  nameHi: item.name_hi || def?.nameHi || item.title,
+                  nameEn: item.name_en || def?.nameEn || item.title,
+                  descGu: item.desc_gu || def?.descGu || item.description || '',
+                  descHi: item.desc_hi || def?.descHi || item.description || '',
+                  descEn: item.desc_en || def?.descEn || item.description || '',
+                  reqGu: item.req_gu || def?.reqGu || '',
+                  reqHi: item.req_hi || def?.reqHi || '',
+                  reqEn: item.req_en || def?.reqEn || '',
+                  rewardCoins: item.reward_coins || def?.rewardCoins || 20,
+                  iconBg: def?.iconBg || '#FEF3C7',
+                  iconBorder: def?.iconBorder || '#FDE68A',
+                  checkUnlocked: def?.checkUnlocked || ((p: any) => (p.completedLessons?.length || 0) >= (item.requirement_value || 1)),
+                  getProgress: def?.getProgress || ((p: any) => ({
+                    current: Math.min(p.completedLessons?.length || 0, item.requirement_value || 1),
+                    total: item.requirement_value || 1,
+                  })),
+                };
+              });
+              try {
+                await AsyncStorage.setItem(CACHE_KEYS.BADGES, JSON.stringify(mapped));
+              } catch {}
+              return mapped;
+            }
+          }
+        } catch {}
+        return null;
+      });
 
-    // Stale cache
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEYS.BADGES);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const defaultMap = new Map(BADGE_DEFINITIONS.map((b) => [b.id, b]));
-          return parsed.map((item: any) => {
-            const def = defaultMap.get(item.id);
-            return {
-              ...item,
-              checkUnlocked: def?.checkUnlocked || ((_p: any) => true),
-              getProgress: def?.getProgress || ((_p: any) => ({ current: 1, total: 1 })),
-            };
-          });
-        }
-      }
-    } catch { }
+    const cached = await readJsonCache<any[]>(CACHE_KEYS.BADGES);
+    if (Array.isArray(cached) && cached.length > 0) {
+      void refresh();
+      return attachFunctions(cached);
+    }
 
-    return BADGE_DEFINITIONS;
+    const fresh = await refresh();
+    return fresh && fresh.length > 0 ? fresh : BADGE_DEFINITIONS;
   },
 
   /**
    * Rhymes for the Rhymes studio, already in UI shape.
-   * Order: live backend -> last good backend response (AsyncStorage) -> bundled RHYMES_DATA.
-   * Backend rows without lyrics fall back to the bundled rhyme of the same slug, or are skipped.
+   * Order: cached AsyncStorage (instant) + background refresh -> live backend -> bundled RHYMES_DATA.
    */
   async fetchRhymes(): Promise<RhymeItem[]> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-    try {
-      const res = await fetch(`${API_BASE_URL}/rhymes/`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        const mapped = mapBackendRhymes(results);
-        if (mapped.length > 0) {
-          try {
-            await AsyncStorage.setItem(CACHE_KEYS.RHYMES, JSON.stringify(mapped));
-          } catch { }
-          return mapped;
+    const refresh = () =>
+      dedupedRefresh(CACHE_KEYS.RHYMES, async (): Promise<RhymeItem[] | null> => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        try {
+          const res = await fetch(`${API_BASE_URL}/rhymes/`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            const mapped = mapBackendRhymes(results);
+            if (mapped.length > 0) {
+              try {
+                await AsyncStorage.setItem(CACHE_KEYS.RHYMES, JSON.stringify(mapped));
+              } catch {}
+              return mapped;
+            }
+          }
+        } catch {
+        } finally {
+          clearTimeout(timeoutId);
         }
+        return null;
+      });
+
+    const cached = await readJsonCache<any[]>(CACHE_KEYS.RHYMES);
+    if (Array.isArray(cached) && cached.length > 0 && Array.isArray(cached[0]?.lines)) {
+      const current = cached.filter((r: any) => !isRetiredRhymeId(r?.id));
+      if (current.length > 0) {
+        void refresh();
+        return current;
       }
-    } catch {
-    } finally {
-      clearTimeout(timeoutId);
     }
 
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEYS.RHYMES);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Only trust caches written in the mapped UI shape (older builds cached raw rows).
-        if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0]?.lines)) {
-          // Caches written before the licensing update may still list withdrawn rhymes.
-          const current = parsed.filter((r: any) => !isRetiredRhymeId(r?.id));
-          if (current.length > 0) return current;
-        }
-      }
-    } catch { }
-
-    return RHYMES_DATA;
+    const fresh = await refresh();
+    return fresh && fresh.length > 0 ? fresh : RHYMES_DATA;
   },
 
   /**
    * Sticker Album catalogue.
-   * Order: live backend (/rewards/stickers/) -> last good response (AsyncStorage) -> bundled STICKER_CATALOG.
+   * Order: cached AsyncStorage (instant) + background refresh -> live backend -> bundled STICKER_CATALOG.
    */
   async fetchStickers(): Promise<StickerItem[]> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-    try {
-      const res = await fetch(`${API_BASE_URL}/rewards/stickers/`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const mapped = mapBackendStickers(Array.isArray(data) ? data : data?.results || []);
-        if (mapped.length > 0) {
-          try {
-            await AsyncStorage.setItem(CACHE_KEYS.STICKERS, JSON.stringify(mapped));
-          } catch { }
-          return mapped;
+    const refresh = () =>
+      dedupedRefresh(CACHE_KEYS.STICKERS, async (): Promise<StickerItem[] | null> => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+        try {
+          const res = await fetch(`${API_BASE_URL}/rewards/stickers/`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const mapped = mapBackendStickers(Array.isArray(data) ? data : data?.results || []);
+            if (mapped.length > 0) {
+              try {
+                await AsyncStorage.setItem(CACHE_KEYS.STICKERS, JSON.stringify(mapped));
+              } catch {}
+              return mapped;
+            }
+          }
+        } catch {
+        } finally {
+          clearTimeout(timeoutId);
         }
-      }
-    } catch {
-    } finally {
-      clearTimeout(timeoutId);
+        return null;
+      });
+
+    const cached = await readJsonCache<any[]>(CACHE_KEYS.STICKERS);
+    if (Array.isArray(cached) && cached.length > 0 && cached[0]?.name) {
+      void refresh();
+      return cached;
     }
 
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEYS.STICKERS);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.name) return parsed;
-      }
-    } catch { }
-
-    return STICKER_CATALOG;
+    const fresh = await refresh();
+    return fresh && fresh.length > 0 ? fresh : STICKER_CATALOG;
   },
 
   async fetchAdventureLevels(): Promise<any[]> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const res = await fetch(`${safeGetApiBaseUrl()}/gamification/levels/`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
+    const refresh = () =>
+      dedupedRefresh(CACHE_KEYS.ADVENTURE, async (): Promise<any[] | null> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`${safeGetApiBaseUrl()}/gamification/levels/`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const data = await res.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            if (results.length > 0) {
+              try {
+                await AsyncStorage.setItem(CACHE_KEYS.ADVENTURE, JSON.stringify(results));
+              } catch {}
+              return results;
+            }
+          }
+        } catch {}
+        return null;
       });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        if (results.length > 0) {
-          try {
-            await AsyncStorage.setItem(CACHE_KEYS.ADVENTURE, JSON.stringify(results));
-          } catch { }
-          return results;
-        }
-      }
-    } catch { }
 
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEYS.ADVENTURE);
-      if (cached) return JSON.parse(cached);
-    } catch { }
+    const cached = await readJsonCache<any[]>(CACHE_KEYS.ADVENTURE);
+    if (Array.isArray(cached) && cached.length > 0) {
+      void refresh();
+      return cached;
+    }
 
-    return ADVENTURE_LEVELS;
+    const fresh = await refresh();
+    return fresh && fresh.length > 0 ? fresh : ADVENTURE_LEVELS;
   },
 
   async fetchColoringTemplates(): Promise<any[]> {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const res = await fetch(`${safeGetApiBaseUrl()}/creative/coloring/`, {
-        headers: authService.getAuthHeaders(),
-        signal: controller.signal,
+    const refresh = () =>
+      dedupedRefresh(CACHE_KEYS.COLORING, async (): Promise<any[] | null> => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`${safeGetApiBaseUrl()}/creative/coloring/`, {
+            headers: authService.getAuthHeaders(),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const data = await res.json();
+            const results = Array.isArray(data) ? data : (data?.results || []);
+            if (results.length > 0) {
+              try {
+                await AsyncStorage.setItem(CACHE_KEYS.COLORING, JSON.stringify(results));
+              } catch {}
+              return results;
+            }
+          }
+        } catch {}
+        return null;
       });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json();
-        const results = Array.isArray(data) ? data : (data?.results || []);
-        if (results.length > 0) {
-          try {
-            await AsyncStorage.setItem(CACHE_KEYS.COLORING, JSON.stringify(results));
-          } catch { }
-          return results;
-        }
-      }
-    } catch { }
 
-    try {
-      const cached = await AsyncStorage.getItem(CACHE_KEYS.COLORING);
-      if (cached) return JSON.parse(cached);
-    } catch { }
+    const cached = await readJsonCache<any[]>(CACHE_KEYS.COLORING);
+    if (Array.isArray(cached) && cached.length > 0) {
+      void refresh();
+      return cached;
+    }
 
-    return COLORING_TEMPLATES;
+    const fresh = await refresh();
+    return fresh && fresh.length > 0 ? fresh : COLORING_TEMPLATES;
   },
 
   async submitQuestionAnswer(questionId: string | number, selectedAnswer: string, childProfileId?: number): Promise<any> {

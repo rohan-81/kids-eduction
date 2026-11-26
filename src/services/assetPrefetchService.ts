@@ -8,29 +8,49 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
-import { CHARACTER_ASSET_VERSION, getAllCharacterAssets } from '../utils/remoteAssets';
-// Importing the registries populates the remote asset list.
+import { Platform } from 'react-native';
+import {
+  CHARACTER_ASSET_VERSION,
+  APP_ASSET_VERSION,
+  getAllCharacterAssets,
+  getAllAppAssets,
+  getMediaBaseUrl,
+} from '../utils/remoteAssets';
+// Importing the registries populates the remote asset lists.
 import '../utils/animalRenders';
 import '../utils/natureRenders';
 import '../utils/extraRenders';
 import '../utils/rhymeRenders';
-import '../utils/imageHelper'; // story characters
-import '../utils/magicStoryGenerator'; // magic story companions
+import '../utils/imageHelper'; // story characters + app assets
+import '../utils/magicStoryGenerator'; // magic story companions, themes & tools
 import '../components/SubjectBadgeIcons'; // topic badges
 
 const DONE_KEY = '@kidszone_char_prefetch_done';
-const BATCH_SIZE = 8;
-const START_DELAY_MS = 6000;
+const APP_ASSETS_DONE_KEY = '@kidszone_app_assets_prefetch_done';
+const ANIMAL_AUDIO_DONE_KEY = '@kidszone_animal_audio_prefetch_done';
+const BATCH_SIZE = 4;
+const BATCH_PAUSE_MS = 120;
+const START_DELAY_MS = 3500;
 
 let started = false;
 
-export async function prefetchCharacterAssets(): Promise<boolean> {
-  const marker = `${CHARACTER_ASSET_VERSION}:${getAllCharacterAssets().length}`;
+const ANIMAL_KEYS_TO_PREFETCH = [
+  'lion', 'tiger', 'cat', 'dog', 'cow', 'peacock', 'sparrow', 'elephant',
+  'horse', 'parrot', 'rabbit', 'monkey', 'duck', 'camel', 'deer', 'giraffe',
+  'zebra', 'bear', 'pigeon', 'rooster', 'sheep', 'goat', 'frog', 'donkey',
+  'crow', 'owl', 'bee', 'buffalo', 'fox', 'wolf', 'leopard', 'cheetah',
+  'panda', 'kangaroo', 'hippo', 'rhino', 'squirrel', 'ox', 'turtle',
+  'crocodile', 'koel', 'eagle', 'swan', 'flamingo', 'crane', 'woodpecker',
+  'kingfisher', 'penguin', 'ostrich', 'vulture',
+];
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function prefetchImageUrls(urls: string[], doneKey: string, marker: string): Promise<boolean> {
   try {
-    if ((await AsyncStorage.getItem(DONE_KEY)) === marker) return true;
+    if ((await AsyncStorage.getItem(doneKey)) === marker) return true;
   } catch {}
 
-  const urls = getAllCharacterAssets().map((s) => s.uri);
   let allOk = true;
   for (let i = 0; i < urls.length; i += BATCH_SIZE) {
     try {
@@ -40,11 +60,78 @@ export async function prefetchCharacterAssets(): Promise<boolean> {
       allOk = false;
       break; // offline: stop now, retry next launch
     }
+    if (typeof process === 'undefined' || !process.env?.JEST_WORKER_ID) {
+      await sleep(BATCH_PAUSE_MS);
+    }
   }
 
   if (allOk) {
     try {
-      await AsyncStorage.setItem(DONE_KEY, marker);
+      await AsyncStorage.setItem(doneKey, marker);
+    } catch {}
+  }
+  return allOk;
+}
+
+export async function prefetchCharacterAssets(): Promise<boolean> {
+  const urls = getAllCharacterAssets().map((s) => s.uri);
+  const marker = `${CHARACTER_ASSET_VERSION}:${urls.length}`;
+  return prefetchImageUrls(urls, DONE_KEY, marker);
+}
+
+/** Downloads compressed app images (animals, stories, currency, magic) into disk cache for offline use. */
+export async function prefetchAppAssets(): Promise<boolean> {
+  const urls = getAllAppAssets().map((s) => s.uri);
+  if (urls.length === 0) return true;
+  const marker = `${APP_ASSET_VERSION}:${urls.length}`;
+  return prefetchImageUrls(urls, APP_ASSETS_DONE_KEY, marker);
+}
+
+/** Downloads compressed animal MP3s (~1 MB total) to local mobile storage once for instant offline playback. */
+export async function prefetchAnimalAudio(): Promise<boolean> {
+  if (Platform.OS === 'web') return true;
+  const marker = `v1:${ANIMAL_KEYS_TO_PREFETCH.length}`;
+  try {
+    if ((await AsyncStorage.getItem(ANIMAL_AUDIO_DONE_KEY)) === marker) return true;
+  } catch {}
+
+  let FileSystem: any = null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    FileSystem = require('expo-file-system');
+  } catch {
+    return false;
+  }
+  const baseDir = FileSystem?.documentDirectory || FileSystem?.cacheDirectory;
+  if (!baseDir || typeof FileSystem?.downloadAsync !== 'function') return false;
+
+  const audioDir = `${baseDir}kidszone_audio/animals/`;
+  try {
+    await FileSystem.makeDirectoryAsync(audioDir, { intermediates: true });
+  } catch {}
+
+  const mediaBase = getMediaBaseUrl();
+  let allOk = true;
+  for (const key of ANIMAL_KEYS_TO_PREFETCH) {
+    const target = `${audioDir}${key}.mp3`;
+    try {
+      const info = await FileSystem.getInfoAsync(target);
+      if (info?.exists && (info.size ?? 0) > 500) continue;
+      const res = await FileSystem.downloadAsync(`${mediaBase}/audio/animals/${key}.mp3`, target);
+      if (res?.status && res.status >= 400) {
+        allOk = false;
+        try { await FileSystem.deleteAsync(target, { idempotent: true }); } catch {}
+      }
+    } catch {
+      allOk = false;
+      break;
+    }
+    await sleep(60);
+  }
+
+  if (allOk) {
+    try {
+      await AsyncStorage.setItem(ANIMAL_AUDIO_DONE_KEY, marker);
     } catch {}
   }
   return allOk;
@@ -54,7 +141,13 @@ export async function prefetchCharacterAssets(): Promise<boolean> {
 export function schedulePrefetchCharacterAssets(delayMs: number = START_DELAY_MS): void {
   if (started) return;
   started = true;
-  setTimeout(() => {
-    prefetchCharacterAssets().catch(() => {});
+  const timer = setTimeout(() => {
+    prefetchCharacterAssets()
+      .then(() => prefetchAppAssets())
+      .then(() => prefetchAnimalAudio())
+      .catch(() => {});
   }, delayMs);
+  if (typeof timer === 'object' && typeof (timer as any).unref === 'function') {
+    (timer as any).unref();
+  }
 }

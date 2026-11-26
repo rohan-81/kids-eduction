@@ -3,6 +3,21 @@ import { RhymeItem } from '../data/rhymesData';
 import { safeGetApiBaseUrl, API_BASE_URL } from './apiConfig';
 import { getMediaBaseUrl } from '../utils/remoteAssets';
 
+let ExpoFileSystem: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  ExpoFileSystem = require('expo-file-system');
+} catch {
+  ExpoFileSystem = null;
+}
+
+function getRhymeCachePath(rhymeId: string): string | null {
+  const baseDir = ExpoFileSystem?.documentDirectory || ExpoFileSystem?.cacheDirectory;
+  if (!baseDir) return null;
+  const safeId = rhymeId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return `${baseDir}kidszone_audio/rhymes/${safeId}.mp3`;
+}
+
 // Safely obtain native audio player factory if available (Expo SDK 53+ uses expo-audio)
 let createAudioPlayerFn: ((source: any) => any) | null = null;
 let setAudioModeAsyncFn: ((mode: any) => Promise<any>) | null = null;
@@ -236,6 +251,45 @@ class RhymeAudioService {
 
     // 2. Native Playback via expo-audio
     if (createAudioPlayerFn) {
+      // Check local mobile storage cache first for instant offline playback
+      const cachePath = getRhymeCachePath(rhyme.id);
+      if (cachePath && typeof ExpoFileSystem?.getInfoAsync === 'function') {
+        try {
+          const info = await ExpoFileSystem.getInfoAsync(cachePath);
+          if (info?.exists && (info.size ?? 0) > 1000) {
+            const cachedPlayer = createAudioPlayerFn({ uri: cachePath });
+            if (cachedPlayer) {
+              this.currentNativePlayer = cachedPlayer;
+              try { cachedPlayer.volume = 1.0; } catch {}
+              if (typeof cachedPlayer.addListener === 'function') {
+                this.currentNativeSubscription = cachedPlayer.addListener('playbackStatusUpdate', (status: any) => {
+                  if (this.currentNativePlayer !== cachedPlayer) return;
+                  if (status?.duration) this.durationState = status.duration;
+                  if (status?.currentTime !== undefined) this.currentTimeState = status.currentTime;
+                  if (status?.didJustFinish) {
+                    this.isPlayingState = false;
+                    this.isPausedState = false;
+                    this.emitStatus({ didJustFinish: true, isPlaying: false });
+                    this.stop();
+                    return;
+                  }
+                  this.emitStatus();
+                });
+              }
+              cachedPlayer.play();
+              if (this.playRequestId !== requestId) {
+                try { cachedPlayer.pause(); } catch {}
+                return 'superseded';
+              }
+              this.isPlayingState = true;
+              this.isPausedState = false;
+              this.emitStatus();
+              return 'started';
+            }
+          }
+        } catch {}
+      }
+
       for (const url of candidateUrls) {
         if (this.playRequestId !== requestId) return 'superseded';
 
@@ -300,6 +354,14 @@ class RhymeAudioService {
           this.isPlayingState = true;
           this.isPausedState = false;
           this.emitStatus();
+          // Cache track locally in background so future plays are instant & offline
+          if (cachePath && typeof ExpoFileSystem?.downloadAsync === 'function' && (url.startsWith('http://') || url.startsWith('https://'))) {
+            const dir = cachePath.slice(0, cachePath.lastIndexOf('/') + 1);
+            ExpoFileSystem.makeDirectoryAsync(dir, { intermediates: true })
+              .catch(() => {})
+              .then(() => ExpoFileSystem.downloadAsync(url, cachePath))
+              .catch(() => {});
+          }
           return 'started';
         } catch {
           if (this.playRequestId !== requestId) return 'superseded';
