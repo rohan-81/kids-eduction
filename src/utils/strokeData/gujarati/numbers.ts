@@ -275,7 +275,7 @@ export const GUJARATI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
     metadata: { phonetic: 'Aath', transliteration: '8' },
   },
 
-  // ૯ (Nine): Authentic Gujarati ૯ - outer curved arc with center horizontal tongue pointing right
+  // ૯ (Nine): Authentic Gujarati ૯ - curved C-arc with detached tilted inner dash
   '૯': {
     character: '૯',
     language: 'gu',
@@ -285,23 +285,26 @@ export const GUJARATI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
         'gu_num_9_s1',
         1,
         sampleCurve([
-          { x: 56, y: 22 },
-          { x: 40, y: 22 },
-          { x: 28, y: 36 },
-          { x: 28, y: 52 },
-          { x: 44, y: 52 },
-          { x: 58, y: 52 },
-          { x: 44, y: 52 },
-          { x: 28, y: 52 },
-          { x: 28, y: 68 },
-          { x: 40, y: 86 },
-          { x: 56, y: 86 },
+          { x: 56, y: 28 },
+          { x: 44, y: 32 },
+          { x: 35, y: 42 },
+          { x: 33, y: 55 },
+          { x: 39, y: 68 },
+          { x: 52, y: 74 },
+          { x: 67, y: 72 },
         ], 18),
         'forward',
-        'Outer C-arc with center horizontal tongue'
+        'Smooth curved C-arc from top-right to bottom-right'
+      ),
+      createStroke(
+        'gu_num_9_s2',
+        2,
+        sampleLine({ x: 51, y: 53 }, { x: 66, y: 48 }, 12),
+        'forward',
+        'Tilted short center bar inside the opening'
       ),
     ],
-    totalStrokes: 1,
+    totalStrokes: 2,
     metadata: { phonetic: 'Nav', transliteration: '9' },
   },
 };
