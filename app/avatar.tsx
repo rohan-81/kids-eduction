@@ -28,6 +28,7 @@ import { AppGlobalBackground } from '../src/components/common/AppGlobalBackgroun
 import { AgeGroup } from '../src/types';
 import { KidsDatePickerModal } from '../src/components/common/KidsDatePickerModal';
 import { AVATAR_3D_BOY, AVATAR_3D_GIRL, MAGIC_UI_ART } from '../src/utils/imageHelper';
+import { resolveOfflineMediaSource } from '../src/utils/remoteAssets';
 import { is3DAvatar } from '../src/utils/avatarHelper';
 import { GoldCoinIcon, CoinLabel } from '../src/components/common/GoldCoinIcon';
 import * as Art from '../src/components/art3d/Art3D';
@@ -436,7 +437,7 @@ export default function AvatarScreen() {
                 {currentAvatar.hat && currentAvatar.hat !== '❌' ? (
                   <View style={styles.hatContainer} pointerEvents="none">
                     {currentAvatar.hat === '👑' ? (
-                      <Image source={MAGIC_UI_ART.crown} style={styles.crown3DArt} resizeMode="contain" />
+                      <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.crown)} style={styles.crown3DArt} resizeMode="contain" />
                     ) : (
                       <Text style={styles.hatEmoji}>{currentAvatar.hat}</Text>
                     )}
@@ -449,7 +450,7 @@ export default function AvatarScreen() {
                     {currentAvatar.accessory === '🏅' ? (
                       <Image source={require('../assets/images/rewards/medal.webp')} style={styles.acc3DThumb} resizeMode="contain" />
                     ) : currentAvatar.accessory === '✨' ? (
-                      <Image source={MAGIC_UI_ART.wand} style={styles.acc3DThumb} resizeMode="contain" />
+                      <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.wand)} style={styles.acc3DThumb} resizeMode="contain" />
                     ) : (
                       <Text style={styles.accEmoji}>{currentAvatar.accessory}</Text>
                     )}

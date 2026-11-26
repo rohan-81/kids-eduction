@@ -31,7 +31,7 @@ import { GoldCoinIcon, CoinLabel } from '../src/components/common/GoldCoinIcon';
 import * as Art from '../src/components/art3d/Art3D';
 import { Glyph } from '../src/components/fun/KidIcons';
 import { Remote3DImage } from '../src/components/common/Remote3DImage';
-import { characterAsset } from '../src/utils/remoteAssets';
+import { characterAsset, resolveOfflineMediaSource } from '../src/utils/remoteAssets';
 
 const WORLD_GATES_CONFIG: Record<
   number,
@@ -962,7 +962,7 @@ export default function AdventureMapScreen() {
         {/* 1. 3D CARTOON HERO BANNER */}
         <View style={[styles.heroPosterCard, shadows.card]}>
           <Image
-            source={FANTASY_ADVENTURE_HEADER}
+            source={resolveOfflineMediaSource(FANTASY_ADVENTURE_HEADER)}
             style={styles.heroPosterImage}
             resizeMode="cover"
           />

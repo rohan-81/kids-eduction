@@ -3,6 +3,7 @@ import { Animated, Easing, Image, ImageStyle, Platform, StyleProp, StyleSheet, T
 import Svg, { Defs, LinearGradient, RadialGradient, Stop, Rect, Circle, Ellipse, Path, G } from 'react-native-svg';
 import { SceneComposition, SceneSetting, castScene } from '../../utils/storyArt';
 import { STORY_CHARACTER_IMAGES, STORY_PROP_IMAGES } from '../../utils/imageHelper';
+import { resolveOfflineMediaSource } from '../../utils/remoteAssets';
 import { Remote3DImage } from '../common/Remote3DImage';
 
 const useNative = Platform.OS !== 'web';
@@ -262,7 +263,12 @@ const PropBadge: React.FC<{ glyph: string; size: number; index: number; animated
       style={[styles.prop, { width: size, height: size, borderRadius: size / 2, transform: [{ translateY }] }]}
     >
       {art ? (
-        <Image source={art} resizeMode="contain" style={{ width: size * 0.78, height: size * 0.78 }} />
+        <Remote3DImage
+          source={art}
+          style={{ width: size * 0.78, height: size * 0.78 }}
+          contentFit="contain"
+          fallback={<Text style={{ fontSize: Math.round(size * 0.52) }}>{glyph}</Text>}
+        />
       ) : (
         <Text style={{ fontSize: Math.round(size * 0.52) }}>{glyph}</Text>
       )}
@@ -304,7 +310,7 @@ export const StoryIllustration: React.FC<StoryIllustrationProps> = ({
     >
       {image && !failed ? (
         <Image
-          source={image}
+          source={resolveOfflineMediaSource(image)}
           resizeMode="cover"
           onError={() => setFailed(true)}
           style={[

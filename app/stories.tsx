@@ -31,6 +31,7 @@ import { StoryIllustration } from '../src/components/story/StoryIllustration';
 import { composeCover, getSceneComposition, resolveStoryCover, resolveStoryScene } from '../src/utils/storyArt';
 import { MagicStoryWizard, MagicStoryChoice } from '../src/components/story/MagicStoryWizard';
 import { STORY_IMAGE_MAP, MAGIC_UI_ART } from '../src/utils/imageHelper';
+import { resolveOfflineMediaSource } from '../src/utils/remoteAssets';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { kidTones, kidPalette, kidBackdrops, kidRadii, clayShadow, toneAt, KidTone } from '../src/theme/kidTheme';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
@@ -301,7 +302,12 @@ const SavedStoryCover: React.FC<{
           {/* Luminous circular halo for 3D Quest art */}
           <View style={styles.savedStageHalo}>
             {coverArt ? (
-              <Image source={coverArt} resizeMode="contain" style={styles.savedStageArt} />
+              <Remote3DImage
+                source={coverArt}
+                style={styles.savedStageArt}
+                contentFit="contain"
+                fallback={<Text style={styles.savedStageEmoji}>{story.coverEmoji}</Text>}
+              />
             ) : (
               <Text style={styles.savedStageEmoji}>{story.coverEmoji}</Text>
             )}
@@ -774,7 +780,7 @@ export default function StoryModeScreen() {
 
               <View style={styles.magicBannerMainRow}>
                 <View style={styles.magicBannerIconBadge}>
-                  <Image source={MAGIC_UI_ART.wizard} resizeMode="contain" style={styles.magicBannerArt} />
+                  <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.wizard)} resizeMode="contain" style={styles.magicBannerArt} />
                 </View>
                 <View style={{ flex: 1, paddingRight: 6 }}>
                   <Text style={styles.magicBannerTitle}>
@@ -793,7 +799,7 @@ export default function StoryModeScreen() {
                   </Text>
                 </View>
                 <View style={styles.magicBannerArtDecor}>
-                  <Image source={MAGIC_UI_ART.wand} resizeMode="contain" style={styles.magicDecorWand} />
+                  <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.wand)} resizeMode="contain" style={styles.magicDecorWand} />
                 </View>
               </View>
 

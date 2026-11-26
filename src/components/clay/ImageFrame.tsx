@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ImageSourcePropType, StyleProp, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { kidRadii, kidSizes, kidTones, KidTone } from '../../theme/kidTheme';
+import { resolveOfflineMediaSource } from '../../utils/remoteAssets';
 
 export interface ImageFrameProps {
   /** Remote URL, require() asset, or an ImageSource. Falls back to `emoji` when missing or broken. */
@@ -40,8 +41,9 @@ export const ImageFrame: React.FC<ImageFrameProps> = ({
   const r = radius ?? (variant === 'detail' ? kidRadii.card : kidRadii.frame);
   const spec = kidTones[tone];
 
-  const resolved =
+  const resolvedRaw =
     typeof source === 'string' ? (source.trim() ? { uri: source } : null) : (source as ImageSourcePropType | null | undefined);
+  const resolved = resolveOfflineMediaSource(resolvedRaw);
   const sourceKey = resolved && typeof resolved === 'object' && 'uri' in resolved ? String(resolved.uri) : String(resolved ?? '');
 
   // A recycled grid cell may get a new source: retry instead of keeping the old failure.

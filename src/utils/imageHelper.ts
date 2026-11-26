@@ -23,7 +23,7 @@ export const HERO_PENCIL_BOY = require('../../assets/images/3d_style/hero_pencil
 export const AVATAR_3D_BOY = require('../../assets/images/3d_style/avatar_3d_boy.webp');
 export const AVATAR_3D_GIRL = require('../../assets/images/3d_style/avatar_3d_girl.webp');
 export const MILESTONE_BANNER = require('../../assets/images/3d_style/milestone_banner.webp');
-export const ICON_3D_STAR = require('../../assets/images/3d_style/3d_yellow_star.webp');
+export const ICON_3D_STAR = require('../../assets/images/subjects/star.webp');
 export const ICON_3D_MOUNTAIN = require('../../assets/images/3d_style/3d_mountain_flag.webp');
 
 export const ICONS_3D = {
@@ -229,14 +229,15 @@ export const STICKER_IMAGE_MAP: Record<string, any> = {
   'stk-parrot': appAsset('magic/3d_parrot.webp'),
   'stk-unicorn': appAsset('magic/3d_unicorn.webp'),
   'stk-teddy': characterAsset('3d_bear'),
-  'stk-star': require('../../assets/images/3d_style/3d_yellow_star.webp'),
+  'stk-star': require('../../assets/images/subjects/star.webp'),
   // Fallback lookup by emoji glyph:
   '🪄': appAsset('magic/tool_wand.webp'),
 };
 
 export function getStickerImage(key?: string): any | null {
   if (!key) return null;
-  return STICKER_IMAGE_MAP[key] ?? null;
+  const raw = STICKER_IMAGE_MAP[key] ?? null;
+  return raw ? resolveOfflineMediaSource(raw) : null;
 }
 
 /**
@@ -307,14 +308,23 @@ export const LOCAL_ANIMAL_IMAGES: Record<string, any> = {
   'an-rhino': appAsset('rhino.jpg'),
   'an-wolf': appAsset('wolf.webp'),
   'an-sheep': appAsset('sheep.webp'),
+  'an-zebra': characterAsset('3d_zebra'),
 
   // Alphabet lessons mappings
+  'gu-swar-1': characterAsset('3d_fr_pineapple'),
   'gu-swar-6': appAsset('camel.webp'),
+  'gu-vyan-cha': characterAsset('3d_sparrow'),
   'gu-vyan-ba': appAsset('duck.webp'),
   'gu-vyan-ma': appAsset('peacock.webp'),
+  'gu-vyan-sa': characterAsset('3d_hare'),
+  'gu-vyan-ha': characterAsset('3d_deer'),
+  'hi-swar-aa': characterAsset('3d_fr_mango'),
   'hi-vyan-ka': appAsset('pigeon.webp'),
+  'hi-vyan-kha': characterAsset('3d_hare'),
   'hi-vyan-mo': appAsset('peacock.webp'),
   'hi-vyan-va': appAsset('crane.webp'),
+  'gu-bk-ku': characterAsset('3d_dog'),
+  'gu-bk-ke': characterAsset('3d_fr_banana'),
   'gu-bk-kaa': appAsset('crow.webp'),
   'gu-bk-ko': appAsset('koel.webp'),
   'en-c': appAsset('cat.webp'),
@@ -322,12 +332,19 @@ export const LOCAL_ANIMAL_IMAGES: Record<string, any> = {
   'en-l': appAsset('lion.webp'),
   'en-m': appAsset('monkey.webp'),
   'en-t': appAsset('tiger.webp'),
+  'en-alpha-a': characterAsset('3d_apple'),
   'en-alpha-c': appAsset('cat.webp'),
   'en-alpha-d': appAsset('dog.webp'),
+  'en-alpha-e': characterAsset('3d_elephant'),
+  'en-alpha-g': characterAsset('3d_fr_grapes'),
+  'en-alpha-h': characterAsset('3d_horse'),
   'en-alpha-l': appAsset('lion.webp'),
   'en-alpha-m': appAsset('monkey.webp'),
+  'en-alpha-o': characterAsset('3d_fr_orange'),
   'en-alpha-p': appAsset('peacock.webp'),
+  'en-alpha-r': characterAsset('3d_hare'),
   'en-alpha-t': appAsset('tiger.webp'),
+  'en-alpha-z': characterAsset('3d_zebra'),
 
   // GK Symbols & English Words
   'sym-bird': appAsset('peacock.webp'),
@@ -454,7 +471,7 @@ function getLessonImageSourceRaw(
   if (imgUrl.includes('1564349683136-77e08dba1ef7')) return LOCAL_ANIMAL_IMAGES['an-wolf'];
   if (imgUrl.includes('1484557052118-f32bd25b45b5')) return LOCAL_ANIMAL_IMAGES['an-sheep'];
   if (imgUrl.includes('1501705388883-4ed8a543392c')) {
-    return { uri: 'https://images.unsplash.com/photo-1578326457399-3b34dbbf23b8?w=600&auto=format&fit=crop&q=80' };
+    return characterAsset('3d_zebra');
   }
 
   // 3. Skip heuristic animal matching for abstract/concept-only categories
@@ -474,7 +491,7 @@ function getLessonImageSourceRaw(
   };
 
   if (hasWord('zebra') || hasWord('ઝીબ્રા') || hasWord('ज़ेबरा')) {
-    return { uri: 'https://images.unsplash.com/photo-1578326457399-3b34dbbf23b8?w=600&auto=format&fit=crop&q=80' };
+    return characterAsset('3d_zebra');
   }
 
   if (hasWord('ઊંટ') || hasWord('ऊँट') || hasWord('camel')) {

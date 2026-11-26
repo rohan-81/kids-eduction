@@ -31,11 +31,10 @@ export const AppGlobalBackground: React.FC<AppGlobalBackgroundProps> = ({ id = '
         style={[
           StyleSheet.absoluteFill,
           {
-            // @ts-ignore - Web CSS linear-gradient background
             backgroundImage: `linear-gradient(180deg, ${BG_COLORS.top} 0%, ${BG_COLORS.mid} 40%, ${BG_COLORS.warmSun} 75%, ${BG_COLORS.sunshine} 100%)`,
             backgroundAttachment: 'fixed',
             zIndex: -1,
-          },
+          } as any,
         ]}
       />
     );

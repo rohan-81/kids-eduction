@@ -24,6 +24,7 @@ import { AppLanguage } from '../src/types';
 import { HOME_CARD_ART, STICKER_IMAGE_MAP, getStickerImage } from '../src/utils/imageHelper';
 import * as Art from '../src/components/art3d/Art3D';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import { Remote3DImage } from '../src/components/common/Remote3DImage';
 
 const SEEN_KEY = '@kidszone_seen_unlocked_stickers';
 const useNative = Platform.OS !== 'web';
@@ -118,10 +119,15 @@ const StickerCard: React.FC<StickerCardProps> = ({ sticker, name, unlocked, sele
                 { transform: [{ rotate }] },
               ]}
             >
-              <Image
+              <Remote3DImage
                 source={stickerImg}
                 style={{ width: Math.round(width * 0.44), height: Math.round(width * 0.44) }}
-                resizeMode="contain"
+                contentFit="contain"
+                fallback={
+                  <Text style={[styles.cardEmoji, { fontSize: Math.round(width * 0.42), marginBottom: 0 }]}>
+                    {sticker.emoji === '🪄' ? '✨' : sticker.emoji}
+                  </Text>
+                }
               />
             </Animated.View>
           ) : (
@@ -332,13 +338,18 @@ export default function StickerAlbumScreen() {
                   ]}
                 >
                   {getStickerImage(selected.id) || getStickerImage(selected.emoji) ? (
-                    <Image
+                    <Remote3DImage
                       source={getStickerImage(selected.id) || getStickerImage(selected.emoji)}
                       style={[
                         styles.showcaseImage,
                         !isSelectedUnlocked && styles.cardEmojiLocked,
                       ]}
-                      resizeMode="contain"
+                      contentFit="contain"
+                      fallback={
+                        <Text style={[styles.showcaseEmoji, !isSelectedUnlocked && styles.cardEmojiLocked]}>
+                          {selected.emoji === '🪄' ? '✨' : selected.emoji}
+                        </Text>
+                      }
                     />
                   ) : (
                     <Text style={[styles.showcaseEmoji, !isSelectedUnlocked && styles.cardEmojiLocked]}>

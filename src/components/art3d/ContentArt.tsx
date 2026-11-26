@@ -69,10 +69,11 @@ export const CONTENT_ART_LOCAL: Record<string, ArtSource> = {
 
 export const CONTENT_ART: Record<string, ArtSource> = {
   ...CONTENT_ART_LOCAL,
-  // real 3D renders (animals, nature, weather; served remotely + disk-cached) win over the SVG stand-ins
-  ...ANIMAL_RENDERS_BY_EMOJI,
-  ...NATURE_RENDERS_BY_EMOJI,
+  // Real 3D renders (served remotely + disk-cached). Spread EXTRA first so animal/nature
+  // symbols like '🕊️' (dove/pigeon) and '🌸'/'🌳' are never overwritten by history/person icons.
   ...EXTRA_RENDERS_BY_EMOJI,
+  ...NATURE_RENDERS_BY_EMOJI,
+  ...ANIMAL_RENDERS_BY_EMOJI,
 };
 
 /** Bundled art for an emoji (no network): vector component, bundled image, or null. */

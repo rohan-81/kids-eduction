@@ -29,6 +29,7 @@ import {
 } from '../../utils/magicStoryGenerator';
 import { AppLanguage } from '../../types';
 import { Remote3DImage } from '../common/Remote3DImage';
+import { resolveOfflineMediaSource } from '../../utils/remoteAssets';
 
 const useNative = Platform.OS !== 'web';
 
@@ -271,11 +272,11 @@ const LaunchButton: React.FC<{ label: string; onPress: () => void }> = ({ label,
       >
         <View style={styles.launchLip} />
         <Animated.View style={[styles.launchFace, { transform: [{ translateY: sink }] }]}>
-          <Image source={MAGIC_UI_ART.wand} resizeMode="contain" style={styles.launchIcon} />
+          <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.wand)} resizeMode="contain" style={styles.launchIcon} />
           <Text style={styles.launchText} numberOfLines={1} adjustsFontSizeToFit>
             {label}
           </Text>
-          <Image source={MAGIC_UI_ART.rocket} resizeMode="contain" style={styles.launchIcon} />
+          <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.rocket)} resizeMode="contain" style={styles.launchIcon} />
         </Animated.View>
       </Pressable>
     </Animated.View>
@@ -506,7 +507,7 @@ export const MagicStoryWizard: React.FC<MagicStoryWizardProps> = ({
             </View>
             <HeaderTwinkles />
             <View style={styles.headerRow}>
-              <Image source={MAGIC_UI_ART.wizard} resizeMode="contain" style={styles.headerArt} />
+              <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.wizard)} resizeMode="contain" style={styles.headerArt} />
               <Text style={styles.headerTitle} numberOfLines={2}>
                 {getWizardTitle(step, language)}
               </Text>
@@ -526,7 +527,7 @@ export const MagicStoryWizard: React.FC<MagicStoryWizardProps> = ({
             {step === 1 ? (
               <View style={styles.stepWrap}>
                 <Animated.View style={[styles.heroBubble, { transform: [{ translateY: heroLift }] }]}>
-                  <Image source={selectedHeroImage} resizeMode="contain" style={styles.heroImg} />
+                  <Image source={resolveOfflineMediaSource(selectedHeroImage)} resizeMode="contain" style={styles.heroImg} />
                 </Animated.View>
                 <Text style={styles.heroName} numberOfLines={1} adjustsFontSizeToFit>
                   {displayName(heroName) || tr(language, { en: 'Little Hero', gu: 'નાનો હીરો', hi: 'नन्हा हीरो' })}
@@ -681,7 +682,7 @@ export const MagicStoryWizard: React.FC<MagicStoryWizardProps> = ({
                           isCustomActive && selectedHeroImage === MAGIC_UI_ART.crown && styles.avatarChoicePillActive,
                         ]}
                       >
-                        <Image source={MAGIC_UI_ART.crown} style={styles.avatarChoiceThumb} resizeMode="contain" />
+                        <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.crown)} style={styles.avatarChoiceThumb} resizeMode="contain" />
                         <Text
                           style={[
                             styles.avatarChoiceText,
@@ -737,7 +738,7 @@ export const MagicStoryWizard: React.FC<MagicStoryWizardProps> = ({
                   })}
                 </View>
                 <View style={styles.sectionLabelRow}>
-                  <Image source={MAGIC_UI_ART.wand} resizeMode="contain" style={styles.sectionIcon} />
+                  <Image source={resolveOfflineMediaSource(MAGIC_UI_ART.wand)} resizeMode="contain" style={styles.sectionIcon} />
                   <Text style={styles.sectionLabel}>
                     {tr(language, { en: 'Pick a Magic Tool', gu: 'જાદુઈ સાધન પસંદ કરો', hi: 'जादुई साधन चुनें' })}
                   </Text>

@@ -17,6 +17,7 @@ import { audioService } from '../../src/services/audioService';
 import { formatNumberDigits } from '../../src/utils/languageData';
 import { evaluateDuelAnswer, createDuelRoundController } from '../../src/utils/duelRound';
 import { CARTOON_BATTLE_IMAGE } from '../../src/utils/imageHelper';
+import { resolveOfflineMediaSource } from '../../src/utils/remoteAssets';
 import { EmojiArt, splitEmojiLabel } from '../../src/components/art3d/ContentArt';
 import { StarArt, TrophyArt } from '../../src/components/art3d/Art3D';
 import { Glyph } from '../../src/components/fun';
@@ -574,7 +575,7 @@ export default function DuelGameScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, shadows.card]}>
             <Image
-              source={CARTOON_BATTLE_IMAGE}
+              source={resolveOfflineMediaSource(CARTOON_BATTLE_IMAGE)}
               style={styles.modalBannerImage}
               resizeMode="cover"
             />

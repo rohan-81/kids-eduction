@@ -13,6 +13,7 @@ import { soundEffects } from '../../services/soundEffects';
 import { Bouncy3DButton } from '../common/Bouncy3DButton';
 import { AppLanguage } from '../../types';
 import { FANTASY_ADVENTURE_HEADER } from '../../utils/imageHelper';
+import { resolveOfflineMediaSource } from '../../utils/remoteAssets';
 import { formatNumberDigits } from '../../utils/languageData';
 import { useApp } from '../../context/AppContext';
 import { Glyph } from '../fun';
@@ -58,7 +59,7 @@ export const HomeAdventureMapBanner: React.FC<HomeAdventureMapBannerProps> = ({
     >
       {/* Background 3D Fantasy Island Adventure Poster */}
       <Image
-        source={FANTASY_ADVENTURE_HEADER}
+        source={resolveOfflineMediaSource(FANTASY_ADVENTURE_HEADER)}
         style={styles.bannerImage}
         resizeMode="cover"
       />

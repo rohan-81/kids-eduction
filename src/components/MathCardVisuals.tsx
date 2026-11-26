@@ -4,6 +4,7 @@ import { LessonItem, AppLanguage } from '../types';
 import { toHiDigits, toGujDigits } from '../utils/languageData';
 import { clayShadow } from '../theme/kidTheme';
 import { INDIAN_CURRENCY_IMAGES } from '../utils/imageHelper';
+import { resolveOfflineMediaSource } from '../utils/remoteAssets';
 
 // -------------------------------------------------------------
 // Helper: Localize digits for math visuals
@@ -26,7 +27,7 @@ export const RupeeCoinVisual: React.FC<{
   language?: AppLanguage;
 }> = ({ value, size = 64 }) => {
   const isDetail = size > 80;
-  const imgSource = INDIAN_CURRENCY_IMAGES[`money-coin-${value}`];
+  const imgSource = resolveOfflineMediaSource(INDIAN_CURRENCY_IMAGES[`money-coin-${value}`]);
   const coinSize = isDetail ? 140 : 58;
 
   return (
@@ -99,7 +100,7 @@ export const RupeeNoteVisual: React.FC<{
 }> = ({ value, size = 64 }) => {
   const isDetail = size > 80;
   const spec = NOTE_SPECS[value];
-  const imgSource = INDIAN_CURRENCY_IMAGES[`money-note-${value}`];
+  const imgSource = resolveOfflineMediaSource(INDIAN_CURRENCY_IMAGES[`money-note-${value}`]);
   const noteW = isDetail ? 252 : 90;
   const noteH = isDetail ? 118 : 46;
 

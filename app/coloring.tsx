@@ -62,9 +62,13 @@ const MushroomIcon = ({ size = 22 }: { size?: number }) => (
   </Svg>
 );
 
+const remotePropIcon = (source: any, emoji: string) => (
+  <Remote3DImage source={source} style={{ width: 22, height: 22 }} fallback={<Text style={{ fontSize: 16 }}>{emoji}</Text>} />
+);
+
 const renderTemplateIcon = (tplId: string) => {
   if (tplId === 'elephant' && STORY_CHARACTER_IMAGES['🐘']) {
-    return <Remote3DImage source={STORY_CHARACTER_IMAGES['🐘']} style={{ width: 22, height: 22 }} fallback={<Text style={{ fontSize: 16 }}>🐘</Text>} />;
+    return remotePropIcon(STORY_CHARACTER_IMAGES['🐘'], '🐘');
   }
   if (tplId === 'butterfly') {
     return <ButterflyIcon size={22} />;
@@ -82,10 +86,10 @@ const renderTemplateIcon = (tplId: string) => {
     return <Art.AppleArt size={22} />;
   }
   if (tplId === 'rocket' && STORY_PROP_IMAGES['🚀']) {
-    return <Image source={STORY_PROP_IMAGES['🚀']} style={{ width: 22, height: 22 }} resizeMode="contain" />;
+    return remotePropIcon(STORY_PROP_IMAGES['🚀'], '🚀');
   }
   if (tplId === 'balloon' && STORY_PROP_IMAGES['🎈']) {
-    return <Image source={STORY_PROP_IMAGES['🎈']} style={{ width: 22, height: 22 }} resizeMode="contain" />;
+    return remotePropIcon(STORY_PROP_IMAGES['🎈'], '🎈');
   }
   if (tplId === 'star') {
     return <Image source={SUBJECT_CARD_ART.star} style={{ width: 22, height: 22 }} resizeMode="contain" />;
@@ -97,13 +101,13 @@ const renderTemplateIcon = (tplId: string) => {
     return <Art.FeatherArt size={22} />;
   }
   if (tplId === 'dino' && STORY_PROP_IMAGES['🦕']) {
-    return <Image source={STORY_PROP_IMAGES['🦕']} style={{ width: 22, height: 22 }} resizeMode="contain" />;
+    return remotePropIcon(STORY_PROP_IMAGES['🦕'], '🦕');
   }
   if (tplId === 'lion' && STORY_CHARACTER_IMAGES['🦁']) {
-    return <Remote3DImage source={STORY_CHARACTER_IMAGES['🦁']} style={{ width: 22, height: 22 }} fallback={<Text style={{ fontSize: 16 }}>🦁</Text>} />;
+    return remotePropIcon(STORY_CHARACTER_IMAGES['🦁'], '🦁');
   }
   if (tplId === 'castle' && STORY_PROP_IMAGES['🏰']) {
-    return <Image source={STORY_PROP_IMAGES['🏰']} style={{ width: 22, height: 22 }} resizeMode="contain" />;
+    return remotePropIcon(STORY_PROP_IMAGES['🏰'], '🏰');
   }
   return <Art.PaletteArt size={22} />;
 };

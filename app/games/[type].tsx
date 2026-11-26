@@ -36,6 +36,7 @@ import { kidBackdrops } from '../../src/theme/kidTheme';
 import { AppGlobalBackground } from '../../src/components/common/AppGlobalBackground';
 import * as Art from '../../src/components/art3d/Art3D';
 import { VisualArt, EmojiArt, splitEmojiLabel } from '../../src/components/art3d/ContentArt';
+import { resolveOfflineMediaSource } from '../../src/utils/remoteAssets';
 
 const MEMORY_EMOJI_BANK = [
   '🦁', '🐰', '🐢', '🦊', '🐯', '🐬', '🐘', '🦄', '🐒', '🐶',
@@ -978,7 +979,7 @@ export default function GameRunnerScreen() {
             {showPuzzlePeek && (
               <View style={[styles.puzzlePeekCard, shadows.soft]}>
                 <Image
-                  source={PUZZLE_PICTURES[puzzleIndex].imageSource}
+                  source={resolveOfflineMediaSource(PUZZLE_PICTURES[puzzleIndex].imageSource)}
                   style={styles.puzzlePeekImage}
                   resizeMode="cover"
                 />
@@ -1015,7 +1016,7 @@ export default function GameRunnerScreen() {
                     /* Solved whole unified picture */
                     <View style={{ width: totalW, height: totalH, overflow: 'hidden', borderRadius: radii.md }}>
                       <Image
-                        source={PUZZLE_PICTURES[puzzleIndex].imageSource}
+                        source={resolveOfflineMediaSource(PUZZLE_PICTURES[puzzleIndex].imageSource)}
                         style={{ width: totalW, height: totalH }}
                         resizeMode="cover"
                       />
@@ -1044,7 +1045,7 @@ export default function GameRunnerScreen() {
                         >
                           <View style={{ width: pieceW, height: pieceH, overflow: 'hidden' }}>
                             <Image
-                              source={PUZZLE_PICTURES[puzzleIndex].imageSource}
+                              source={resolveOfflineMediaSource(PUZZLE_PICTURES[puzzleIndex].imageSource)}
                               style={{
                                 width: totalW,
                                 height: totalH,
@@ -1245,11 +1246,11 @@ export default function GameRunnerScreen() {
               {currentQ.displayImageSource || currentQ.displayImage ? (
                 <View style={styles.gameImageBox}>
                   <Image
-                    source={
+                    source={resolveOfflineMediaSource(
                       currentQ.displayImageSource || {
                         uri: currentQ.displayImage,
                       }
-                    }
+                    )}
                     style={styles.gameImage}
                     resizeMode="cover"
                   />
