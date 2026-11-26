@@ -154,7 +154,7 @@
     "score": "Score",
     "question": "Question",
     "correct": "Super! That's Right! 🎉",
-    "wrong": "Nice try! Let's try again! 💡",
+    "wrong": "Try again! 💡",
     "playAgain": "Play Again",
     "gameOver": "Game Completed! 🏆",
     "earnedScore": "You scored {{score}} out of {{total}}!"

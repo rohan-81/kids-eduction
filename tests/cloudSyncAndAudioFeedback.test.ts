@@ -13,9 +13,9 @@ describe('Cloud Sync, Mystery Box Persistence and Adventure Challenge Speech', (
     expect(adventureFile).toContain("speak('शाबाश! सही जवाब!', 'hi');");
     expect(adventureFile).toContain("speak('Awesome! Correct answer!', 'en');");
 
-    expect(adventureFile).toContain("speak('અરેરે! ખોટો જવાબ, ફરીથી પ્રયત્ન કરો!', 'gu');");
-    expect(adventureFile).toContain("speak('अरे! गलत जवाब, फिर से प्रयास करें!', 'hi');");
-    expect(adventureFile).toContain("speak('Oops! Wrong answer, try again!', 'en');");
+    expect(adventureFile).toContain("speak('ફરીથી પ્રયત્ન કરો!', 'gu');");
+    expect(adventureFile).toContain("speak('फिर से कोशिश करें!', 'hi');");
+    expect(adventureFile).toContain("speak('Try again!', 'en');");
 
     // Verify speak call in handleAnswer does not speak coins or stars
     const handleAnswerMatch = adventureFile.match(/const handleAnswer = async \([\s\S]*?\n  \};/);

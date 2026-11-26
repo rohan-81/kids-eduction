@@ -875,11 +875,11 @@ export default function AdventureMapScreen() {
       setQuizSuccess(false);
 
       if (language === 'gu') {
-        speak('અરેરે! ખોટો જવાબ, ફરીથી પ્રયત્ન કરો!', 'gu');
+        speak('ફરીથી પ્રયત્ન કરો!', 'gu');
       } else if (language === 'hi') {
-        speak('अरे! गलत जवाब, फिर से प्रयास करें!', 'hi');
+        speak('फिर से कोशिश करें!', 'hi');
       } else {
-        speak('Oops! Wrong answer, try again!', 'en');
+        speak('Try again!', 'en');
       }
 
       // Re-enable options after full speech completes (3.2 seconds) so voice is never cut off

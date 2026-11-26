@@ -31,6 +31,7 @@ import { HeartMeter, StarMeter, CoinBurst, KidModal, Glyph } from '../../src/com
 import { GoldCoinIcon, GoldCoinStack } from '../../src/components/common/GoldCoinIcon';
 import { getRoundStars, getNextGameRoute } from '../../src/utils/gameRound';
 import { formatNumberDigits } from '../../src/utils/languageData';
+import { getTryAgainSpeech } from '../../src/utils/feedbackSpeech';
 import { GAMES_LIST } from './index';
 import { kidBackdrops } from '../../src/theme/kidTheme';
 import { AppGlobalBackground } from '../../src/components/common/AppGlobalBackground';
@@ -489,18 +490,7 @@ export default function GameRunnerScreen() {
         isCorrect: false,
         text: t('games.wrong'),
       });
-      const tryAgain =
-        language === 'gu'
-          ? cleanWord
-            ? `આ તો ${cleanWord} છે! ફરીથી પ્રયત્ન કરો!`
-            : `ફરીથી પ્રયત્ન કરો!`
-          : language === 'hi'
-          ? cleanWord
-            ? `यह तो ${cleanWord} है! फिर से कोशिश करो!`
-            : `फिर से कोशिश करो!`
-          : cleanWord
-          ? `That is ${cleanWord}! Let us try again!`
-          : `Let us try again!`;
+      const tryAgain = getTryAgainSpeech(language);
       if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
       speechTimerRef.current = setTimeout(() => {
         speak(tryAgain, language);
@@ -583,12 +573,7 @@ export default function GameRunnerScreen() {
         isCorrect: false,
         text: gentleMessage,
       });
-      const gentleVoice =
-        language === 'gu'
-          ? 'કોઈ વાંધો નહીં, ફરી પ્રયત્ન કરો!'
-          : language === 'hi'
-          ? 'कोई बात नहीं, फिर से कोशिश करें!'
-          : 'Nice try! Look carefully and try again!';
+      const gentleVoice = getTryAgainSpeech(language);
       speak(gentleVoice, language);
 
       // Keep child able to try another option immediately

@@ -16,6 +16,7 @@ import { useApp } from '../src/context/AppContext';
 import { soundEffects } from '../src/services/soundEffects';
 import { audioService } from '../src/services/audioService';
 import { formatNumberDigits, toHiDigits, toGujDigits } from '../src/utils/languageData';
+import { getTryAgainSpeech } from '../src/utils/feedbackSpeech';
 import { GoldCoinIcon, GoldCoinStack, CoinLabel } from '../src/components/common/GoldCoinIcon';
 import { Glyph } from '../src/components/fun/KidIcons';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
@@ -198,12 +199,10 @@ export default function ShopGameScreen() {
       addCoins(10);
     } else if (paidTotal < cartTotal) {
       soundEffects.playBuzzer();
-      const diff = cartTotal - paidTotal;
-      speak(tUI.speechShort(diff), activeLang);
+      speak(getTryAgainSpeech(activeLang), activeLang);
     } else {
-      soundEffects.playBubblePop();
-      const change = paidTotal - cartTotal;
-      speak(tUI.speechOver(change), activeLang);
+      soundEffects.playBuzzer();
+      speak(getTryAgainSpeech(activeLang), activeLang);
     }
   };
 

@@ -183,10 +183,10 @@ export default function ChallengeCertificateScreen() {
       soundEffects.playBuzzer();
       feedbackText =
         language === 'gu'
-          ? 'ખોટો જવાબ! પ્રયત્ન ચાલુ રાખો!'
+          ? 'ફરીથી પ્રયત્ન કરો!'
           : language === 'hi'
-          ? 'गलत जवाब! प्रयास जारी रखें!'
-          : 'Nice Try! Keep Going!';
+          ? 'फिर से कोशिश करें!'
+          : 'Try again!';
       setFeedback({ isCorrect: false, text: feedbackText });
     }
 

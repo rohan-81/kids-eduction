@@ -105,7 +105,7 @@ const UI_TEXT = {
     reset: 'Reset',
     nextWord: 'Next Word ▶️ +10',
     successMsg: (w: string) => `Awesome! ${w}! You spelled it right!`,
-    errorMsg: "Oops! Letters are not in the right order, try again!",
+    errorMsg: 'Try again!',
   },
   gu: {
     headerTitle: 'વર્ડ બિલ્ડર',
@@ -114,7 +114,7 @@ const UI_TEXT = {
     reset: 'ફરીથી ગોઠવો',
     nextWord: 'આગળનો શબ્દ ▶️ +૧૦',
     successMsg: (w: string) => `શાબાશ! ${w}! સાચો શબ્દ બન્યો!`,
-    errorMsg: 'અરેરે! અક્ષરોનો ક્રમ ખોટો છે, ફરીથી પ્રયત્ન કરો!',
+    errorMsg: 'ફરીથી પ્રયત્ન કરો!',
   },
   hi: {
     headerTitle: 'वर्ड बिल्डर',
@@ -123,7 +123,7 @@ const UI_TEXT = {
     reset: 'फिर से लगाएं',
     nextWord: 'अगला शब्द ▶️ +१०',
     successMsg: (w: string) => `शाबाश! ${w}! सही शब्द बन गया!`,
-    errorMsg: 'अरे! अक्षरों का क्रम गलत है, फिर से कोशिश करें!',
+    errorMsg: 'फिर से कोशिश करें!',
   },
 };
 

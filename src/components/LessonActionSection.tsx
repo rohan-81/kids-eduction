@@ -35,10 +35,6 @@ export interface LessonActionSectionProps {
   characterImage?: any;
   phonicsPrompt?: PhonicsPromptInfo | null;
   onPlayPhonics?: () => void;
-  canTrace?: boolean;
-  isTracingOpen?: boolean;
-  onToggleTracing?: () => void;
-  isNumberLesson?: boolean;
   speechFeedback?: SpeechFeedbackInfo;
   hasPrevious?: boolean;
   hasNext?: boolean;
@@ -56,10 +52,6 @@ export const LessonActionSection: React.FC<LessonActionSectionProps> = ({
   characterImage,
   phonicsPrompt,
   onPlayPhonics,
-  canTrace = false,
-  isTracingOpen = false,
-  onToggleTracing,
-  isNumberLesson = false,
   speechFeedback,
   hasPrevious = false,
   hasNext = false,
@@ -121,25 +113,6 @@ export const LessonActionSection: React.FC<LessonActionSectionProps> = ({
       : language === 'hi'
       ? 'फोनिक्स ध्वनि'
       : 'Phonics Sound';
-
-  // Localized tracing button label
-  const traceButtonLabel = isTracingOpen
-    ? language === 'gu'
-      ? '▲ ટ્રેસિંગ છુપાવો'
-      : language === 'hi'
-      ? '▲ ट्रेसिंग छुपाएं'
-      : '▲ Hide Tracing'
-    : isNumberLesson
-    ? language === 'gu'
-      ? 'અંક ઘૂંટો'
-      : language === 'hi'
-      ? 'अंक ट्रेस करें'
-      : 'Trace Number'
-    : language === 'gu'
-    ? 'આંગળીથી ટ્રેસ કરો'
-    : language === 'hi'
-    ? 'उंगली से ट्रेस करें'
-    : 'Finger Trace';
 
   // Localized nav button labels
   const prevLabel =
@@ -268,21 +241,6 @@ export const LessonActionSection: React.FC<LessonActionSectionProps> = ({
           <Text style={styles.speechBubbleText}>{speechFeedback.msg}</Text>
         </View>
       ) : null}
-
-      {/* 4. FINGER TRACING TOGGLE PILL (Available uniformly for all letters & numbers) */}
-      {canTrace && onToggleTracing && (
-        <View style={styles.traceContainer}>
-          <TouchableOpacity
-            onPress={onToggleTracing}
-            style={[styles.traceBtn, shadows.soft]}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={traceButtonLabel}
-          >
-            <Text style={styles.traceBtnText}>{traceButtonLabel}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* 5. NAVIGATION ROW (Previous, Complete, Next) */}
       <View style={styles.navRow}>
@@ -425,28 +383,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#15803D',
     textAlign: 'center',
-  },
-  traceContainer: {
-    marginTop: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  traceBtn: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: 10,
-    borderRadius: radii.full,
-    borderWidth: 1.5,
-    borderColor: '#0284C7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 180,
-  },
-  traceBtnText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0284C7',
   },
   navRow: {
     flexDirection: 'row',
