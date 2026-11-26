@@ -16,6 +16,7 @@ import { soundEffects } from '../../src/services/soundEffects';
 import { audioService } from '../../src/services/audioService';
 import { formatNumberDigits } from '../../src/utils/languageData';
 import { evaluateDuelAnswer, createDuelRoundController } from '../../src/utils/duelRound';
+import { getTryAgainSpeech } from '../../src/utils/feedbackSpeech';
 import { CARTOON_BATTLE_IMAGE } from '../../src/utils/imageHelper';
 import { resolveOfflineMediaSource } from '../../src/utils/remoteAssets';
 import { EmojiArt, splitEmojiLabel } from '../../src/components/art3d/ContentArt';
@@ -423,7 +424,7 @@ export default function DuelGameScreen() {
         )}
         {feedback === 'wrong' && (
           <Text style={styles.feedbackEmoji}>
-            {language === 'gu' ? 'ખોટો જવાબ' : language === 'hi' ? 'गलत' : 'Try Again!'}
+            {getTryAgainSpeech(language)}
           </Text>
         )}
       </View>

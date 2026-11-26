@@ -22,14 +22,12 @@ describe('BUG 1: Unified Learning Module Action Buttons Consistency', () => {
     expect(lessonCode).not.toContain('<ClayButton\n                tone="sky"\n                size="lg"\n                sound={false}\n                onPress={handleSpeak}');
   });
 
-  test('canShowTracing is kept strictly for English Alphabet (ABCD) and Numbers, and removed from Gujarati & Hindi', () => {
+  test('Tracing toggle button is removed from LessonActionSection and lesson detail screen', () => {
     const lessonCode = readNormalized(lessonScreenPath);
-    const tracingBlock = lessonCode.slice(
-      lessonCode.indexOf('const canShowTracing'),
-      lessonCode.indexOf('const canShowTracing') + 300
-    );
-    expect(tracingBlock).toContain('(isEnglishAlphabetCategory || isNumberCategory)');
-    expect(tracingBlock).not.toContain('(isLetterCategory || isNumberCategory)');
+    const actionCode = readNormalized(actionSectionPath);
+    expect(lessonCode).not.toContain('canShowTracing');
+    expect(lessonCode).not.toContain('<TracingCanvas');
+    expect(actionCode).not.toContain('onToggleTracing');
   });
 
   test('LessonActionSection provides consistent circular audio controls and localized labels', () => {
@@ -54,10 +52,10 @@ describe('BUG 1: Unified Learning Module Action Buttons Consistency', () => {
     expect(actionCode).toContain("'फोनिक्स ध्वनि'");
     expect(actionCode).toContain("'Phonics Sound'");
 
-    // Consistent tracing labels (emoji-free: icons are SVG / 3D art, never raw emoji)
-    expect(actionCode).toContain("'આંગળીથી ટ્રેસ કરો'");
-    expect(actionCode).toContain("'उंगली से ट्रेस करें'");
-    expect(actionCode).toContain("'Finger Trace'");
+    // Tracing toggle button removed cleanly
+    expect(actionCode).not.toContain("'આંગળીથી ટ્રેસ કરો'");
+    expect(actionCode).not.toContain("'उंगली से ट्रेस करें'");
+    expect(actionCode).not.toContain("'Finger Trace'");
     expect(actionCode).not.toContain('✏️');
 
     // Consistent navigation row with Prev, Complete, Next
