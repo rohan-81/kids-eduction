@@ -147,7 +147,7 @@ export const GUJARATI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
     metadata: { phonetic: 'Chaar', transliteration: '4' },
   },
 
-  // ૫ (Five): Authentic Gujarati 5 - continuous stroke starting top-left, forming U-cup, ascending to top-right stem crest, and descending to baseline
+  // ૫ (Five): Authentic Gujarati ૫ - single continuous stroke with top-left lip, rounded U-cup, clean vertical stem, and rightward foot
   '૫': {
     character: '૫',
     language: 'gu',
@@ -157,17 +157,22 @@ export const GUJARATI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
         'gu_num_5_s1',
         1,
         sampleCurve([
-          { x: 34, y: 26 },
-          { x: 34, y: 52 },
-          { x: 42, y: 76 },
-          { x: 54, y: 76 },
-          { x: 66, y: 56 },
-          { x: 66, y: 24 },
-          { x: 66, y: 56 },
-          { x: 66, y: 86 },
+          { x: 28, y: 28 },
+          { x: 35, y: 30 },
+          { x: 36, y: 42 },
+          { x: 38, y: 56 },
+          { x: 46, y: 63 },
+          { x: 56, y: 60 },
+          { x: 63, y: 50 },
+          { x: 63, y: 38 },
+          { x: 63, y: 27 },
+          { x: 63, y: 46 },
+          { x: 63, y: 68 },
+          { x: 66, y: 78 },
+          { x: 73, y: 80 },
         ], 16),
         'forward',
-        'Left cup ascending to top stem crest and descending down vertical stem'
+        'Top-left curved lip, U-cup ascending to top stem crest, and vertical stem with bottom-right foot'
       ),
     ],
     totalStrokes: 1,
