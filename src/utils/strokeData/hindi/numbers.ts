@@ -220,7 +220,7 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
     metadata: { phonetic: 'Chhah', transliteration: '6' },
   },
 
-  // ७ - सात (Seven): Authentic Devanagari 7 - top-right loop, right stem, bottom U-bowl rising into left vertical stem
+  // ७ - सात (Seven): Authentic Devanagari 7 spiral matching printed glyph - inner loop lower than high left stem
   '७': {
     character: '७',
     language: 'hi',
@@ -230,23 +230,21 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
         'hi_num_7_s1',
         1,
         sampleCurve([
-          { x: 56, y: 38 },
-          { x: 50, y: 30 },
-          { x: 54, y: 22 },
-          { x: 66, y: 22 },
-          { x: 72, y: 32 },
-          { x: 68, y: 44 },
-          { x: 58, y: 44 },
           { x: 66, y: 56 },
-          { x: 68, y: 70 },
-          { x: 58, y: 84 },
-          { x: 44, y: 84 },
-          { x: 30, y: 74 },
-          { x: 28, y: 50 },
-          { x: 28, y: 22 },
+          { x: 52, y: 51 },
+          { x: 49, y: 41 },
+          { x: 57, y: 35 },
+          { x: 67, y: 40 },
+          { x: 69, y: 54 },
+          { x: 66, y: 68 },
+          { x: 54, y: 78 },
+          { x: 39, y: 76 },
+          { x: 32, y: 63 },
+          { x: 31, y: 44 },
+          { x: 34, y: 24 },
         ], 18),
         'forward',
-        'Top-right loop descending down right stem and curving around bottom into left vertical stem'
+        'Inner oval spiral curving cleanly around the right side and bottom U-bowl up into the tall left stem'
       ),
     ],
     totalStrokes: 1,
