@@ -64,7 +64,7 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
     metadata: { phonetic: 'Ek', transliteration: '1' },
   },
 
-  // २ - दो (Two): Top rounded arch, waist sweep, left rounded bulb, and graceful downward-right tail
+  // २ - दो (Two): Top rounded arch, waist sweep into tight left rounded loop, and steep slanted tail
   '२': {
     character: '२',
     language: 'hi',
@@ -74,21 +74,21 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
         'hi_num_2_s1',
         1,
         sampleCurve([
-          { x: 34, y: 38 },
-          { x: 44, y: 24 },
-          { x: 60, y: 24 },
-          { x: 68, y: 36 },
-          { x: 66, y: 48 },
-          { x: 54, y: 56 },
-          { x: 38, y: 60 },
-          { x: 30, y: 65 },
-          { x: 36, y: 71 },
-          { x: 48, y: 72 },
-          { x: 62, y: 78 },
-          { x: 72, y: 86 },
+          { x: 37, y: 28 },
+          { x: 48, y: 24 },
+          { x: 61, y: 30 },
+          { x: 65, y: 42 },
+          { x: 58, y: 54 },
+          { x: 43, y: 58 },
+          { x: 35, y: 55 },
+          { x: 36, y: 50 },
+          { x: 42, y: 52 },
+          { x: 48, y: 61 },
+          { x: 54, y: 71 },
+          { x: 59, y: 80 },
         ], 14),
         'forward',
-        'Top rounded arch, waist sweep into left rounded bulb, and graceful downward-right tail'
+        'Top rounded arch sweeping into a left round loop and steep downward-right tail'
       ),
     ],
     totalStrokes: 1,
