@@ -512,19 +512,19 @@ export default function DuelGameScreen() {
           </Text>
         </View>
 
-        {/* Orientation Toggle: Opposite vs Side */}
+        {/* Orientation Toggle: shows the target (opposite) layout to switch into */}
         <TouchableOpacity
-          style={[styles.modeToggleBtn, isFaceToFace && styles.modeToggleActive]}
+          style={[styles.modeToggleBtn, !isFaceToFace && styles.modeToggleActive]}
           onPress={() => {
             soundEffects.playBubblePop();
             setIsFaceToFace((f) => !f);
           }}
           activeOpacity={0.8}
         >
-          <Text style={[styles.modeToggleText, isFaceToFace && styles.modeToggleActiveText]}>
+          <Text style={[styles.modeToggleText, !isFaceToFace && styles.modeToggleActiveText]}>
             {isFaceToFace
-              ? (language === 'gu' ? 'સામસામે' : language === 'hi' ? 'आमने-सामने' : 'Opposite')
-              : (language === 'gu' ? 'સાથે' : language === 'hi' ? 'साथ' : 'Side')}
+              ? (language === 'gu' ? 'સાથે' : language === 'hi' ? 'साथ' : 'Side')
+              : (language === 'gu' ? 'સામસામે' : language === 'hi' ? 'आमने-सामने' : 'Opposite')}
           </Text>
         </TouchableOpacity>
 
