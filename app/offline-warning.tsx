@@ -179,7 +179,7 @@ export default function OfflineWarningScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.card, claySurface('#FFFFFF', '#FDE68A')]}>
+        <View style={[styles.card, claySurface('plain', 2)]}>
           <Image source={require('../assets/icon.png')} style={styles.logo} resizeMode="contain" />
 
           <Text style={styles.title}>

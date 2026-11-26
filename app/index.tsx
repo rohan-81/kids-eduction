@@ -29,12 +29,15 @@ export default function SplashScreen() {
 
   const hasNavigated = useRef(false);
   const bootCheckRef = useRef<Promise<{ packInstalled: boolean; online: boolean }> | null>(null);
-  if (!bootCheckRef.current) {
-    bootCheckRef.current = Promise.all([
-      contentPackService.init().catch(() => false),
-      checkInternetAvailable(2800).catch(() => false),
-    ]).then(([packInstalled, online]) => ({ packInstalled, online }));
-  }
+
+  useEffect(() => {
+    if (!bootCheckRef.current) {
+      bootCheckRef.current = Promise.all([
+        contentPackService.init().catch(() => false),
+        checkInternetAvailable(2800).catch(() => false),
+      ]).then(([packInstalled, online]) => ({ packInstalled, online }));
+    }
+  }, []);
 
   const navigateToOnboarding = async () => {
     if (hasNavigated.current) return;

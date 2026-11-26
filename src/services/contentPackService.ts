@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { unzipSync } from 'fflate';
 import { getMediaBaseUrl, setLocalPackBaseUri, getLocalPackBaseUri } from '../utils/remoteAssets';
 import { apiService } from './apiService';
 
@@ -143,6 +142,8 @@ export const contentPackService = {
         for (let i = 0; i < binStr.length; i++) zipBytes[i] = binStr.charCodeAt(i);
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { unzipSync } = require('fflate/browser');
       const entries = unzipSync(zipBytes);
       const fileKeys = Object.keys(entries).filter((k) => !k.endsWith('/'));
       const createdDirs = new Set<string>();

@@ -136,7 +136,7 @@ export default function SetupScreen() {
       </View>
 
       <View style={styles.centerWrap}>
-        <View style={[styles.card, claySurface('#FFFFFF', '#E2E8F0')]}>
+        <View style={[styles.card, claySurface('plain', 2)]}>
           <Image source={require('../assets/icon.png')} style={styles.logo} resizeMode="contain" />
 
           <Text style={styles.title}>

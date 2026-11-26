@@ -1,17 +1,19 @@
-const { withGradleProperties, withAppBuildGradle } = require('@expo/config-plugins');
+const { withGradleProperties } = require('@expo/config-plugins');
 
 /**
- * Expo config plugin to minimize Android APK size while keeping runtime fast:
- * - Targets arm64-v8a only (cuts ~57 MB of x86/x86_64/armeabi-v7a native libs)
- * - Enables R8/ProGuard code & resource shrinking in release builds
- * - Compresses native .so libs inside the APK archive (unpacked once at install)
+ * Expo config plugin to minimize Android APK size safely:
+ * - Targets arm64-v8a only (cuts ~57.5 MB of x86/x86_64/armeabi-v7a native libs)
+ * - Sets expo.useLegacyPackaging=true so arm64-v8a .so libs are ZIP-compressed in the APK
+ *   (shrinks ~20 MB of native libs down to ~8 MB; unpacked once at install time)
+ * - Keeps R8/shrinkResources disabled so Expo New Architecture reflection/resources never crash
  */
 module.exports = function withSmallAndroidApk(config) {
-  config = withGradleProperties(config, (cfg) => {
+  return withGradleProperties(config, (cfg) => {
     const props = [
       { key: 'reactNativeArchitectures', value: 'arm64-v8a' },
-      { key: 'android.enableMinifyInReleaseBuilds', value: 'true' },
-      { key: 'android.enableShrinkResourcesInReleaseBuilds', value: 'true' },
+      { key: 'expo.useLegacyPackaging', value: 'true' },
+      { key: 'android.enableMinifyInReleaseBuilds', value: 'false' },
+      { key: 'android.enableShrinkResourcesInReleaseBuilds', value: 'false' },
     ];
     for (const { key, value } of props) {
       const existing = cfg.modResults.find((item) => item.type === 'property' && item.key === key);
@@ -23,21 +25,4 @@ module.exports = function withSmallAndroidApk(config) {
     }
     return cfg;
   });
-
-  config = withAppBuildGradle(config, (cfg) => {
-    let contents = cfg.modResults.contents;
-    if (!contents.includes('useLegacyPackaging')) {
-      const marker = 'android {';
-      const idx = contents.indexOf(marker);
-      if (idx !== -1) {
-        const insert = `\n    packagingOptions {\n        jniLibs {\n            useLegacyPackaging = true\n        }\n    }`;
-        contents = contents.slice(0, idx + marker.length) + insert + contents.slice(idx + marker.length);
-      }
-    }
-    cfg.modResults.contents = contents;
-    return cfg;
-  });
-
-  return config;
 };
-
