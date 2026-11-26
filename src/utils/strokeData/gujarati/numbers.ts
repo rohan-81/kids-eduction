@@ -115,7 +115,7 @@ export const GUJARATI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
     metadata: { phonetic: 'Tran', transliteration: '3' },
   },
 
-  // ૪ (Four): Authentic Gujarati ૪ - curved U-bowl horns crossing smoothly at waist into a round circular bottom loop
+  // ૪ (Four): Authentic Gujarati ૪ - straight diagonal V-arms crossing smoothly into a teardrop bottom loop
   '૪': {
     character: '૪',
     language: 'gu',
@@ -125,24 +125,22 @@ export const GUJARATI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
         'gu_num_4_s1',
         1,
         sampleCurve([
-          { x: 34, y: 26 },
-          { x: 33, y: 35 },
-          { x: 40, y: 44 },
-          { x: 50, y: 49 },
-          { x: 61, y: 56 },
-          { x: 64, y: 67 },
-          { x: 58, y: 76 },
-          { x: 50, y: 78 },
-          { x: 42, y: 76 },
-          { x: 36, y: 67 },
-          { x: 39, y: 56 },
-          { x: 50, y: 49 },
-          { x: 60, y: 44 },
-          { x: 67, y: 35 },
-          { x: 66, y: 26 },
+          { x: 31, y: 27 },
+          { x: 41, y: 36 },
+          { x: 50, y: 45 },
+          { x: 59, y: 55 },
+          { x: 62, y: 66 },
+          { x: 57, y: 75 },
+          { x: 50, y: 77 },
+          { x: 43, y: 75 },
+          { x: 38, y: 66 },
+          { x: 41, y: 55 },
+          { x: 50, y: 45 },
+          { x: 59, y: 36 },
+          { x: 69, y: 27 },
         ], 16),
         'forward',
-        'Top-left curved horn crossing through waist into round bottom loop and rising to top-right curved horn'
+        'Top-left straight diagonal arm crossing through center into teardrop bottom loop and rising diagonally top-right'
       ),
     ],
     totalStrokes: 1,
