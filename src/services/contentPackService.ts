@@ -133,8 +133,8 @@ export const contentPackService = {
           }
           downloaded = true;
           break;
-        } catch (err: any) {
-          lastErr = err instanceof Error ? err : new Error(err?.message || 'Download failed');
+        } catch (err: unknown) {
+          lastErr = err instanceof Error ? err : new Error((err as { message?: string })?.message || 'Download failed');
         }
       }
       if (!downloaded) {

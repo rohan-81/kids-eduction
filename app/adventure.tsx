@@ -1629,7 +1629,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#38A149',
   },
   terrainHillBand: {
-    ...(StyleSheet.absoluteFill as any),
+    ...StyleSheet.absoluteFill,
     overflow: 'hidden',
   },
   terrainFleckRow: {

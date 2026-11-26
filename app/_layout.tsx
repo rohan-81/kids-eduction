@@ -299,7 +299,7 @@ export default function RootLayout() {
           <Stack.Screen
             name="lessons/[id]"
             options={({ route }) => ({
-              animation: (route?.params as any)?.dir === 'prev' ? 'slide_from_left' : 'slide_from_right',
+              animation: (route?.params as Record<string, unknown> | undefined)?.dir === 'prev' ? 'slide_from_left' : 'slide_from_right',
             })}
           />
           <Stack.Screen name="games/index" />
