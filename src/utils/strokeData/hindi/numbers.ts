@@ -278,7 +278,7 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
     metadata: { phonetic: 'Aath', transliteration: '8' },
   },
 
-  // ९ - नौ (Nine): Top circular head into graceful down-right diagonal stem
+  // ९ - नौ (Nine): Vertical oval top loop sweeping cleanly into curved S-tail
   '९': {
     character: '९',
     language: 'hi',
@@ -288,20 +288,20 @@ export const HINDI_NUMBERS: Record<string, CharacterStrokeDefinition> = {
         'hi_num_9_s1',
         1,
         sampleCurve([
-          { x: 48, y: 42 },
-          { x: 38, y: 38 },
-          { x: 32, y: 28 },
-          { x: 38, y: 18 },
-          { x: 50, y: 18 },
-          { x: 58, y: 26 },
-          { x: 58, y: 38 },
-          { x: 50, y: 46 },
-          { x: 54, y: 56 },
-          { x: 62, y: 70 },
-          { x: 70, y: 84 },
+          { x: 46, y: 48 },
+          { x: 61, y: 41 },
+          { x: 63, y: 30 },
+          { x: 55, y: 21 },
+          { x: 42, y: 22 },
+          { x: 35, y: 34 },
+          { x: 39, y: 46 },
+          { x: 50, y: 54 },
+          { x: 62, y: 63 },
+          { x: 66, y: 75 },
+          { x: 65, y: 85 },
         ], 18),
         'forward',
-        'Top circular head into graceful down-right diagonal stem'
+        'Top vertical oval loop flowing smoothly down-right into a curved S-tail'
       ),
     ],
     totalStrokes: 1,
