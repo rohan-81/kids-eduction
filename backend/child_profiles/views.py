@@ -15,8 +15,4 @@ class ChildProfileViewSet(viewsets.ModelViewSet):
         return ChildProfile.objects.none()
 
     def perform_create(self, serializer):
-        user = self.request.user
-        if user and user.is_authenticated:
-            serializer.save(parent=user)
-        else:
-            serializer.save()
+        serializer.save(parent=self.request.user)

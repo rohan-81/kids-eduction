@@ -1,19 +1,9 @@
 import { Platform } from 'react-native';
+import { loadExpoAudio, loadFileSystemLegacy, type AudioPlayer } from './nativeModules';
 import { safeGetApiBaseUrl } from './apiConfig';
 import { getMediaBaseUrl, resolvePackFileUri } from '../utils/remoteAssets';
 
-let ExpoFileSystem: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  ExpoFileSystem = require('expo-file-system/legacy');
-} catch {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    ExpoFileSystem = require('expo-file-system');
-  } catch {
-    ExpoFileSystem = null;
-  }
-}
+const ExpoFileSystem = loadFileSystemLegacy();
 
 function getAnimalAudioCachePath(key: string): string | null {
   const baseDir = ExpoFileSystem?.documentDirectory || ExpoFileSystem?.cacheDirectory;
@@ -53,25 +43,8 @@ function cacheRemoteAnimalAudioInBackground(key: string, url: string): void {
 }
 
 // Safely obtain native audio player factory if available (Expo SDK 53+ uses expo-audio)
-let createAudioPlayerFn: ((source: any) => any) | null = null;
-let setAudioModeAsyncFn: ((mode: any) => Promise<any>) | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const ExpoAudio = require('expo-audio');
-  createAudioPlayerFn = ExpoAudio?.createAudioPlayer || ExpoAudio?.default?.createAudioPlayer || null;
-  setAudioModeAsyncFn = ExpoAudio?.setAudioModeAsync || ExpoAudio?.default?.setAudioModeAsync || null;
-} catch {
-  // Native module not linked or not supported
-}
+const { createAudioPlayer: createAudioPlayerFn, setAudioModeAsync: setAudioModeAsyncFn } = loadExpoAudio();
 
-let ExpoAvAudio: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const ExpoAv = require('expo-av');
-  ExpoAvAudio = ExpoAv?.Audio || null;
-} catch {
-  // Native module not linked or not supported
-}
 
 const ANIMAL_AUDIO_KEYS = [
   'lion', 'tiger', 'cat', 'dog', 'cow', 'peacock', 'bird', 'sparrow',
@@ -84,7 +57,10 @@ const ANIMAL_AUDIO_KEYS = [
 ] as const;
 
 // Minimal bundled fallback; all other compressed animal MP3s stream from backend/media and cache on device storage.
-const ANIMAL_AUDIO_MAP: Record<string, any> = {
+/** A bundled `require()`d asset: a module id on native, a URL string or `{ uri | default }` on web. */
+type BundledAsset = number | string | { uri?: string; default?: string };
+
+const ANIMAL_AUDIO_MAP: Record<string, BundledAsset> = {
   cat: require('../../assets/audio/animals/cat.mp3'),
 };
 
@@ -144,12 +120,17 @@ const WEB_AUDIO_FILE_MAP: Record<string, string> = {
 
 // KidsZone Kid-Friendly Sound Effects & Authentic Animal Audio
 class SoundEffectsService {
-  private currentAnimalSound: any = null;
-  private currentWebAudio: any = null;
-  private animalStopTimeout: any = null;
-  private animalFadeInterval: any = null;
-  private audioCtx: any = null;
-  private bgmInterval: any = null;
+  private currentAnimalSound: AudioPlayer | null = null;
+  /**
+   * Incremented on every play/stop. An async playAnimalSound() that resumes after an await
+   * with a stale id aborts instead of creating a second, overlapping (leaked) player (P1-5).
+   */
+  private animalReqId = 0;
+  private currentWebAudio: HTMLAudioElement | null = null;
+  private animalStopTimeout: ReturnType<typeof setTimeout> | null = null;
+  private animalFadeInterval: ReturnType<typeof setInterval> | null = null;
+  private audioCtx: AudioContext | null = null;
+  private bgmInterval: ReturnType<typeof setInterval> | null = null;
   private soundEnabled: boolean = true;
   private isBgmPlaying: boolean = false;
   private bgmMuted: boolean = false;
@@ -174,10 +155,10 @@ class SoundEffectsService {
     329.63, 392.00, 440.00, 523.25, 440.00, 392.00, 329.63, 261.63
   ];
 
-  private getAudioContext(): any {
+  private getAudioContext(): AudioContext | null {
     if (!this.soundEnabled) return null;
     if (typeof window === 'undefined') return null;
-    const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextClass) return null;
 
     if (!this.audioCtx) {
@@ -399,8 +380,15 @@ class SoundEffectsService {
     return this.bgmMuted;
   }
 
-  // Stop any currently playing animal / bird audio immediately
+  // Stop any currently playing animal / bird audio immediately, and cancel any request that
+  // is still resolving its source (so it cannot start playing after the caller stopped it).
   public stopAnimalSound(): void {
+    this.animalReqId += 1;
+    this.releaseAnimalPlayers();
+  }
+
+  /** Pauses and releases the current animal players without cancelling the active request. */
+  private releaseAnimalPlayers(): void {
     if (this.animalStopTimeout) {
       clearTimeout(this.animalStopTimeout);
       this.animalStopTimeout = null;
@@ -424,12 +412,6 @@ class SoundEffectsService {
         if (typeof this.currentAnimalSound.remove === 'function') {
           this.currentAnimalSound.remove();
         }
-        if (typeof this.currentAnimalSound.stopAsync === 'function') {
-          this.currentAnimalSound.stopAsync().catch(() => {});
-        }
-        if (typeof this.currentAnimalSound.unloadAsync === 'function') {
-          this.currentAnimalSound.unloadAsync().catch(() => {});
-        }
       } catch { }
       this.currentAnimalSound = null;
     }
@@ -446,10 +428,11 @@ class SoundEffectsService {
     maxDurationMs: number = 2800,
     customAudioUrl?: string
   ): Promise<boolean> {
+    // Always stop any previously playing audio immediately so sounds never overlap or run in background
+    this.stopAnimalSound();
+    const req = this.animalReqId;
+    const isStale = () => req !== this.animalReqId;
     try {
-      // Always stop any previously playing audio immediately so sounds never overlap or run in background
-      this.stopAnimalSound();
-
       if (!this.soundEnabled) return false;
 
       const key = (animalKey || '').toLowerCase();
@@ -531,6 +514,7 @@ class SoundEffectsService {
       }
 
       const cachedLocalUri = Platform.OS !== 'web' ? await resolveCachedAnimalAudioUri(canonicalAudioKey) : null;
+      if (isStale()) return false;
       const nativeCachedSource = cachedLocalUri ? { uri: cachedLocalUri } : null;
 
       // Ensure native audio mode supports playback in silent/vibrate mode
@@ -541,27 +525,36 @@ class SoundEffectsService {
             allowsRecording: false,
           });
         } catch {}
+        if (isStale()) return false;
       }
 
       // Web Audio playback
-      if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof (window as any).Audio !== 'undefined') {
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.Audio !== 'undefined') {
         const webFallbackFile = WEB_AUDIO_FILE_MAP[matchedKey] || `/audio/animals/${matchedKey}.mp3`;
         const candidateUrls = [
           typeof bundledSource === 'string' ? bundledSource : null,
-          bundledSource && (bundledSource as any).default,
-          bundledSource && (bundledSource as any).uri,
+          typeof bundledSource === 'object' && bundledSource ? bundledSource.default : null,
+          typeof bundledSource === 'object' && bundledSource ? bundledSource.uri : null,
           webFallbackFile,
           streamUrl,
         ].filter(Boolean) as string[];
 
         for (const candidate of candidateUrls) {
           try {
-            const audio = new (window as any).Audio(candidate);
+            if (isStale()) return false;
+            this.releaseAnimalPlayers();
+            const audio = new window.Audio(candidate);
             this.currentWebAudio = audio;
             audio.volume = 1.0;
             const playPromise = audio.play();
             if (playPromise !== undefined) {
               await playPromise;
+            }
+            if (isStale()) {
+              // A newer tap (or stop) arrived while this one was starting: silence it.
+              try { audio.pause(); } catch {}
+              if (this.currentWebAudio === audio) this.currentWebAudio = null;
+              return false;
             }
 
             // Stop with gentle fade-out after maxDurationMs
@@ -603,6 +596,8 @@ class SoundEffectsService {
         const localSource = nativeCachedSource || bundledSource;
         if (localSource) {
           try {
+            if (isStale()) return false;
+            this.releaseAnimalPlayers();
             const player = createAudioPlayerFn(localSource);
             if (player) {
               this.currentAnimalSound = player;
@@ -626,6 +621,8 @@ class SoundEffectsService {
           try {
             cacheRemoteAnimalAudioInBackground(canonicalAudioKey, streamUrl);
             const remoteSource = { uri: streamUrl };
+            if (isStale()) return false;
+            this.releaseAnimalPlayers();
             const player = createAudioPlayerFn(remoteSource);
             if (player) {
               this.currentAnimalSound = player;
@@ -645,44 +642,6 @@ class SoundEffectsService {
         }
       }
 
-      // Priority 3: Fallback via expo-av Sound (for Expo Go & broad device compatibility)
-      if (!this.currentAnimalSound && ExpoAvAudio?.Sound) {
-        const localAvSource = nativeCachedSource || bundledSource;
-        if (localAvSource) {
-          try {
-            const soundInstance = new ExpoAvAudio.Sound();
-            this.currentAnimalSound = soundInstance;
-            await soundInstance.loadAsync(localAvSource, { shouldPlay: true, volume: 1.0 });
-
-            this.animalStopTimeout = setTimeout(() => {
-              if (this.currentAnimalSound === soundInstance) {
-                this.stopAnimalSound();
-              }
-            }, maxDurationMs);
-            return true;
-          } catch (avErr) {
-            console.warn('[soundEffects] expo-av local animal sound failed:', avErr);
-          }
-        }
-
-        if (streamUrl) {
-          try {
-            cacheRemoteAnimalAudioInBackground(canonicalAudioKey, streamUrl);
-            const soundInstance = new ExpoAvAudio.Sound();
-            this.currentAnimalSound = soundInstance;
-            await soundInstance.loadAsync({ uri: streamUrl }, { shouldPlay: true, volume: 1.0 });
-
-            this.animalStopTimeout = setTimeout(() => {
-              if (this.currentAnimalSound === soundInstance) {
-                this.stopAnimalSound();
-              }
-            }, maxDurationMs);
-            return true;
-          } catch (avErr) {
-            console.warn('[soundEffects] expo-av remote animal sound failed:', avErr);
-          }
-        }
-      }
     } catch (e) {
       console.warn('playAnimalSound error:', e);
     }

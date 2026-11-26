@@ -3,6 +3,8 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import {
   View, Text, StyleSheet, ScrollView, Platform, Animated, Easing, Pressable, useWindowDimensions, Modal,
   TextInput, TouchableOpacity, Image,
+  type DimensionValue,
+  type ImageStyle
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,7 +27,7 @@ import {
 import { ConfettiCelebration } from '../src/components/common/ConfettiCelebration';
 import { ClayButton } from '../src/components/clay';
 import { FloatingSparkles, SpeechBubble, CornerRibbon, Glyph, useKidDialog } from '../src/components/fun';
-import { STORIES_DATA, StoryBook, StoryScene, StoryChoiceOption } from '../src/data/storiesData';
+import { STORIES_DATA, StoryBook, StoryScene, StoryChoiceOption, type StoryChoice } from '../src/data/storiesData';
 import { getStoryReadingMinutes, getStoryDifficulty, getStoryCategoryMeta } from '../src/utils/storyMeta';
 import { StoryIllustration } from '../src/components/story/StoryIllustration';
 import { composeCover, getSceneComposition, resolveStoryCover, resolveStoryScene } from '../src/utils/storyArt';
@@ -40,6 +42,8 @@ import { AppLanguage } from '../src/types';
 import * as Art from '../src/components/art3d/Art3D';
 import { VolumeIcon } from '../src/components/fun';
 import { Remote3DImage } from '../src/components/common/Remote3DImage';
+import { webStyle } from '../src/utils/webStyle';
+import type { ImageAsset } from '../src/utils/remoteAssets';
 
 const useNative = Platform.OS !== 'web';
 
@@ -61,7 +65,7 @@ function getSceneText(scene: StoryScene, lang: string): string {
   return scene.textGu;
 }
 
-function getChoiceQuestion(choice: any, lang: string): string {
+function getChoiceQuestion(choice: StoryChoice | undefined, lang: string): string {
   if (!choice) return '';
   if (lang === 'en') return choice.questionEn;
   if (lang === 'hi') return choice.questionHi || choice.questionGu;
@@ -99,7 +103,8 @@ const GradientStage: React.FC<{ id: string; from: string; to: string; radius?: n
 );
 
 /** Visual framing offsets for cover art so characters are centered and not cropped at edges */
-const STORY_COVER_FRAMING: Record<string, any> = {
+/** objectPosition is web-only (react-native-web); native ignores it. */
+const STORY_COVER_FRAMING: Record<string, ImageStyle & { objectPosition?: string }> = {
   'story-crow': { objectPosition: 'center 68%', transform: [{ translateY: -10 }, { scale: 1.1 }] },
   'crow': { objectPosition: 'center 68%', transform: [{ translateY: -10 }, { scale: 1.1 }] },
   '1': { objectPosition: 'center 68%', transform: [{ translateY: -10 }, { scale: 1.1 }] },
@@ -126,7 +131,7 @@ const BookCover: React.FC<{
   index: number;
   lang: AppLanguage;
   isRead: boolean;
-  width: any;
+  width: DimensionValue;
   onOpen: () => void;
 }> = ({ story, index, lang, isRead, width, onOpen }) => {
   const tone: KidTone = toneAt(index);
@@ -146,7 +151,7 @@ const BookCover: React.FC<{
       onPressOut={() => Animated.spring(press, { toValue: 0, friction: 4, tension: 150, useNativeDriver: useNative }).start()}
       accessibilityRole="button"
       accessibilityLabel={`${getStoryTitle(story, lang)}, ${mins} min`}
-      style={[{ width, display: 'flex', flexDirection: 'column' }, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+      style={[{ width, display: 'flex', flexDirection: 'column' }, webStyle({ cursor: 'pointer' })]}
     >
       <Animated.View style={[styles.book, { borderBottomColor: spec.edge }, clayShadow(3), { transform: [{ scale }, { translateY }] }]}>
         {/* Spine */}
@@ -228,7 +233,7 @@ const BookCover: React.FC<{
 };
 
 /** 3D quest badge for a saved magic story (its cover emoji is the quest's emoji). */
-function getMagicCoverArt(story: StoryBook): any | null {
+function getMagicCoverArt(story: StoryBook): ImageAsset | null {
   return MAGIC_THEMES.find((t) => t.emoji === story.coverEmoji)?.image ?? null;
 }
 
@@ -278,7 +283,7 @@ const SavedStoryCover: React.FC<{
       onPressOut={() => Animated.spring(press, { toValue: 0, friction: 4, tension: 150, useNativeDriver: useNative }).start()}
       accessibilityRole="button"
       accessibilityLabel={title}
-      style={[styles.savedBookWrap, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+      style={[styles.savedBookWrap, webStyle({ cursor: 'pointer' })]}
     >
       <Animated.View
         style={[
@@ -381,13 +386,13 @@ const SavedStoryCover: React.FC<{
  * Idle     -> white card, #E2E8F0 border, neutral lip.
  */
 const MagicChip: React.FC<{
-  image: any;
+  image: ImageAsset;
   label: string;
   selected: boolean;
   tone: KidTone;
   onPress: () => void;
   imageSize?: number;
-  width?: any;
+  width?: DimensionValue;
 }> = ({ image, label, selected, tone, onPress, imageSize = 64, width }) => {
   const spec = kidTones[tone];
   const scale = useRef(new Animated.Value(selected ? 1.05 : 1)).current;
@@ -406,7 +411,7 @@ const MagicChip: React.FC<{
           selected
             ? { backgroundColor: spec.tint, borderColor: spec.fill, borderBottomColor: spec.edge, borderWidth: 2.5, borderBottomWidth: 5 }
             : null,
-          Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+          webStyle({ cursor: 'pointer' }),
         ]}
       >
         <Remote3DImage
@@ -451,7 +456,7 @@ export default function StoryModeScreen() {
   }, [progress?.childName, magicChildName]);
 
   useEffect(() => {
-    AsyncStorage.getItem('@kidszone_magic_stories').then((val) => {
+    AsyncStorage.getItem('@kidszone_magic_stories').catch(() => null).then((val) => {
       if (val) {
         try {
           const parsed = JSON.parse(val);
@@ -624,13 +629,21 @@ export default function StoryModeScreen() {
     narrate(scene);
   };
 
+  const rewardedChoicesRef = useRef<Set<string>>(new Set());
+
   const handleChoice = (opt: StoryChoiceOption) => {
     const fbText = getChoiceFeedback(opt, textLang);
     if (opt.isBest) {
       soundEffects.playTadaaa();
       setChoiceFeedback({ text: fbText, good: true });
       speak(fbText, textLang);
-      addCoins(10);
+      // One reward per choice scene: the options stay tappable (and paging back re-arms them),
+      // so every extra tap on the right answer used to pay another +10.
+      const choiceKey = `${selectedStory?.id ?? ''}:${currentPage}`;
+      if (!rewardedChoicesRef.current.has(choiceKey)) {
+        rewardedChoicesRef.current.add(choiceKey);
+        addCoins(10);
+      }
     } else {
       soundEffects.playBuzzer();
       setChoiceFeedback({ text: fbText, good: false });
@@ -641,7 +654,10 @@ export default function StoryModeScreen() {
   const handleFinishStory = () => {
     if (!selectedStory) return;
     soundEffects.playTadaaa();
-    addCoins(20);
+    // Like rhymes and word builder: the completion bonus is paid on the first read only.
+    if (!progress.completedLessons?.includes(selectedStory.id)) {
+      addCoins(20);
+    }
     try {
       completeLesson(selectedStory.id);
       completeLesson('story-' + selectedStory.id);
@@ -704,7 +720,7 @@ export default function StoryModeScreen() {
 
   // Catalogue grid: 1 column on phones, 2 on tablets, 3 on wide desktop.
   const shelfCols = screenW >= 1000 ? 3 : screenW >= 640 ? 2 : 1;
-  const coverWidth: any = shelfCols === 1 ? '100%' : shelfCols === 2 ? '48.5%' : '31.8%';
+  const coverWidth: DimensionValue = shelfCols === 1 ? '100%' : shelfCols === 2 ? '48.5%' : '31.8%';
 
   const pillScale = pillAnim.interpolate({ inputRange: [0, 1], outputRange: [0.75, 1] });
   const speakerScale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
@@ -1023,7 +1039,7 @@ export default function StoryModeScreen() {
                       {/* Scene Text with Synchronized Word Glow Reader */}
                       <WordGlowReader
                         text={getSceneText(currentScene, activeLang)}
-                        language={activeLang as any}
+                        language={activeLang}
                         isNarrating={isNarrating}
                         speechRate={voiceRate}
                         onNarrationEnd={() => setIsNarrating(false)}
@@ -1035,7 +1051,7 @@ export default function StoryModeScreen() {
                           styles.speakerBtn,
                           isNarrating ? styles.speakerBtnActive : styles.speakerBtnIdle,
                           shadows.soft,
-                          Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+                          webStyle({ cursor: 'pointer' }),
                         ]}
                         onPress={() => handleToggleReadScene(currentScene)}
                         activeOpacity={0.8}
@@ -1092,7 +1108,7 @@ export default function StoryModeScreen() {
                             </Text>
                           </View>
                           <View style={styles.optionsList}>
-                            {currentScene.choice.options.map((opt: any, oIdx: number) => (
+                            {currentScene.choice.options.map((opt: StoryChoiceOption, oIdx: number) => (
                               <ClayButton
                                 key={`c-opt-${oIdx}`}
                                 tone={oIdx % 2 === 0 ? 'sky' : 'coral'}
@@ -1835,7 +1851,7 @@ const styles = StyleSheet.create({
     color: '#0369A1',
     fontSize: 12,
     fontWeight: '700',
-    fontFamily: (Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined) as any,
+    fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
   },
   savedClearBtn: {
     paddingHorizontal: 10,

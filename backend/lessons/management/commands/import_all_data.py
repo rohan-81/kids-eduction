@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path
 from django.core.management.base import BaseCommand
@@ -52,19 +53,25 @@ class Command(BaseCommand):
 
         # Step 1: Ensure export data exists or refresh if requested
         if refresh_export or not export_file.exists():
-            self.stdout.write("Running static data extractor script via npx tsx...")
+            # Plain Node + scripts/register_assets.cjs (aliases react-native to mocks and
+            # transpiles TS with the project's own `typescript`). `npx tsx` both downloaded a
+            # package on every run and failed to parse react-native 0.88's Flow entry.
+            self.stdout.write("Running static data extractor (node -r scripts/register_assets.cjs)...")
+            node = shutil.which('node')
             try:
-                result = subprocess.run(
-                    ['npx', '--yes', 'tsx', '-r', './scripts/register_assets.cjs', 'scripts/export_static_data.ts'],
+                if not node:
+                    raise FileNotFoundError('node executable not found on PATH')
+                subprocess.run(
+                    [node, '-r', './scripts/register_assets.cjs', 'scripts/export_static_data.ts'],
                     cwd=str(project_root),
                     capture_output=True,
                     text=True,
-                    shell=True,
-                    check=True
+                    check=True,
                 )
                 self.stdout.write(self.style.SUCCESS("TypeScript static data extracted successfully."))
-            except subprocess.CalledProcessError as e:
-                self.stdout.write(self.style.ERROR(f"Data extraction failed: {e.stderr or e.stdout}"))
+            except (subprocess.CalledProcessError, OSError) as e:
+                detail = getattr(e, 'stderr', None) or getattr(e, 'stdout', None) or str(e)
+                self.stdout.write(self.style.ERROR(f"Data extraction failed: {detail}"))
                 if not export_file.exists():
                     self.stdout.write(self.style.ERROR("Fatal: No exported data file available to import."))
                     return
@@ -154,7 +161,7 @@ class Command(BaseCommand):
                 stats['lessons']['discovered'] = len(all_lessons)
                 for idx, item in enumerate(all_lessons):
                     try:
-                        stable_id = str(item.get('id') or f"lesson-{item.get('category')}-{idx+1}")
+                        stable_id = str(item.get('id') or f"lesson-{item.get('category') or item.get('categoryId')}-{idx+1}")
                         lang_code = item.get('language', 'gu')
                         if lang_code not in ['gu', 'en', 'hi', 'all']:
                             lang_code = 'gu'
@@ -168,7 +175,7 @@ class Command(BaseCommand):
                                 stable_id=stable_id,
                                 defaults={
                                     'title': item.get('title', 'Lesson'),
-                                    'category': item.get('category', 'general'),
+                                    'category': item.get('category') or item.get('categoryId') or 'general',
                                     'language': lang_code,
                                     'age_group': age_grp,
                                     'difficulty': item.get('difficulty', 1),

@@ -78,3 +78,39 @@ class QuestionSecurityAndSubmissionTest(TestCase):
         )
         with self.assertRaises(ValidationError):
             bad_q.clean()
+
+
+class WrongAnswerLoggingTest(TestCase):
+    """Regression: the old ownership check read child.user (no such field) and silently failed."""
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from rest_framework.test import APIClient
+        from child_profiles.models import ChildProfile
+        self.question = Question.objects.create(
+            stable_id='q-log-1', question_text='Pick K', question_type='find-letter', category='gujarati',
+            language='gu', options=[{'id': '1', 'label': 'ક'}, {'id': '2', 'label': 'ખ'}], correct_answer='1',
+        )
+        self.parent = User.objects.create_user(username='log_parent', password='Password123!')
+        self.other = User.objects.create_user(username='log_other', password='Password123!')
+        self.child = ChildProfile.objects.create(parent=self.parent, nickname='A', age_group='2-4')
+        self.other_child = ChildProfile.objects.create(parent=self.other, nickname='B', age_group='2-4')
+        self.api = APIClient()
+
+    def _submit(self, child_id):
+        return self.api.post('/api/questions/submit/', {
+            'question_id': self.question.id, 'selected_answer': '2', 'child_profile_id': child_id,
+        }, format='json')
+
+    def test_owner_wrong_answer_is_logged(self):
+        from parent_controls.models import WrongAnswerLog
+        self.api.force_authenticate(self.parent)
+        self.assertEqual(self._submit(self.child.id).status_code, 200)
+        self.assertEqual(WrongAnswerLog.objects.filter(child_profile=self.child).count(), 1)
+
+    def test_anonymous_or_foreign_child_is_never_logged(self):
+        from parent_controls.models import WrongAnswerLog
+        self.assertEqual(self._submit(self.other_child.id).status_code, 200)  # anonymous
+        self.api.force_authenticate(self.parent)
+        self.assertEqual(self._submit(self.other_child.id).status_code, 200)  # foreign child
+        self.assertFalse(WrongAnswerLog.objects.exists())

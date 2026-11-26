@@ -13,7 +13,7 @@ class AccountsAuthTests(TestCase):
         payload = {
             'username': 'parent_sarah',
             'email': 'sarah@example.com',
-            'password': 'password123',
+            'password': 'Sunflower#2026',
             'parent_name': 'Sarah Jenkins',
             'child_nickname': 'Leo',
             'child_age_group': '4-6',
@@ -27,7 +27,7 @@ class AccountsAuthTests(TestCase):
 
         # Check user created in DB
         user = User.objects.get(username='parent_sarah')
-        self.assertTrue(user.check_password('password123'))
+        self.assertTrue(user.check_password('Sunflower#2026'))
 
         # Check child profile linked
         child = ChildProfile.objects.filter(parent=user).first()
@@ -39,7 +39,7 @@ class AccountsAuthTests(TestCase):
         User.objects.create_user(username='existing_parent', password='password123')
         payload = {
             'username': 'existing_parent',
-            'password': 'password456',
+            'password': 'Sunflower#2026x',
         }
         response = self.client.post('/api/auth/register/', payload, format='json')
         self.assertEqual(response.status_code, 400)
@@ -50,7 +50,7 @@ class AccountsAuthTests(TestCase):
         payload = {
             'username': 'user2',
             'email': 'test@example.com',
-            'password': 'password456',
+            'password': 'Sunflower#2026x',
         }
         response = self.client.post('/api/auth/register/', payload, format='json')
         self.assertEqual(response.status_code, 400)
@@ -142,3 +142,34 @@ class AccountsAuthTests(TestCase):
         profile = ChildProfile.objects.get(id=create_res.data['id'])
         self.assertEqual(profile.parent, user)
 
+
+
+class AuthHardeningTests(TestCase):
+    """Audit P1-8: password validators run on registration; login is rate limited."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.client = APIClient()
+
+    def test_common_password_rejected(self):
+        res = self.client.post('/api/auth/register/', {'username': 'weakling', 'password': 'password'}, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('password', res.data)
+
+    def test_numeric_password_rejected(self):
+        res = self.client.post('/api/auth/register/', {'username': 'numbers', 'password': '83920174'}, format='json')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('password', res.data)
+
+    def test_login_is_throttled(self):
+        from unittest import mock
+        from rest_framework.throttling import ScopedRateThrottle
+        rates = dict(ScopedRateThrottle.THROTTLE_RATES, login='3/min')
+        with mock.patch.object(ScopedRateThrottle, 'THROTTLE_RATES', rates):
+            codes = [
+                self.client.post('/api/auth/login/', {'username': 'x', 'password': 'y'}, format='json').status_code
+                for _ in range(5)
+            ]
+        self.assertEqual(codes[:3], [400, 400, 400])
+        self.assertEqual(codes[3:], [429, 429])

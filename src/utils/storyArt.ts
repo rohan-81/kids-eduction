@@ -7,6 +7,7 @@
  *   2. Bundled artwork registered in STORY_IMAGE_MAP (src/utils/imageHelper.ts)
  *   3. null -> <StoryIllustration> draws an illustrated SVG scene (never a bare emoji box)
  */
+import type { ImageSourcePropType } from 'react-native';
 import { StoryBook, StoryScene } from '../data/storiesData';
 import { resolveOfflineMediaSource } from './remoteAssets';
 
@@ -21,7 +22,7 @@ export interface SceneComposition {
 }
 
 /** True when a backend field holds a picture reference rather than emoji text. */
-export function isImageRef(value?: string | null): boolean {
+export function isImageRef(value?: string | null): value is string {
   if (!value) return false;
   const v = value.trim();
   return /^https?:\/\//i.test(v) || /^\/media\//i.test(v) || /\.(png|jpe?g|webp|gif)(\?.*)?$/i.test(v);
@@ -44,9 +45,9 @@ export function withArtVersion(url: string, version: string = STORY_ART_VERSION)
   return `${url}${url.includes('?') ? '&' : '?'}v=${version}`;
 }
 
-type ImageMap = Record<string, { cover?: any; scenes?: Record<number, any> }>;
+type ImageMap = Record<string, { cover?: ImageSourcePropType; scenes?: Record<number, ImageSourcePropType> }>;
 
-export function resolveStoryCover(story: StoryBook, map: ImageMap): any | null {
+export function resolveStoryCover(story: StoryBook, map: ImageMap): ImageSourcePropType | null {
   if (story.coverImage) return resolveOfflineMediaSource({ uri: story.coverImage });
   const id = String(story.id || '');
   const found =
@@ -57,7 +58,7 @@ export function resolveStoryCover(story: StoryBook, map: ImageMap): any | null {
   return resolveOfflineMediaSource(found);
 }
 
-export function resolveStoryScene(story: StoryBook, page: number, map: ImageMap): any | null {
+export function resolveStoryScene(story: StoryBook, page: number, map: ImageMap): ImageSourcePropType | null {
   const scene = story.scenes[page - 1];
   if (scene?.image) return resolveOfflineMediaSource({ uri: scene.image });
   const id = String(story.id || '');
@@ -108,9 +109,9 @@ export function composeCover(story: StoryBook): SceneComposition {
   return { ...first, actors: heroFirst };
 }
 
-export interface SceneCast {
+export interface SceneCast<S = ImageSourcePropType> {
   /** 3D characters with real artwork, one per distinct image (🪓 🪓 -> one woodcutter). */
-  cast: { glyph: string; source: any }[];
+  cast: { glyph: string; source: S }[];
   /** Objects / moods without character art (🏺 🍇 😢), shown as small badges. */
   props: string[];
 }
@@ -119,16 +120,16 @@ export interface SceneCast {
  * Splits a scene's actors into 3D-illustrated characters and small props.
  * When no actor has character art, the story hero stands in so a page is never empty.
  */
-export function castScene(
+export function castScene<S = ImageSourcePropType>(
   actors: string[],
   hero: string | undefined,
-  lookup: (glyph: string) => any,
+  lookup: (glyph: string) => S | null | undefined,
   maxCast = 3,
   maxProps = 2
-): SceneCast {
-  const cast: SceneCast['cast'] = [];
+): SceneCast<S> {
+  const cast: SceneCast<S>['cast'] = [];
   const props: string[] = [];
-  const seen = new Set<any>();
+  const seen = new Set<S>();
   actors.forEach((glyph) => {
     const source = lookup(glyph);
     if (source) {

@@ -156,7 +156,7 @@ export default function ShopGameScreen() {
   };
 
   const formatPrice = (p: number) => {
-    return formatNumberDigits(p, activeLang as any);
+    return formatNumberDigits(p, activeLang);
   };
 
   const addToCart = (item: ShopItem) => {

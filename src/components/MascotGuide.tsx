@@ -4,6 +4,7 @@ import { colors } from '../theme/colors';
 import { spacing, radii, shadows } from '../theme/spacing';
 import { useApp } from '../context/AppContext';
 import { soundEffects } from '../services/soundEffects';
+import type { TimerHandle } from '../utils/runtime';
 
 const MASCOT_MESSAGES_GU = [
   'ખૂબ સરસ દોસ્ત! તું બહુ હોશિયાર છે! 🌟',
@@ -35,7 +36,7 @@ export const MascotGuide: React.FC = () => {
   const isCompact = width < 380;
   const [bubbleText, setBubbleText] = useState<string | null>(null);
   const [character, setCharacter] = useState<'🐵' | '🦁' | '🐰'>('🐵');
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<TimerHandle | null>(null);
 
   useEffect(() => {
     return () => {

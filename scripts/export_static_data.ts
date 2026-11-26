@@ -16,6 +16,7 @@ import { ENGLISH_LESSONS } from '../src/data/lessonsEnglish';
 import { GK_LESSONS } from '../src/data/lessonsGK';
 import { MATH_LESSONS } from '../src/data/lessonsMath';
 import { SCIENCE_LESSONS } from '../src/data/lessonsScience';
+
 import { GAME_QUESTIONS, PUZZLE_PICTURES } from '../src/data/gamesData';
 import { STORIES_DATA } from '../src/data/storiesData';
 import { ADVENTURE_LEVELS } from '../src/data/adventureLevels';
@@ -23,6 +24,10 @@ import { COLORING_TEMPLATES } from '../src/data/coloringTemplates';
 import { TEST_QUESTIONS } from '../src/data/challengeData';
 import { RHYMES_DATA, toBackendRhyme } from '../src/data/rhymesData';
 import { STICKER_CATALOG, toBackendSticker } from '../src/data/stickersData';
+
+const OTHER_SUBJECT_LESSON_IDS = new Set(
+  [...ENGLISH_LESSONS, ...GK_LESSONS, ...MATH_LESSONS, ...SCIENCE_LESSONS].map((l) => l.id)
+);
 
 // Parse screen-defined data safely from sources
 function extractArrayFromSource(filePath: string, startPattern: RegExp, endPattern: RegExp): any[] {
@@ -193,7 +198,9 @@ const exportPayload = {
   },
   categories: CATEGORIES,
   lessons: {
-    gujarati: LESSONS,
+    // LESSONS aggregates every subject; export only the lessons not already listed below so
+    // each lesson appears exactly once (previously 255 lessons were duplicated).
+    gujarati: LESSONS.filter((l) => !OTHER_SUBJECT_LESSON_IDS.has(l.id)),
     english: ENGLISH_LESSONS,
     gk: GK_LESSONS,
     math: MATH_LESSONS,
@@ -215,7 +222,22 @@ if (!fs.existsSync(outputDir)) {
 }
 
 const outputPath = path.join(outputDir, 'kidszone_data.json');
-fs.writeFileSync(outputPath, JSON.stringify(exportPayload, null, 2), 'utf8');
+/**
+ * Remote media sources resolve against the API host of whoever runs the export (e.g. a dev
+ * machine's http://127.0.0.1:8000). Store them host-independently as the plain file name, the
+ * same format bundled asset requires already use.
+ */
+const portableMedia = (_key: string, value: unknown): unknown => {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const uri = (value as { uri?: unknown }).uri;
+    if (typeof uri === 'string' && /\/media\//.test(uri) && Object.keys(value).length === 1) {
+      return path.basename(uri.split('?')[0]);
+    }
+  }
+  return value;
+};
+
+fs.writeFileSync(outputPath, JSON.stringify(exportPayload, portableMedia, 2), 'utf8');
 
 console.log('✅ Static data exported successfully to:', outputPath);
 console.log('Summary:');

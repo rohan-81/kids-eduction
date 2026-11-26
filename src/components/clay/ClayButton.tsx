@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { kidTones, kidRadii, kidSizes, CLAY_DEPTH, KidTone } from '../../theme/kidTheme';
 import { soundEffects } from '../../services/soundEffects';
+import { webStyle } from '../../utils/webStyle';
 
 export interface ClayButtonProps {
   title?: string;
@@ -97,7 +98,7 @@ export const ClayButton: React.FC<ClayButtonProps> = ({
       style={[
         styles.button,
         { height: height + CLAY_DEPTH, minWidth: height },
-        Platform.OS === 'web' && ({ cursor: disabled ? 'default' : 'pointer', userSelect: 'none' } as any),
+        webStyle({ cursor: disabled ? 'default' : 'pointer', userSelect: 'none' }),
         style,
       ]}
     >

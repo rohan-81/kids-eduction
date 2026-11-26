@@ -31,6 +31,7 @@ import { AgeGroup } from '../src/types';
 import { GuestNameModal } from '../src/components/common/GuestNameModal';
 import { localizeAuthError } from '../src/utils/authErrorTranslators';
 import { Glyph } from '../src/components/fun/KidIcons';
+import { webStyle } from '../src/utils/webStyle';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -149,6 +150,7 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
+    if (isLoading) return; // keyboard 'submit' while a request is in flight sent a second one
     soundEffects.playBubblePop();
     setErrorMessage('');
 
@@ -812,11 +814,9 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     height: '100%',
     backgroundColor: 'transparent',
-    ...(Platform.OS === 'web'
-      ? ({
+    ...webStyle({
           outlineStyle: 'none',
-        } as any)
-      : {}),
+        }),
   },
   eyeBtn: {
     width: 36,

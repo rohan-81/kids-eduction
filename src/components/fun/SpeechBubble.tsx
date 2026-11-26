@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle, type DimensionValue } from 'react-native';
 import { kidTones, kidPalette, kidRadii, clayShadow, KidTone } from '../../theme/kidTheme';
 
 interface SpeechBubbleProps {
@@ -32,7 +32,7 @@ export const SpeechBubble: React.FC<SpeechBubbleProps> = ({ children, tone = 'pl
     ...(dir === 'up' ? { borderBottomWidth: size, borderBottomColor: color } : { borderTopWidth: size, borderTopColor: color }),
   });
 
-  const pointerStyle = { position: 'absolute' as const, left: `${Math.round(pointerAt * 100)}%` as any, marginLeft: -POINTER - 2 };
+  const pointerStyle = { position: 'absolute' as const, left: `${Math.round(pointerAt * 100)}%` as DimensionValue, marginLeft: -POINTER - 2 };
 
   return (
     <View style={[{ marginTop: pointer === 'top' ? POINTER : 0, marginBottom: pointer === 'bottom' ? POINTER : 0 }, style]}>

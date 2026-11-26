@@ -10,6 +10,9 @@ import {
   Animated,
   Pressable,
   Image,
+  type StyleProp,
+  type ViewStyle,
+  type DimensionValue
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -47,11 +50,14 @@ import {
   GUEST_DAILY_GAMES_MAX,
 } from '../../src/utils/guestLimits';
 import * as Art from '../../src/components/art3d/Art3D';
+import { webStyle } from '../../src/utils/webStyle';
+import type { AppRoute } from '../../src/utils/navigationHelper';
+import type { ImageAsset } from '../../src/utils/remoteAssets';
 
 export interface GameItemConfig {
   id: string;
   type?: GameType;
-  route: string;
+  route: AppRoute;
   titleGu: string;
   titleHi: string;
   titleEn: string;
@@ -340,7 +346,7 @@ const pickLang = <T,>(art: { en: T; gu: T; hi: T }, lang?: AppLanguage): T =>
 
 /** Crisp vector 3D art (or real 3D renders) for each game, sized for the 64px white stage. */
 const renderGame3DIcon = (gameId: string, lang?: AppLanguage) => {
-  const img = (src: any) => <Image source={src} resizeMode="contain" style={{ width: ART + 4, height: ART + 4 }} />;
+  const img = (src: ImageAsset) => <Image source={src} resizeMode="contain" style={{ width: ART + 4, height: ART + 4 }} />;
   switch (gameId) {
     case 'balloon-pop':
       return <BalloonsArt size={ART} />;
@@ -380,7 +386,7 @@ const useNativeDriver = Platform.OS !== 'web';
 
 /** Game card with a soft press-down: the card dips and the Play pill sinks onto its lip. */
 const GameCardPress: React.FC<{
-  style: any;
+  style: { width: DimensionValue; card: StyleProp<ViewStyle> };
   onPress: () => void;
   accessibilityLabel: string;
   children: (press: Animated.Value) => React.ReactNode;
@@ -394,7 +400,7 @@ const GameCardPress: React.FC<{
       onPressOut={() => Animated.spring(press, { toValue: 0, friction: 4, tension: 170, useNativeDriver }).start()}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={[{ width: style.width }, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+      style={[{ width: style.width }, webStyle({ cursor: 'pointer' })]}
     >
       <Animated.View style={[style.card, { flex: 1, transform: [{ translateY }] }]}>{children(press)}</Animated.View>
     </Pressable>
@@ -442,7 +448,7 @@ export default function GamesHubScreen() {
 
   useEffect(() => {
     if (type) {
-      router.replace(`/games/${type}` as any);
+      router.replace(`/games/${type}`);
     }
   }, [type, router]);
 
@@ -757,7 +763,7 @@ export default function GamesHubScreen() {
                     const nextCount = await incrementDailyGuestGames();
                     setGuestGamesPlayed(nextCount);
                   }
-                  router.push(game.route as any);
+                  router.push(game.route);
                 }}
               >
                 {(press) => (
@@ -1226,9 +1232,9 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 20,
     gap: 12,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(245, 158, 11, 0.08)',
-    } as any)),
+    })),
   },
   guestNoticeIconCol: {
     width: 44,

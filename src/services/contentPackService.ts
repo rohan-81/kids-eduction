@@ -2,28 +2,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { getMediaBaseUrl, setLocalPackBaseUri, getLocalPackBaseUri } from '../utils/remoteAssets';
 import { apiService } from './apiService';
+import { errorMessage } from '../utils/runtime';
+import { loadFileSystemLegacy, loadFileSystemNext } from './nativeModules';
 
 export const CONTENT_PACK_VERSION = 'v1';
 const PACK_VERSION_KEY = '@kidszone_content_pack_version';
 const PACK_DIR_KEY = '@kidszone_content_pack_dir';
 
-let FileSystemLegacy: any = null;
-let FileClass: any = null;
-let DirectoryClass: any = null;
-let PathsObj: any = null;
-
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  FileSystemLegacy = require('expo-file-system/legacy');
-} catch {}
-
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fsNext = require('expo-file-system');
-  FileClass = fsNext?.File || null;
-  DirectoryClass = fsNext?.Directory || null;
-  PathsObj = fsNext?.Paths || null;
-} catch {}
+const FileSystemLegacy = loadFileSystemLegacy();
+const fsNext = loadFileSystemNext();
+const FileClass = fsNext?.File ?? null;
+const DirectoryClass = fsNext?.Directory ?? null;
+const PathsObj = fsNext?.Paths ?? null;
 
 let initialized = false;
 
@@ -166,7 +156,8 @@ export const contentPackService = {
         if (FileClass) {
           const outFile = new FileClass(targetUri);
           outFile.create({ intermediates: true, overwrite: true });
-          outFile.write(data);
+          // Awaited so a failed write fails the install instead of marking a broken pack as ready.
+          await outFile.write(data);
         } else {
           // Fallback base64 write
           let binary = '';
@@ -209,9 +200,9 @@ export const contentPackService = {
 
       onProgress?.({ percent: 100, stage: 'done' });
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       await FileSystemLegacy.deleteAsync(tempZipUri, { idempotent: true }).catch(() => {});
-      return { success: false, error: err?.message || 'Download failed' };
+      return { success: false, error: errorMessage(err, 'Download failed') };
     }
   },
 };

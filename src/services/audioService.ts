@@ -3,8 +3,10 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppLanguage } from '../types';
 import { safeGetApiBaseUrl } from './apiConfig';
+import { loadExpoAudio, loadFileSystemLegacy, type AudioPlayer, type AudioSource, type AudioStatus } from './nativeModules';
 import { PROMPT_AUDIO_MAP, WEB_PROMPT_AUDIO_MAP } from './promptAudioMap';
 import { GUJARATI_NUMBERS, HINDI_NUMBERS } from '../utils/languageData';
+import { formatChildName } from '../utils/nameTransliterator';
 
 export type VoiceGender = 'male' | 'female' | 'child';
 
@@ -46,13 +48,88 @@ AsyncStorage.getItem(VOICE_PITCH_KEY)
   })
   .catch(() => {});
 
-let activeUtterance: any = null;
-let activeWebAudio: any = null;
-let activeWebAudioList: any[] = [];
+let activeUtterance: SpeechSynthesisUtterance | null = null;
+let activeWebAudio: HTMLAudioElement | null = null;
+let activeWebAudioList: HTMLAudioElement[] = [];
 let globalSoundEnabled: boolean = true;
-let activeNativeAudio: any = null;
+
+// ---------------------------------------------------------------------------------------------
+// Child-name privacy for remote TTS (audit P1-6, COPPA / GDPR-K).
+// Text sent to the backend TTS proxy or to translate.google.com must never contain the child's
+// (or parent's) name. Names are registered by AppContext; every remote URL builder passes its
+// text through maskPrivateNames(). On-device speech and bundled audio are unaffected.
+// ---------------------------------------------------------------------------------------------
+const NAME_PLACEHOLDER: Record<AppLanguage, string> = {
+  en: 'little friend',
+  gu: 'નાના દોસ્ત',
+  hi: 'छोटे दोस्त',
+};
+let privateNameVariants: string[] = [];
+
+const escapeRegExp = (v: string) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Registers names that must be masked before any text leaves the device for remote TTS. */
+export function setPrivateNames(names: Array<string | null | undefined>): void {
+  const variants = new Set<string>();
+  for (const raw of names) {
+    const base = String(raw || '').trim();
+    if (base.length < 2) continue;
+    const forms = [base, ...(['en', 'gu', 'hi'] as AppLanguage[]).map((l) => formatChildName(base, l))];
+    for (const form of forms) {
+      const f = String(form || '').trim();
+      if (f.length < 2) continue;
+      variants.add(f);
+      f.split(/\s+/).filter((w) => w.length >= 2).forEach((w) => variants.add(w));
+    }
+  }
+  // Longest first so "Aarav Patel" is replaced before "Aarav".
+  privateNameVariants = Array.from(variants).sort((a, b) => b.length - a.length);
+}
+
+/** Replaces registered names with a neutral, language-appropriate placeholder. */
+export function maskPrivateNames(text: string, lang: AppLanguage = 'en'): string {
+  if (!text || privateNameVariants.length === 0) return text;
+  let out = text;
+  const placeholder = NAME_PLACEHOLDER[lang] || NAME_PLACEHOLDER.en;
+  for (const name of privateNameVariants) {
+    const isLatin = /^[\x00-\x7F]+$/.test(name);
+    const pattern = isLatin
+      ? new RegExp(`(?<![A-Za-z0-9])${escapeRegExp(name)}(?![A-Za-z0-9])`, 'gi')
+      : new RegExp(escapeRegExp(name), 'g');
+    out = out.replace(pattern, placeholder);
+  }
+  return out;
+}
+
+/** Hot-path diagnostics are dev-only; `__DEV__` is undefined under Jest/Node, hence the guard. */
+const IS_DEV = typeof __DEV__ !== 'undefined' && !!__DEV__;
+
+let activeNativeAudio: AudioPlayer | null = null;
+/**
+ * Completion callback of the playback that owns activeNativeAudio. Interrupting or stopping
+ * that playback must still run it, otherwise callers awaiting `onDone` hang forever (P2-5).
+ */
+let activeNativeFinish: (() => void) | null = null;
+
+/** Stops and releases the current native player, then completes its pending request. */
+function releaseActiveNativeAudio(): void {
+  const finish = activeNativeFinish;
+  activeNativeFinish = null;
+  if (activeNativeAudio) {
+    try {
+      if (typeof activeNativeAudio.pause === 'function') activeNativeAudio.pause();
+      if (typeof activeNativeAudio.remove === 'function') activeNativeAudio.remove();
+    } catch {}
+    activeNativeAudio = null;
+  }
+  if (finish) {
+    try {
+      finish();
+    } catch {}
+  }
+}
 let cachedWebVoices: SpeechSynthesisVoice[] = [];
-const voiceCache = new Map<string, any>();
+const voiceCache = new Map<string, SpeechSynthesisVoice>();
 let cachedNativeVoices: Speech.Voice[] = [];
 let isNativeVoicesLoaded = false;
 let currentSpeechRequestId = 0;
@@ -131,39 +208,17 @@ export function splitIntoSpeechChunks(text: string, maxLen = 85): string[] {
   return chunks.length > 0 ? chunks : [text];
 }
 
-let createAudioPlayerFn: ((source: any, options?: any) => any) | null = null;
-let setAudioModeAsyncFn: ((mode: any) => Promise<any>) | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const ExpoAudio = require('expo-audio');
-  createAudioPlayerFn = ExpoAudio?.createAudioPlayer || ExpoAudio?.default?.createAudioPlayer || null;
-  setAudioModeAsyncFn = ExpoAudio?.setAudioModeAsync || ExpoAudio?.default?.setAudioModeAsync || null;
-} catch {
-  // Native module not linked or web environment
-}
+const { createAudioPlayer: createAudioPlayerFn, setAudioModeAsync: setAudioModeAsyncFn } = loadExpoAudio();
 
-let ExpoAvAudio: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const ExpoAv = require('expo-av');
-  ExpoAvAudio = ExpoAv?.Audio || null;
-} catch {
-  // Native module not linked or web environment
-}
+const fileSystem = loadFileSystemLegacy();
+const fileSystemDownloadAsync = fileSystem?.downloadAsync ?? null;
+const fileSystemCacheDir: string | null = fileSystem?.cacheDirectory ?? null;
+const fileSystemGetInfoAsync = fileSystem?.getInfoAsync ?? null;
 
-let fileSystemDownloadAsync: ((uri: string, fileUri: string, options?: any) => Promise<any>) | null = null;
-let fileSystemCacheDir: string | null = null;
-let fileSystemGetInfoAsync: ((uri: string) => Promise<any>) | null = null;
-try {
-  // SDK 54+: the classic downloadAsync/getInfoAsync/cacheDirectory API lives in "expo-file-system/legacy";
-  // the same names on the root export are stubs that throw at runtime.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const FileSystem = require('expo-file-system/legacy');
-  fileSystemDownloadAsync = FileSystem?.downloadAsync || FileSystem?.default?.downloadAsync || null;
-  fileSystemCacheDir = FileSystem?.cacheDirectory || FileSystem?.default?.cacheDirectory || null;
-  fileSystemGetInfoAsync = FileSystem?.getInfoAsync || FileSystem?.default?.getInfoAsync || null;
-} catch {
-  // Native module not linked or web environment
+/** Word-boundary payload from expo-speech (native) — both fields may be missing on some engines. */
+interface SpeechBoundaryEvent {
+  charIndex?: number;
+  charLength?: number;
 }
 
 let isAudioModeConfigured = false;
@@ -174,17 +229,6 @@ export async function ensureNativeAudioMode(): Promise<void> {
       await setAudioModeAsyncFn({
         playsInSilentMode: true,
         interruptionMode: 'doNotMix',
-      });
-      isAudioModeConfigured = true;
-    } catch {}
-  }
-  if (ExpoAvAudio?.setAudioModeAsync) {
-    try {
-      await ExpoAvAudio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
       });
       isAudioModeConfigured = true;
     } catch {}
@@ -834,6 +878,8 @@ export function buildWordTimings(
 }
 
 export const audioService = {
+  /** See setPrivateNames: names masked from remote TTS requests. */
+  setPrivateNames,
   addWordBoundaryListener(listener: WordBoundaryListener): () => void {
     wordBoundaryListeners.add(listener);
     return () => {
@@ -1061,9 +1107,13 @@ export const audioService = {
         this.speakNativeSpeech(normalizedText, effectiveLang, requestId, doneCb);
         return;
       }
-      this.speakNativeAudio(normalizedText, effectiveLang, requestId, doneCb);
+      // If the high-fidelity path fails outright (player error, decoding, storage), fall back to
+      // on-device speech so the child still hears the prompt and onDone still fires.
+      this.speakNativeAudio(normalizedText, effectiveLang, requestId, doneCb).catch(() =>
+        this.speakNativeSpeech(normalizedText, effectiveLang, requestId, doneCb)
+      );
     } catch (e) {
-      console.log('Audio speak error:', e);
+      if (IS_DEV) console.log('Audio speak error:', e);
       if (doneCb) {
         try {
           doneCb();
@@ -1078,7 +1128,7 @@ export const audioService = {
     requestId: number,
     onDone?: () => void
   ): Promise<void> {
-    if ((!createAudioPlayerFn && !ExpoAvAudio?.Sound) || !globalSoundEnabled) {
+    if (!createAudioPlayerFn || !globalSoundEnabled) {
       this.speakNativeSpeech(text, lang, requestId, onDone);
       return;
     }
@@ -1088,7 +1138,7 @@ export const audioService = {
     // Priority 0: Check offline pre-bundled asset first for 100% offline, zero-latency, identical playback
     const offlineKey = `${lang}:${text}`;
     const bundledSource = PROMPT_AUDIO_MAP[offlineKey] || PROMPT_AUDIO_MAP[text];
-    let targetSource: any = bundledSource || null;
+    let targetSource: AudioSource = bundledSource || null;
 
     // Fast-path: When no pre-bundled local asset exists, immediately speak using native device speech synthesis
     // Eliminates HTTP network requests, caching latency, and delays across Android and iOS
@@ -1100,9 +1150,9 @@ export const audioService = {
     // High-fidelity Google TTS endpoints
     const apiBase = safeGetApiBaseUrl();
     const proxyUrl = apiBase
-      ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(lang)}&text=${encodeURIComponent(text)}`
+      ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(lang)}&text=${encodeURIComponent(maskPrivateNames(text, lang))}`
       : null;
-    const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text)}`;
+    const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(maskPrivateNames(text, lang))}`;
 
     // Check if we can download/cache to local file for instant native ExoPlayer playback
     if (!targetSource && fileSystemDownloadAsync && fileSystemCacheDir) {
@@ -1147,12 +1197,12 @@ export const audioService = {
                 break;
               }
             } catch (dlErr) {
-              console.log('[AudioService] FileSystem download error from:', url, dlErr);
+              if (IS_DEV) console.log('[AudioService] FileSystem download error from:', url, dlErr);
             }
           }
         }
       } catch (err) {
-        console.log('[AudioService] Local disk cache download exception:', err);
+        if (IS_DEV) console.log('[AudioService] Local disk cache download exception:', err);
       }
     }
 
@@ -1169,35 +1219,24 @@ export const audioService = {
     const rate = Math.min(1.35, Math.max(0.85, Math.round(currentVoiceRate * 100) / 100));
 
     try {
-      if (activeNativeAudio) {
-        try {
-          if (typeof activeNativeAudio.pause === 'function') activeNativeAudio.pause();
-          if (typeof activeNativeAudio.stopAsync === 'function') activeNativeAudio.stopAsync();
-          if (typeof activeNativeAudio.unloadAsync === 'function') activeNativeAudio.unloadAsync();
-          if (typeof activeNativeAudio.remove === 'function') activeNativeAudio.remove();
-        } catch {}
-        activeNativeAudio = null;
-      }
+      // Interrupt the previous phrase; its onDone still fires so its caller does not hang.
+      releaseActiveNativeAudio();
 
       let started = false;
       let finished = false;
-      let player: any = null;
-      let soundObj: any = null;
+      let player: AudioPlayer | null = null;
 
       const finishOnce = () => {
         if (finished) return;
         finished = true;
         clearTimeout(fallbackTimer);
+        if (activeNativeFinish === finishOnce) activeNativeFinish = null;
         emitSpeechEnd();
-        if (activeNativeAudio === player || activeNativeAudio === soundObj) {
+        if (activeNativeAudio === player) {
           activeNativeAudio = null;
         }
         try {
           if (player && typeof player.remove === 'function') player.remove();
-          if (soundObj) {
-            soundObj.stopAsync().catch(() => {});
-            soundObj.unloadAsync().catch(() => {});
-          }
         } catch {}
         if (onDone) {
           try {
@@ -1213,12 +1252,9 @@ export const audioService = {
               player.pause();
               if (typeof player.remove === 'function') player.remove();
             }
-            if (soundObj) {
-              soundObj.stopAsync().catch(() => {});
-              soundObj.unloadAsync().catch(() => {});
-            }
           } catch {}
-          if (activeNativeAudio === player || activeNativeAudio === soundObj) activeNativeAudio = null;
+          if (activeNativeAudio === player) activeNativeAudio = null;
+          if (activeNativeFinish === finishOnce) activeNativeFinish = null; // handed to on-device speech
           this.speakNativeSpeech(text, lang, requestId, onDone);
         }
       }, 2000);
@@ -1229,12 +1265,13 @@ export const audioService = {
           player = createAudioPlayerFn(targetSource);
           if (player) {
             activeNativeAudio = player;
+            activeNativeFinish = finishOnce;
             try {
               player.playbackRate = rate;
             } catch {}
 
             if (typeof player.addListener === 'function') {
-              player.addListener('playbackStatusUpdate', (status: any) => {
+              player.addListener('playbackStatusUpdate', (status: AudioStatus) => {
                 if (status?.playing) {
                   started = true;
                   clearTimeout(fallbackTimer);
@@ -1253,10 +1290,11 @@ export const audioService = {
                   clearTimeout(fallbackTimer);
                   if (!started && requestId === currentSpeechRequestId && globalSoundEnabled) {
                     try {
-                      player.pause();
-                      if (typeof player.remove === 'function') player.remove();
+                      player?.pause();
+                      player?.remove();
                     } catch {}
                     if (activeNativeAudio === player) activeNativeAudio = null;
+                    if (activeNativeFinish === finishOnce) activeNativeFinish = null;
                     this.speakNativeSpeech(text, lang, requestId, onDone);
                   } else {
                     finishOnce();
@@ -1269,45 +1307,8 @@ export const audioService = {
             return;
           }
         } catch (playerErr) {
-          console.log('[AudioService] createAudioPlayerFn threw, trying expo-av:', playerErr);
+          if (IS_DEV) console.log('[AudioService] createAudioPlayerFn threw, using on-device speech:', playerErr);
           player = null;
-        }
-      }
-
-      // Attempt 2: expo-av Sound
-      if (!player && ExpoAvAudio?.Sound) {
-        try {
-          const soundInstance = new ExpoAvAudio.Sound();
-          soundObj = soundInstance;
-          activeNativeAudio = soundInstance;
-          const uri = typeof targetSource === 'string' ? targetSource : targetSource?.uri;
-          await soundInstance.loadAsync({ uri }, { shouldPlay: true, rate });
-          started = true;
-          clearTimeout(fallbackTimer);
-          soundInstance.setOnPlaybackStatusUpdate((status: any) => {
-            if (status?.isLoaded && status?.durationMillis && status.durationMillis > 0 && typeof status.positionMillis === 'number') {
-              const prog = Math.min(1, Math.max(0, status.positionMillis / status.durationMillis));
-              emitWordBoundary({
-                progress: prog,
-                charIndex: Math.floor(prog * text.length),
-              });
-            }
-            if (status?.didJustFinish) {
-              finishOnce();
-            }
-            if (status?.error) {
-              clearTimeout(fallbackTimer);
-              if (!started && requestId === currentSpeechRequestId && globalSoundEnabled) {
-                this.speakNativeSpeech(text, lang, requestId, onDone);
-              } else {
-                finishOnce();
-              }
-            }
-          });
-          return;
-        } catch (avErr) {
-          console.log('[AudioService] expo-av playback failed:', avErr);
-          soundObj = null;
         }
       }
 
@@ -1342,23 +1343,23 @@ export const audioService = {
 
       const bestVoice = selectBestVoice(voices, effectiveLang, currentVoiceGender);
       if (bestVoice) {
-        const vLang = ((bestVoice as any).language || (bestVoice as any).lang || '').toLowerCase();
-        const vName = ((bestVoice as any).name || '').toLowerCase();
+        const vLang = (bestVoice.language || '').toLowerCase();
+        const vName = (bestVoice.name || '').toLowerCase();
         const isGujaratiVoice = vLang.startsWith('gu') || vName.includes('gujarati');
         const isHindiVoice = vLang.startsWith('hi') || vName.includes('hindi') || vName.includes('हिन्दी');
 
         if (isGujaratiVoice) {
           targetLocale = 'gu-IN';
           targetText = normalizedText;
-          selectedVoiceIdentifier = (bestVoice as any).identifier;
+          selectedVoiceIdentifier = bestVoice.identifier;
         } else if (isHindiVoice && effectiveLang === 'gu') {
           targetLocale = 'hi-IN';
           targetText = gujaratiToDevanagari(normalizedText);
-          selectedVoiceIdentifier = (bestVoice as any).identifier;
+          selectedVoiceIdentifier = bestVoice.identifier;
         } else {
           targetLocale = this.getLanguageLocale(effectiveLang);
           targetText = normalizedText;
-          selectedVoiceIdentifier = (bestVoice as any).identifier;
+          selectedVoiceIdentifier = bestVoice.identifier;
         }
       } else {
         if (effectiveLang === 'gu') {
@@ -1367,7 +1368,7 @@ export const audioService = {
           targetLocale = 'hi-IN';
           targetText = gujaratiToDevanagari(normalizedText);
           if (fallbackHindiVoice) {
-            selectedVoiceIdentifier = (fallbackHindiVoice as any).identifier;
+            selectedVoiceIdentifier = fallbackHindiVoice.identifier;
           }
         } else {
           targetLocale = this.getLanguageLocale(effectiveLang);
@@ -1375,13 +1376,13 @@ export const audioService = {
         }
       }
 
-      const voiceIsActuallyMale = bestVoice ? isMaleVoiceName((bestVoice as any).name || (bestVoice as any).identifier || '') : false;
+      const voiceIsActuallyMale = bestVoice ? isMaleVoiceName(bestVoice.name || bestVoice.identifier || '') : false;
       const speechPitch = getCalibratedPitch(currentVoiceGender, currentVoicePitch, voiceIsActuallyMale);
       const speechRate = currentVoiceGender === 'male' ? Math.min(1.3, Math.max(0.85, currentVoiceRate * 0.96)) : currentVoiceRate;
 
       let hasReceivedNativeBoundary = false;
-      let nativeBoundaryFallbackInterval: any = null;
-      let initialLatencyTimer: any = null;
+      let nativeBoundaryFallbackInterval: ReturnType<typeof setInterval> | null = null;
+      let initialLatencyTimer: ReturnType<typeof setTimeout> | null = null;
 
       const clearFallback = () => {
         if (initialLatencyTimer) {
@@ -1452,7 +1453,7 @@ export const audioService = {
             }
           }
         },
-        onBoundary: (event: any) => {
+        onBoundary: (event: SpeechBoundaryEvent) => {
           if (requestId === currentSpeechRequestId) {
             hasReceivedNativeBoundary = true;
             clearFallback();
@@ -1474,7 +1475,7 @@ export const audioService = {
         },
         onError: (err) => {
           clearFallback();
-          console.log('Native speech error:', err);
+          if (IS_DEV) console.log('Native speech error:', err);
           if (requestId === currentSpeechRequestId) {
             emitSpeechEnd();
             // Fallback: If native gu-IN failed (e.g. missing Android offline voice pack), retry with hi-IN transliteration
@@ -1512,7 +1513,7 @@ export const audioService = {
                   language: targetLocale,
                   pitch: speechPitch,
                   rate: speechRate,
-                  onBoundary: (event: any) => {
+                  onBoundary: (event: SpeechBoundaryEvent) => {
                     if (requestId === currentSpeechRequestId) {
                       const charIndex = typeof event?.charIndex === 'number' ? event.charIndex : 0;
                       const charLength = typeof event?.charLength === 'number' ? event.charLength : undefined;
@@ -1568,7 +1569,7 @@ export const audioService = {
       }
       Speech.speak(targetText, speechOptions);
     } catch (e) {
-      console.log('Native speech error:', e);
+      if (IS_DEV) console.log('Native speech error:', e);
       if (doneCb) {
         try {
           doneCb();
@@ -1577,7 +1578,7 @@ export const audioService = {
     }
   },
 
-  getAvailableWebVoices(): any[] {
+  getAvailableWebVoices(): SpeechSynthesisVoice[] {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       if (cachedWebVoices && cachedWebVoices.length > 0) return cachedWebVoices;
       try {
@@ -1686,7 +1687,7 @@ export const audioService = {
         activeWebAudio = audio;
         audio.playbackRate = effectiveRate;
         try {
-          (audio as any).preservesPitch = true;
+          audio.preservesPitch = true;
         } catch {}
 
         audio.onplay = () => {
@@ -1745,21 +1746,21 @@ export const audioService = {
         const chunkWordCount = wordsMatch ? wordsMatch.length : 0;
 
         const proxyUrl = apiBase
-          ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(lang)}&text=${encodeURIComponent(chunkText)}`
+          ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(lang)}&text=${encodeURIComponent(maskPrivateNames(chunkText, lang))}`
           : null;
-        const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(chunkText)}`;
+        const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(maskPrivateNames(chunkText, lang))}`;
         const targetUrl = proxyUrl || directUrl;
 
         const audio = new Audio(targetUrl);
         activeWebAudio = audio;
         audio.playbackRate = effectiveRate;
         try {
-          (audio as any).preservesPitch = true;
+          audio.preservesPitch = true;
         } catch {}
 
         let chunkTimings: WordTiming[] = [];
         let lastReportedTimingIdx = -1;
-        let trackInterval: any = null;
+        let trackInterval: ReturnType<typeof setInterval> | null = null;
 
         const ensureTimings = () => {
           if (chunkTimings.length === 0 && audio.duration && audio.duration > 0 && !isNaN(audio.duration)) {
@@ -1957,8 +1958,8 @@ export const audioService = {
         const utterance = new SpeechSynthesisUtterance(finalText);
         activeUtterance = utterance;
         if (typeof window !== 'undefined') {
-          (window as any).__activeUtterance = utterance;
-          (window as any).__kidsUtterance = utterance;
+          window.__activeUtterance = utterance;
+          window.__kidsUtterance = utterance;
         }
 
         if (selectedVoice) {
@@ -1995,7 +1996,7 @@ export const audioService = {
           emitSpeechStart();
         };
 
-        utterance.onboundary = (event: any) => {
+        utterance.onboundary = (event: SpeechSynthesisEvent) => {
           if (event?.name && event.name !== 'word') {
             return;
           }
@@ -2046,7 +2047,7 @@ export const audioService = {
           if (activeUtterance === utterance) {
             activeUtterance = null;
             if (typeof window !== 'undefined') {
-              (window as any).__activeUtterance = null;
+              window.__activeUtterance = null;
             }
           }
           finishUtteranceOnce();
@@ -2057,12 +2058,12 @@ export const audioService = {
           // (navigation, a new line replacing the old one); only log real failures.
           const code = (e as SpeechSynthesisErrorEvent)?.error;
           if (code !== 'interrupted' && code !== 'canceled') {
-            console.log('Web speech error:', e);
+            if (IS_DEV) console.log('Web speech error:', e);
             if (code === 'language-unavailable' || code === 'voice-unavailable' || code === 'not-allowed' || code === 'network') {
               if (activeUtterance === utterance) {
                 activeUtterance = null;
                 if (typeof window !== 'undefined') {
-                  (window as any).__activeUtterance = null;
+                  window.__activeUtterance = null;
                 }
               }
               this.speakWebNativeAudio(text, lang, requestId || currentSpeechRequestId, onDone);
@@ -2072,7 +2073,7 @@ export const audioService = {
           if (activeUtterance === utterance) {
             activeUtterance = null;
             if (typeof window !== 'undefined') {
-              (window as any).__activeUtterance = null;
+              window.__activeUtterance = null;
             }
           }
           finishUtteranceOnce();
@@ -2089,10 +2090,10 @@ export const audioService = {
         executeSpeak();
       } else {
         // Cancel flush via microtask rather than 15ms macrotask to preserve click activation
-        Promise.resolve().then(executeSpeak);
+        Promise.resolve().then(executeSpeak).catch(() => onDone?.());
       }
     } catch (err) {
-      console.log('Web speech synthesis error:', err);
+      if (IS_DEV) console.log('Web speech synthesis error:', err);
       if (onDone) {
         try {
           onDone();
@@ -2123,15 +2124,7 @@ export const audioService = {
         } catch {}
         activeWebAudio = null;
       }
-      if (activeNativeAudio) {
-        try {
-          if (typeof activeNativeAudio.pause === 'function') activeNativeAudio.pause();
-          if (typeof activeNativeAudio.stopAsync === 'function') activeNativeAudio.stopAsync();
-          if (typeof activeNativeAudio.unloadAsync === 'function') activeNativeAudio.unloadAsync();
-          if (typeof activeNativeAudio.remove === 'function') activeNativeAudio.remove();
-        } catch {}
-        activeNativeAudio = null;
-      }
+      releaseActiveNativeAudio();
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         if (window.speechSynthesis.paused) {
@@ -2151,9 +2144,14 @@ export const audioService = {
     } catch {}
   },
 
+  /** Never rejects: it is called fire-and-forget from ~60 places (navigation, taps, unmount). */
   async stop(): Promise<void> {
     currentSpeechRequestId++;
-    this.stopInternal(true);
+    try {
+      this.stopInternal(true);
+    } catch (e) {
+      if (IS_DEV) console.log('Audio stop error:', e);
+    }
   },
 
   /**
@@ -2173,9 +2171,8 @@ export const audioService = {
       } catch {}
     }
     try {
-      if (typeof (Speech as any).pause === 'function') {
-        (Speech as any).pause();
-      }
+      // iOS only; rejects on platforms without pause support.
+      Speech.pause().catch(() => {});
     } catch {}
   },
 
@@ -2196,9 +2193,7 @@ export const audioService = {
       } catch {}
     }
     try {
-      if (typeof (Speech as any).resume === 'function') {
-        (Speech as any).resume();
-      }
+      Speech.resume().catch(() => {});
     } catch {}
   },
 
@@ -2339,9 +2334,9 @@ export const audioService = {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const apiBase = safeGetApiBaseUrl();
         const proxyUrl = apiBase
-          ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(effectiveLang)}&text=${encodeURIComponent(s.cleanText)}`
+          ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(effectiveLang)}&text=${encodeURIComponent(maskPrivateNames(s.cleanText, effectiveLang))}`
           : null;
-        const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(effectiveLang)}&q=${encodeURIComponent(s.cleanText)}`;
+        const directUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(effectiveLang)}&q=${encodeURIComponent(maskPrivateNames(s.cleanText, effectiveLang))}`;
         const targetUrl = proxyUrl || directUrl;
 
         let audio: HTMLAudioElement | null = null;
@@ -2367,13 +2362,13 @@ export const audioService = {
         activeWebAudio = audio;
         audio.playbackRate = effectiveRate;
         try {
-          (audio as any).preservesPitch = true;
+          audio.preservesPitch = true;
         } catch {}
 
         let timings: WordTiming[] = [];
         let lastReportedIdx = -1;
         let currentSentenceMaxReportedIdx = -1;
-        let trackInterval: any = null;
+        let trackInterval: ReturnType<typeof setInterval> | null = null;
 
         const ensureTimings = () => {
           if (audio && audio.duration && audio.duration > 0 && !isNaN(audio.duration) && isFinite(audio.duration)) {
@@ -2434,9 +2429,9 @@ export const audioService = {
           if (sentenceIdx + 1 < sentences.length) {
             const nextS = sentences[sentenceIdx + 1];
             const nextProxyUrl = apiBase
-              ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(effectiveLang)}&text=${encodeURIComponent(nextS.cleanText)}`
+              ? `${apiBase}/tts/audio.mp3?lang=${encodeURIComponent(effectiveLang)}&text=${encodeURIComponent(maskPrivateNames(nextS.cleanText, effectiveLang))}`
               : null;
-            const nextDirectUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(effectiveLang)}&q=${encodeURIComponent(nextS.cleanText)}`;
+            const nextDirectUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(effectiveLang)}&q=${encodeURIComponent(maskPrivateNames(nextS.cleanText, effectiveLang))}`;
             try {
               const preloader = new Audio(nextProxyUrl || nextDirectUrl);
               preloader.preload = 'auto';
@@ -2497,7 +2492,7 @@ export const audioService = {
         };
 
         audio.play().catch((err) => {
-          console.log('[AudioService] audio.play() caught:', err);
+          if (IS_DEV) console.log('[AudioService] audio.play() caught:', err);
           this.speakWebSynthesis(s.cleanText, effectiveLang, requestId, () => {
             sentenceIdx++;
             setTimeout(playSentence, 220);
@@ -2521,13 +2516,13 @@ export const audioService = {
       }
 
       const bestVoice = selectBestVoice(voices || [], effectiveLang, currentVoiceGender);
-      const selectedVoiceIdentifier = (bestVoice as any)?.identifier || undefined;
-      const targetLocale = (bestVoice as any)?.lang || bestVoice?.language || this.getLanguageLocale(effectiveLang);
-      const voiceIsActuallyMale = bestVoice ? isMaleVoiceName((bestVoice as any).name || (bestVoice as any).identifier || '') : false;
+      const selectedVoiceIdentifier = bestVoice?.identifier || undefined;
+      const targetLocale = bestVoice?.language || this.getLanguageLocale(effectiveLang);
+      const voiceIsActuallyMale = bestVoice ? isMaleVoiceName(bestVoice.name || bestVoice.identifier || '') : false;
       const speechPitch = getCalibratedPitch(currentVoiceGender, currentVoicePitch, voiceIsActuallyMale);
       const speechRate = effectiveRate;
 
-      let sentenceTrackInterval: any = null;
+      let sentenceTrackInterval: ReturnType<typeof setInterval> | null = null;
       let mobileLastReported = -1;
       let mobileMaxReportedIdx = -1;
 
@@ -2596,7 +2591,7 @@ export const audioService = {
             updateMobilePosition(elapsed);
           }, 20);
         },
-        onBoundary: (event: any) => {
+        onBoundary: (event: SpeechBoundaryEvent) => {
           if (requestId !== currentSpeechRequestId || isTerminated) return;
           const charIndex = typeof event?.charIndex === 'number' ? event.charIndex : -1;
           if (charIndex >= 0) {
@@ -2642,7 +2637,7 @@ export const audioService = {
         },
         onError: (err) => {
           clearSentenceTimer();
-          console.log('[AudioService] Mobile sentence speech error:', err);
+          if (IS_DEV) console.log('[AudioService] Mobile sentence speech error:', err);
           sentenceIdx++;
           setTimeout(playSentence, 150);
         },
@@ -2651,7 +2646,7 @@ export const audioService = {
       try {
         Speech.speak(s.cleanText, speechOptions);
       } catch (e) {
-        console.log('[AudioService] Speech.speak threw:', e);
+        if (IS_DEV) console.log('[AudioService] Speech.speak threw:', e);
         sentenceIdx++;
         setTimeout(playSentence, 150);
       }

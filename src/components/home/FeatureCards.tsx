@@ -1,10 +1,11 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, Text, View, useWindowDimensions, type DimensionValue } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { AppLanguage } from '../../types';
 import { HOME_CARD_ART } from '../../utils/imageHelper';
 import { ClayPressCard } from './ClayPressCard';
 import { useSafeRouter } from '../../utils/navigationHelper';
+import type { ImageAsset } from '../../utils/remoteAssets';
 
 interface FeatureCardsProps {
   language: AppLanguage;
@@ -24,21 +25,21 @@ type CardTone = keyof typeof CARD_TONES;
 
 type Tri = { gu: string; hi: string; en: string };
 const tr = (lang: AppLanguage, s: Tri) => (lang === 'gu' ? s.gu : lang === 'hi' ? s.hi : s.en);
-const pickArt = (art: { en: any; gu: any; hi: any }, lang: AppLanguage) => (lang === 'gu' ? art.gu : lang === 'hi' ? art.hi : art.en);
+const pickArt = (art: { en: ImageAsset; gu: ImageAsset; hi: ImageAsset }, lang: AppLanguage) => (lang === 'gu' ? art.gu : lang === 'hi' ? art.hi : art.en);
 
 export const FeatureCards: React.FC<FeatureCardsProps> = ({ language }) => {
   const router = useSafeRouter();
   const { width } = useWindowDimensions();
-  const cardWidth: any = width < 768 ? '48%' : '23.5%';
+  const cardWidth: DimensionValue = width < 768 ? '48%' : '23.5%';
   const artSize = width < 360 ? 72 : width < 768 ? 84 : 88;
 
   const openAlphabet = () => {
     const alphabetCatId = language === 'hi' ? 'hi-varnamala' : language === 'en' ? 'en-alphabet' : 'gu-varnamala';
     const subParam = alphabetCatId === 'en-alphabet' ? 'all' : 'vyanjan';
-    router.push(`/lessons?categoryId=${alphabetCatId}&subcategoryId=${subParam}` as any);
+    router.push(`/lessons?categoryId=${alphabetCatId}&subcategoryId=${subParam}`);
   };
 
-  const cards: { key: string; tone: CardTone; art: any; title: string; label: string; onPress: () => void }[] = [
+  const cards: { key: string; tone: CardTone; art: ImageAsset; title: string; label: string; onPress: () => void }[] = [
     {
       key: 'abc',
       tone: 'coral',

@@ -5,6 +5,7 @@ import {
   calculateOptimalFontSize,
   Point2D,
   ReferenceGlyphData,
+  MAX_PATH_LENGTH_RATIO,
 } from '../src/utils/tracingEngine';
 
 describe('Handwriting Tracing & Stroke Validation Engine Tests', () => {
@@ -422,7 +423,109 @@ describe('Handwriting Tracing & Stroke Validation Engine Tests', () => {
     expect(res.isComplete).toBe(true);
     expect(res.stars).toBe(3);
   });
+
+  // ---------------------------------------------------------------------------------------
+  // Anti-cheat regressions (audit P0-1, P2-1, P2-2)
+  // ---------------------------------------------------------------------------------------
+  const DENSE_GLYPHS: [string, string][] = [
+    ['ક', 'gu'], ['અ', 'gu'], ['ગ', 'gu'], ['૩', 'gu'], ['ह', 'hi'], ['क', 'hi'], ['B', 'en'], ['8', 'en'],
+  ];
+
+  function bboxZigzag(ref: Point2D[], rowStep: number): Point2D[] {
+    const xs = ref.map((p) => p.x);
+    const ys = ref.map((p) => p.y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const out: Point2D[] = [];
+    let dir = 1;
+    for (let y = minY; y <= maxY; y += rowStep) {
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40;
+        out.push({ x: dir > 0 ? minX + (maxX - minX) * t : maxX - (maxX - minX) * t, y });
+      }
+      dir *= -1;
+    }
+    return out;
+  }
+
+  function colourIn(ref: Point2D[], radius: number): Point2D[] {
+    const xs = ref.map((p) => p.x);
+    const ys = ref.map((p) => p.y);
+    const out: Point2D[] = [];
+    let dir = 1;
+    for (let y = Math.min(...ys) - radius; y <= Math.max(...ys) + radius; y += 4) {
+      const row: Point2D[] = [];
+      for (let x = Math.min(...xs) - radius; x <= Math.max(...xs) + radius; x += 2) {
+        if (ref.some((r) => (r.x - x) ** 2 + (r.y - y) ** 2 <= radius * radius)) row.push({ x, y });
+      }
+      if (dir < 0) row.reverse();
+      out.push(...row);
+      dir *= -1;
+    }
+    return out;
+  }
+
+  test.each(DENSE_GLYPHS)('27. Bounding-box zigzag over %s never completes or exceeds 74%%', (glyph, lang) => {
+    const ref = buildReferenceGlyphData(glyph, 320, 320, undefined, lang);
+    for (const step of [5, 8]) {
+      const res = evaluateTracingAccuracy(bboxZigzag(ref.referencePoints, step), ref);
+      expect(res.isComplete).toBe(false);
+      expect(res.accuracy).toBeLessThanOrEqual(74);
+      expect(res.stars).toBeLessThanOrEqual(1);
+      expect(res.pathLengthRatio).toBeGreaterThan(MAX_PATH_LENGTH_RATIO);
+    }
+  });
+
+  test.each(DENSE_GLYPHS)('28. "Colouring in" the band around %s is not accepted as tracing', (glyph, lang) => {
+    const ref = buildReferenceGlyphData(glyph, 320, 320, undefined, lang);
+    const res = evaluateTracingAccuracy(colourIn(ref.referencePoints, 10), ref);
+    expect(res.isComplete).toBe(false);
+    expect(res.accuracy).toBeLessThanOrEqual(74);
+  });
+
+  test.each(DENSE_GLYPHS)('29. A clean stroke-by-stroke trace of %s (as separate strokes) still scores 100%%', (glyph, lang) => {
+    const ref = buildReferenceGlyphData(glyph, 320, 320, undefined, lang);
+    const strokes = ref.strokes.map((s) => s.points.map((p) => ({ x: p.x + 1, y: p.y - 1 })));
+    const res = evaluateTracingAccuracy(strokes, ref);
+    expect(res.isComplete).toBe(true);
+    expect(res.accuracy).toBe(100);
+    expect(res.reversedSegmentIds).toEqual([]);
+    expect(res.pathLengthRatio).toBeLessThanOrEqual(MAX_PATH_LENGTH_RATIO);
+  });
+
+  test('30. Tracing the reference twice (natural re-trace) is still allowed to complete', () => {
+    const ref = buildReferenceGlyphData('અ', 320, 320, undefined, 'gu');
+    const once = ref.strokes.map((s) => s.points);
+    const res = evaluateTracingAccuracy([...once, ...once], ref);
+    expect(res.isComplete).toBe(true);
+    expect(res.accuracy).toBe(100);
+  });
+
+  test('31. An open stroke traced backwards is capped at 2 stars and never completes', () => {
+    const ref = buildReferenceGlyphData('L', 320, 320, undefined, 'en');
+    const reversed = [...ref.strokes].reverse().map((s) => [...s.points].reverse());
+    const res = evaluateTracingAccuracy(reversed, ref);
+    expect(res.reversedSegmentIds.length).toBeGreaterThan(0);
+    expect(res.isComplete).toBe(false);
+    expect(res.accuracy).toBeLessThanOrEqual(89);
+    expect(res.stars).toBeLessThanOrEqual(2);
+  });
+
+  test('32. enforceDirection: false restores lenient scoring for reversed strokes', () => {
+    const ref = buildReferenceGlyphData('L', 320, 320, undefined, 'en');
+    const reversed = [...ref.strokes].reverse().map((s) => [...s.points].reverse());
+    const res = evaluateTracingAccuracy(reversed, ref, { enforceDirection: false });
+    expect(res.reversedSegmentIds).toEqual([]);
+    expect(res.isComplete).toBe(true);
+  });
+
+  test('33. Finger lifts are not bridged: two far-apart dots do not draw the line between them', () => {
+    const ref = buildReferenceGlyphData('L', 320, 320, undefined, 'en');
+    const stem = ref.strokes[0].points;
+    const a = stem[0];
+    const b = stem[Math.min(stem.length - 1, 6)];
+    // Each "stroke" is a tiny tap; as separate strokes nothing between them is inked.
+    const taps = [[a, { x: a.x + 0.6, y: a.y }], [b, { x: b.x + 0.6, y: b.y }]];
+    const res = evaluateTracingAccuracy(taps, ref);
+    expect(res.accuracy).toBeLessThan(25);
+  });
 });
-
-
-

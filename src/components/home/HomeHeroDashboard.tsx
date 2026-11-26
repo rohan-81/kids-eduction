@@ -181,7 +181,7 @@ export const HomeHeroDashboard: React.FC<Props> = ({ language, progress }) => {
           tone="sky"
           size="md"
           title={resume ? tr(language, { gu: 'આગળ ▶', hi: 'आगे ▶', en: 'Resume ▶' }) : tr(language, { gu: 'શરૂ ▶', hi: 'शुरू ▶', en: 'Start ▶' })}
-          onPress={() => router.push((resume ? `/lessons/${resume.id}` : '/subjects') as any)}
+          onPress={() => router.push((resume ? `/lessons/${resume.id}` : '/subjects'))}
           style={styles.resumeBtn}
         />
       </View>

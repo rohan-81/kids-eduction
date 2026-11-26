@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#0F172A',
-    fontFamily: (Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", sans-serif' : undefined) as any,
+    fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", sans-serif' : undefined,
   },
   numTraceDots: {
     flexDirection: 'row',
@@ -938,7 +938,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#94A3B8',
     fontWeight: '400',
-    fontFamily: (Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", sans-serif' : undefined) as any,
+    fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", sans-serif' : undefined,
   },
   numApplesRow: {
     flexDirection: 'row',

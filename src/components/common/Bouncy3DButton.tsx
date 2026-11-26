@@ -7,6 +7,7 @@ import {
   Platform,
 } from 'react-native';
 import { soundEffects } from '../../services/soundEffects';
+import { webStyle } from '../../utils/webStyle';
 
 interface Bouncy3DButtonProps {
   children: React.ReactNode;
@@ -86,7 +87,7 @@ export const Bouncy3DButton: React.FC<Bouncy3DButtonProps> = ({
       accessibilityRole={accessibilityRole}
       accessibilityLabel={accessibilityLabel}
       style={{
-        ...(Platform.OS === 'web' ? ({ cursor: disabled ? 'default' : 'pointer' } as any) : {}),
+        ...webStyle({ cursor: disabled ? 'default' : 'pointer' }),
       }}
     >
       <Animated.View

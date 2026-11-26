@@ -8,12 +8,13 @@ import { soundEffects } from '../services/soundEffects';
 import { audioService } from '../services/audioService';
 import { AppIcon } from './AppIcon';
 import { formatNumberDigits } from '../utils/languageData';
+import type { AppRoute } from '../utils/navigationHelper';
 
 interface HeaderProps {
   title?: string;
   showBack?: boolean;
   showStars?: boolean;
-  backHref?: string;
+  backHref?: AppRoute;
   onBack?: () => void;
 }
 
@@ -55,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
               const newPath = window.location.pathname + window.location.search;
               if (newPath === currentPath) {
                 if (backHref) {
-                  router.replace(backHref as any);
+                  router.replace(backHref);
                 } else {
                   router.replace('/home');
                 }
@@ -66,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
         }
       } catch {}
       if (backHref) {
-        router.replace(backHref as any);
+        router.replace(backHref);
         return;
       }
       router.replace('/home');
@@ -80,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
       }
     } catch {}
     if (backHref) {
-      router.replace(backHref as any);
+      router.replace(backHref);
       return;
     }
     router.replace('/home');

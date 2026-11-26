@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Animated, Platform, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { soundEffects } from '../../services/soundEffects';
+import { webStyle } from '../../utils/webStyle';
 
 const useNative = Platform.OS !== 'web';
 export const CLAY_CARD_LIP = 10;
@@ -66,14 +67,14 @@ export const ClayPressCard: React.FC<ClayPressCardProps> = ({
       onPressOut={() => Animated.spring(press, { toValue: 0, friction: 4, tension: 170, useNativeDriver: useNative }).start()}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={[{ paddingBottom: lip }, Platform.OS === 'web' && ({ cursor: 'pointer', userSelect: 'none' } as any), style]}
+      style={[{ paddingBottom: lip }, webStyle({ cursor: 'pointer', userSelect: 'none' }), style]}
     >
       <View style={[styles.lip, { top: lip, borderRadius: radius, backgroundColor: colors.lip, borderColor: colors.lip }]} />
       <Animated.View
         style={[
           styles.face,
           { borderRadius: radius, backgroundColor: colors.fill, borderColor: colors.border, transform: [{ translateY }, { scale }] },
-          Platform.OS === 'web' && ({ boxShadow: '0 6px 16px rgba(120, 72, 32, 0.08)' } as any),
+          webStyle({ boxShadow: '0 6px 16px rgba(120, 72, 32, 0.08)' }),
           faceStyle,
         ]}
       >

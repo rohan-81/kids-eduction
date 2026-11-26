@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import Question
 from .serializers import QuestionSerializer, GameQuestionSerializer, AnswerSubmissionSerializer
 from parent_controls.models import WrongAnswerLog
-from child_profiles.models import ChildProfile
+from child_profiles.utils import resolve_child_profile
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -25,7 +25,8 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         difficulty = self.request.query_params.get('difficulty')
 
         if lesson_id:
-            queryset = queryset.filter(lesson_id=lesson_id)
+            # A non-numeric id used to raise ValueError (HTTP 500); unknown ids simply match nothing.
+            queryset = queryset.filter(lesson_id=lesson_id) if str(lesson_id).isdigit() else queryset.none()
         if question_type:
             queryset = queryset.filter(question_type=question_type)
         if category:
@@ -73,13 +74,11 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         is_correct = (str(question.correct_answer).strip().lower() == selected.lower())
 
         # If child profile provided, log wrong answers for parental review
-        if not is_correct and child_profile_id:
+        # Only the owning, signed-in parent's child gets a log entry; guests are never logged.
+        if not is_correct and child_profile_id and request.user.is_authenticated:
             try:
-                child = ChildProfile.objects.filter(id=child_profile_id).first()
+                child = resolve_child_profile(request, child_profile_id)
                 if child:
-                    # Security check: if request is authenticated, ensure profile belongs to user
-                    if request.user.is_authenticated and child.user != request.user:
-                        return Response({'detail': 'Forbidden profile access.'}, status=status.HTTP_403_FORBIDDEN)
                     WrongAnswerLog.objects.create(
                         child_profile=child,
                         question_text=question.question_text,

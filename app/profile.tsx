@@ -29,6 +29,7 @@ import { AppIcon } from '../src/components/AppIcon';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { formatChildName } from '../src/utils/nameTransliterator';
 import * as Art from '../src/components/art3d/Art3D';
+import { webStyle } from '../src/utils/webStyle';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -173,9 +174,9 @@ export default function ProfileScreen() {
           <View
             style={[
               styles.statBox,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -190,9 +191,9 @@ export default function ProfileScreen() {
           <View
             style={[
               styles.statBox,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -207,9 +208,9 @@ export default function ProfileScreen() {
           <View
             style={[
               styles.statBox,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -224,9 +225,9 @@ export default function ProfileScreen() {
           <View
             style={[
               styles.statBox,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -506,7 +507,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: kidPalette.ink,
-    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {}),
+    ...webStyle({ outlineStyle: 'none' }),
   },
   funBtnRow: {
     flexDirection: 'row',
@@ -653,9 +654,9 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderColor: '#F1EDFF',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 8px 24px rgba(128, 98, 245, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03)',
-    } as any)),
+    })),
     // design system: clay
     borderRadius: kidRadii.card,
     borderWidth: 1.5,
@@ -715,10 +716,10 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 6px rgba(0, 0, 0, 0.03)',
       cursor: 'pointer',
-    } as any)),
+    })),
     // design system: clay
     minHeight: 52,
     borderRadius: kidRadii.pill,
@@ -739,10 +740,10 @@ const styles = StyleSheet.create({
     borderColor: '#C084FC',
     paddingVertical: 14,
     paddingHorizontal: 16,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 6px rgba(126, 34, 206, 0.08)',
       cursor: 'pointer',
-    } as any)),
+    })),
     // design system: clay
     minHeight: 52,
     borderRadius: kidRadii.pill,
@@ -770,20 +771,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 3,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(2, 132, 199, 0.32)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   logoutPrimaryBtn: {
     backgroundColor: '#EF4444',
     paddingVertical: 14,
     paddingHorizontal: 16,
     alignItems: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
       cursor: 'pointer',
-    } as any)),
+    })),
     // design system: clay
     minHeight: 52,
     borderRadius: kidRadii.pill,

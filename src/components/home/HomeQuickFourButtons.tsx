@@ -7,11 +7,12 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { useSafeRouter } from '../../utils/navigationHelper';
+import { useSafeRouter, type AppRoute } from '../../utils/navigationHelper';
 import { soundEffects } from '../../services/soundEffects';
 import { AppLanguage } from '../../types';
 import { ClayBadgeToken } from '../SubjectBadgeIcons';
 import * as Art from '../art3d/Art3D';
+import { webStyle } from '../../utils/webStyle';
 
 interface HomeQuickFourButtonsProps {
   language: AppLanguage;
@@ -73,7 +74,7 @@ export const HomeQuickFourButtons: React.FC<HomeQuickFourButtonsProps> = ({
       tone: 'peach' as const,
       route: '/adventure',
     },
-  ];
+  ] satisfies ReadonlyArray<{ route: AppRoute; [key: string]: unknown }>;
 
   return (
     <View style={styles.gridContainer}>
@@ -82,13 +83,13 @@ export const HomeQuickFourButtons: React.FC<HomeQuickFourButtonsProps> = ({
           key={btn.id}
           style={[
             styles.cardBtn,
-            Platform.OS === 'web' && ({
+            webStyle({
               boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
-            } as any),
+            }),
           ]}
           onPress={() => {
             soundEffects.playBubblePop();
-            router.push(btn.route as any);
+            router.push(btn.route);
           }}
           activeOpacity={0.85}
           accessibilityRole="button"

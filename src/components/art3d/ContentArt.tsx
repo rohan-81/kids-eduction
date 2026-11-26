@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, Text, View, type StyleProp, type TextStyle } from 'react-native';
 import * as Art from './Art3D';
 import { STORY_CHARACTER_IMAGES, STORY_PROP_IMAGES, SUBJECT_CARD_ART } from '../../utils/imageHelper';
 import { ANIMAL_RENDERS_BY_EMOJI } from '../../utils/animalRenders';
@@ -17,8 +17,8 @@ import { Remote3DImage } from '../common/Remote3DImage';
  */
 type ArtSource = number | { uri: string } | React.FC<{ size?: number }>;
 
-const C = STORY_CHARACTER_IMAGES as Record<string, any>;
-const P = STORY_PROP_IMAGES as Record<string, any>;
+const C = STORY_CHARACTER_IMAGES;
+const P = STORY_PROP_IMAGES;
 
 /**
  * Base emoji -> art map: clay vectors, bundled prop art, and the story-character renders
@@ -81,7 +81,7 @@ export const renderLocalArt = (emoji: string, size: number): React.ReactNode => 
   const local = CONTENT_ART_LOCAL[emoji];
   if (local == null || isRemoteImageSource(local)) return null; // remote art can't be an offline fallback
   if (typeof local === 'function') return React.createElement(local, { size });
-  return <Image source={local as any} resizeMode="contain" style={{ width: size, height: size }} />;
+  return <Image source={local} resizeMode="contain" style={{ width: size, height: size }} />;
 };
 
 export { splitEmojiLabel } from '../../utils/emojiLabel';
@@ -111,7 +111,7 @@ export const EmojiArt: React.FC<{ emoji?: string | null; size?: number }> = ({ e
   }
   return (
     <View style={{ width: size, height: size }}>
-      <Image source={src as any} resizeMode="contain" style={{ width: size, height: size }} />
+      <Image source={src} resizeMode="contain" style={{ width: size, height: size }} />
     </View>
   );
 };
@@ -120,7 +120,7 @@ export const EmojiArt: React.FC<{ emoji?: string | null; size?: number }> = ({ e
  * Renders a visual string (one emoji, or several separated by spaces) as 3D art when every
  * emoji has art; otherwise falls back to the original text so no question loses its picture.
  */
-export const VisualArt: React.FC<{ value: string; size?: number; textStyle?: any }> = ({ value, size = 48, textStyle }) => {
+export const VisualArt: React.FC<{ value: string; size?: number; textStyle?: StyleProp<TextStyle> }> = ({ value, size = 48, textStyle }) => {
   const parts = value.trim().split(/\s+/).filter(Boolean);
   const allArt = parts.length > 0 && parts.every((p) => hasContentArt(p));
   if (!allArt) return <Text style={textStyle}>{value}</Text>;

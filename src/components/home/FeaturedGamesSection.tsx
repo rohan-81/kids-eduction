@@ -8,13 +8,15 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { useSafeRouter } from '../../utils/navigationHelper';
+import { useSafeRouter, type AppRoute } from '../../utils/navigationHelper';
 import Svg, { Path } from 'react-native-svg';
 import { spacing, radii } from '../../theme/spacing';
 import { soundEffects } from '../../services/soundEffects';
 import { AppLanguage } from '../../types';
 import { ClayBadgeToken } from '../SubjectBadgeIcons';
 import * as Art from '../art3d/Art3D';
+import { webStyle } from '../../utils/webStyle';
+import type { ArtProps } from '../art3d/Art3D';
 
 interface FeaturedGamesSectionProps {
   language: AppLanguage;
@@ -28,7 +30,7 @@ interface GameCardItem {
   sub: string;
   subGu: string;
   subHi: string;
-  art3d: any;
+  art3d: React.FC<ArtProps>;
   tone: 'peach' | 'mint' | 'sky' | 'lavender' | 'pink' | 'gold';
   badge: string;
   badgeGu?: string;
@@ -38,7 +40,7 @@ interface GameCardItem {
   cardBg: string;
   cardBorder: string;
   btnBg: string;
-  route: string;
+  route: AppRoute;
 }
 
 export const FEATURED_GAMES: GameCardItem[] = [
@@ -283,16 +285,16 @@ export const FeaturedGamesSection: React.FC<FeaturedGamesSectionProps> = ({
                   backgroundColor: game.cardBg,
                   borderColor: game.cardBorder,
                 },
-                Platform.OS === 'web' && ({
+                webStyle({
                   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-                } as any),
+                }),
               ]}
               onPress={() => {
                 if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
                   document.activeElement.blur();
                 }
                 soundEffects.playBubblePop();
-                router.push(game.route as any);
+                router.push(game.route);
               }}
               activeOpacity={0.85}
             >

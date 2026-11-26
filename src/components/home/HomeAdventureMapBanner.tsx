@@ -19,6 +19,7 @@ import { useApp } from '../../context/AppContext';
 import { Glyph } from '../fun';
 import { TreasureMapArt } from '../art3d/Art3D';
 import { useSafeRouter } from '../../utils/navigationHelper';
+import { webStyle } from '../../utils/webStyle';
 
 interface HomeAdventureMapBannerProps {
   language: AppLanguage;
@@ -50,9 +51,9 @@ export const HomeAdventureMapBanner: React.FC<HomeAdventureMapBannerProps> = ({
       disabled={isNavigating}
       style={[
         styles.bannerCard,
-        Platform.OS === 'web' && ({
+        webStyle({
           boxShadow: '0 8px 24px rgba(234, 88, 12, 0.15), 0 2px 8px rgba(0, 0, 0, 0.04)',
-        } as any),
+        }),
       ]}
       onPress={handleOpenAdventure}
       accessibilityLabel="Adventure Map"

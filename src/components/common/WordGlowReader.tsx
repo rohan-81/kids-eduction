@@ -5,10 +5,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  type StyleProp,
+  type ViewStyle
 } from 'react-native';
 import { AppLanguage } from '../../types';
 import { soundEffects } from '../../services/soundEffects';
 import { audioService, WordBoundaryEvent } from '../../services/audioService';
+import { webStyle } from '../../utils/webStyle';
 
 interface WordGlowReaderProps {
   text: string;
@@ -16,7 +19,7 @@ interface WordGlowReaderProps {
   isNarrating?: boolean;
   speechRate?: number;
   onNarrationEnd?: () => void;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 interface WordSpan {
@@ -206,9 +209,7 @@ export const WordGlowReader: React.FC<WordGlowReaderProps> = ({
                 styles.wordPill,
                 isGlowing && styles.glowingPill,
                 isTapped && styles.tappedPill,
-                Platform.OS === 'web' && isGlowing && ({
-                  boxShadow: '0 4px 14px rgba(128, 98, 245, 0.45)',
-                } as any),
+                isGlowing && webStyle({ boxShadow: '0 4px 14px rgba(128, 98, 245, 0.45)' }),
               ]}
               accessibilityRole="button"
               accessibilityLabel={`Word: ${w}`}

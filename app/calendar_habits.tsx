@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import { soundEffects } from '../src/services/soundEffects';
 import { audioService } from '../src/services/audioService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import { getTodayDateKey } from '../src/services/storageService';
 
 const { width } = Dimensions.get('window');
 
@@ -258,12 +259,16 @@ export default function CalendarHabitsScreen() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('seasons');
   const [selectedSeason, setSelectedSeason] = useState<string | null>('winter');
   const [completedHabits, setCompletedHabits] = useState<string[]>([]);
+  // Habits already paid today. Unticking and re-ticking used to pay +2 coins every time.
+  const rewardedHabitsRef = useRef<Set<string>>(new Set());
 
-  const todayDateStr = new Date().toISOString().split('T')[0];
+  // Local calendar day (toISOString() is UTC, so in India the list reset at 5:30 AM).
+  const todayDateStr = getTodayDateKey();
   const habitsStorageKey = `@kidszone_daily_habits_${todayDateStr}`;
+  const rewardedStorageKey = `@kidszone_daily_habits_rewarded_${todayDateStr}`;
 
   useEffect(() => {
-    AsyncStorage.getItem(habitsStorageKey).then((stored) => {
+    AsyncStorage.getItem(habitsStorageKey).catch(() => null).then((stored) => {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
@@ -271,11 +276,17 @@ export default function CalendarHabitsScreen() {
         } catch {}
       }
     });
+    AsyncStorage.getItem(rewardedStorageKey).catch(() => null).then((stored) => {
+      try {
+        const parsed = stored ? JSON.parse(stored) : [];
+        if (Array.isArray(parsed)) parsed.forEach((id) => rewardedHabitsRef.current.add(String(id)));
+      } catch {}
+    });
     return () => {
       audioService.stop();
       soundEffects.stopAnimalSound();
     };
-  }, [habitsStorageKey]);
+  }, [habitsStorageKey, rewardedStorageKey]);
 
   // Silence all audio immediately when this screen loses focus or user navigates to another page
   useFocusEffect(
@@ -334,7 +345,11 @@ export default function CalendarHabitsScreen() {
       const updated = [...completedHabits, habit.id];
       setCompletedHabits(updated);
       AsyncStorage.setItem(habitsStorageKey, JSON.stringify(updated)).catch(() => {});
-      addCoins(2);
+      if (!rewardedHabitsRef.current.has(habit.id)) {
+        rewardedHabitsRef.current.add(habit.id);
+        AsyncStorage.setItem(rewardedStorageKey, JSON.stringify([...rewardedHabitsRef.current])).catch(() => {});
+        addCoins(2);
+      }
       const praise =
         activeLang === 'en'
           ? `Great job! ${habit.speakEn}`

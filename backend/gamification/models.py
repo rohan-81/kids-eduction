@@ -49,6 +49,7 @@ class CoinTransaction(models.Model):
         ('lesson_reward', 'Lesson Completion Reward'),
         ('game_reward', 'Game Victory Reward'),
         ('shop_purchase', 'Shop Purchase'),
+        ('device_spend', 'In-App Spending (synced)'),
         ('lucky_spin', 'Lucky Wheel Spin'),
         ('daily_streak', 'Daily Streak Bonus'),
         ('adventure_reward', 'Adventure Level Reward'),

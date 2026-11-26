@@ -8,6 +8,9 @@ import {
   Dimensions,
   TextInput,
   Platform,
+  type StyleProp,
+  type ViewStyle,
+  type TextStyle
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -385,8 +388,8 @@ export default function ChallengeCertificateScreen() {
                   const toneKey = OPTION_TONES[idx % OPTION_TONES.length];
                   const tone = kidTones[toneKey];
 
-                  let optCardStyle: any = styles.optClayDefault;
-                  let optTextStyle: any = styles.optTextDefault;
+                  let optCardStyle: StyleProp<ViewStyle> = styles.optClayDefault;
+                  let optTextStyle: StyleProp<TextStyle> = styles.optTextDefault;
                   let statusBadge = null;
 
                   if (isAnswered) {

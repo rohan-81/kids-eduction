@@ -90,3 +90,32 @@ class MediaUrlAndCharacterAssetTest(TestCase):
     def test_webp_media_is_served_with_image_content_type(self):
         import mimetypes
         self.assertEqual(mimetypes.guess_type('x.webp')[0], 'image/webp')
+
+
+class TTSProxyHardeningTest(TestCase):
+    """Audit P1-6: the TTS proxy validates language and does not leak upstream errors."""
+
+    def test_unsupported_language_is_rejected_without_upstream_call(self):
+        from unittest import mock
+        with mock.patch('lessons.views.urllib.request.urlopen') as urlopen:
+            res = self.client.get('/api/tts/', {'text': 'hello', 'lang': 'en&q=evil'})
+        self.assertEqual(res.status_code, 400)
+        urlopen.assert_not_called()
+
+    def test_upstream_error_is_not_echoed(self):
+        from unittest import mock
+        with mock.patch('lessons.views.urllib.request.urlopen', side_effect=OSError('secret internal detail')):
+            res = self.client.get('/api/tts/', {'text': 'namaste unique-1', 'lang': 'hi'})
+        self.assertEqual(res.status_code, 502)
+        self.assertNotIn('secret internal detail', res.content.decode())
+
+    def test_language_and_text_are_url_encoded(self):
+        from unittest import mock
+        fake = mock.MagicMock()
+        fake.__enter__.return_value.read.return_value = b'ID3'
+        with mock.patch('lessons.views.urllib.request.urlopen', return_value=fake) as urlopen:
+            res = self.client.get('/api/tts/', {'text': 'a&tl=xx unique-2', 'lang': 'gu'})
+        self.assertEqual(res.status_code, 200)
+        url = urlopen.call_args[0][0].full_url
+        self.assertIn('tl=gu', url)
+        self.assertNotIn('tl=xx', url)

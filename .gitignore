@@ -48,6 +48,11 @@ media_backup*.zip
 !backend/media/content_pack_v1.zip
 staticfiles/
 
+# Local scratch work and one-off audit reports (kept on disk, never committed)
+scratch/
+KIDSAPP_*AUDIT*.md
+KIDSAPP_*VERIFICATION*.md
+
 # Environment and secrets
 .env
 .env.local

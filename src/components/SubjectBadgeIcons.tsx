@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { HOME_CARD_ART, SUBJECT_CARD_ART, TOPIC_ART } from '../utils/imageHelper';
 import * as Art from './art3d/Art3D';
 import { Remote3DImage } from './common/Remote3DImage';
-import { characterAsset, isRemoteImageSource } from '../utils/remoteAssets';
+import { characterAsset, isRemoteImageSource, type ImageAsset } from '../utils/remoteAssets';
 
 /**
  * Subject & topic badges as 3D clay tokens: an embossed circular candy base (tint fill,
@@ -29,7 +29,7 @@ const TOKEN_TONES: Record<TokenTone, { tint: string; border: string; lip: string
 };
 
 type VectorArt = React.FC<{ size?: number }>;
-type BadgeArt = any | VectorArt;
+export type BadgeArt = ImageAsset | VectorArt;
 const isVector = (a: BadgeArt): a is VectorArt => typeof a === 'function';
 
 /**
@@ -78,7 +78,7 @@ export const ClayBadgeToken: React.FC<{ art: BadgeArt; tone: TokenTone; size?: n
   );
 };
 
-const badge = (art: any, tone: TokenTone, defaultSize: number, fallback?: VectorArt): React.FC<BadgeIconProps> => {
+const badge = (art: BadgeArt, tone: TokenTone, defaultSize: number, fallback?: VectorArt): React.FC<BadgeIconProps> => {
   const Badge: React.FC<BadgeIconProps> = ({ size = defaultSize }) => (
     <ClayBadgeToken art={art} tone={tone} size={size} fallback={fallback} />
   );

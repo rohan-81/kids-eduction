@@ -14,10 +14,11 @@ export function getRoundStars(score: number, total: number, outOfLives = false):
  * Games-hub order (wrapping around). Two-player duel and non-game routes are
  * skipped. Returns null when there is no other game.
  */
-export function getNextGameRoute(currentType: string, routes: string[]): string | null {
+export function getNextGameRoute<R extends string>(currentType: string, routes: readonly R[]): R | null {
+  const current = `/games/${currentType}`;
   const games = routes.filter((r) => /^\/games\/[\w-]+$/.test(r) && r !== '/games/duel');
   if (games.length === 0) return null;
-  const idx = games.indexOf(`/games/${currentType}`);
+  const idx = games.findIndex((r) => r === current);
   const next = games[(idx + 1) % games.length];
-  return next === `/games/${currentType}` ? null : next;
+  return next === current ? null : next;
 }

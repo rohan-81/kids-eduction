@@ -17,9 +17,11 @@ import { REWARD_ART, STORY_PROP_IMAGES, STORY_CHARACTER_IMAGES } from '../../uti
 import { Image } from 'react-native';
 import { StarArt } from '../art3d/Art3D';
 import { Remote3DImage } from '../common/Remote3DImage';
+import { webStyle } from '../../utils/webStyle';
+import type { ImageAsset } from '../../utils/remoteAssets';
 
 /** Sticker emoji ids -> bundled 3D renders. */
-const STICKER_ART: Record<string, any> = {
+const STICKER_ART: Record<string, ImageAsset> = {
   '👑': STORY_PROP_IMAGES['👑'],
   '🚀': STORY_PROP_IMAGES['🚀'],
   '💎': STORY_PROP_IMAGES['💎'],
@@ -218,7 +220,7 @@ export const DailyMysteryModal: React.FC<DailyMysteryModalProps> = ({ visible, l
 
   const openStickerBook = () => {
     onClose();
-    router.push('/stickers' as any);
+    router.push('/stickers');
   };
 
   const stickerName = tr(language, { gu: sticker.gu, hi: sticker.hi, en: sticker.en });
@@ -276,7 +278,7 @@ export const DailyMysteryModal: React.FC<DailyMysteryModalProps> = ({ visible, l
           onPress={handleOpenBox}
           accessibilityRole="button"
           accessibilityLabel="Open mystery box"
-          style={[styles.stage, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+          style={[styles.stage, webStyle({ cursor: 'pointer' })]}
         >
           <Starburst size={210} color="#FFD166" />
           <Animated.View style={{ transform: [{ translateY: boxY }, { rotate: boxRotate }, { scale: boxScale }] }}>

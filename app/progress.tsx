@@ -31,6 +31,8 @@ import * as Art from '../src/components/art3d/Art3D';
 import { Glyph } from '../src/components/fun/KidIcons';
 import { ICON_3D_STAR } from '../src/utils/imageHelper';
 import { screenWellnessService } from '../src/services/screenWellnessService';
+import { webStyle } from '../src/utils/webStyle';
+import type { AppRoute } from '../src/utils/navigationHelper';
 
 export default function ProgressScreen() {
   const router = useRouter();
@@ -176,7 +178,18 @@ export default function ProgressScreen() {
   const artLessons = filterLessonsForClass(rawArtLessons, ageGroup, 'colors-shapes');
   const artDone = artLessons.filter((l) => completedSet.has(l.id)).length;
 
-  const subjectProgress = [
+  interface SubjectProgressItem {
+    name: string;
+    nameGu: string;
+    nameHi: string;
+    key: string;
+    done: number;
+    total: number;
+    color: string;
+    route: AppRoute;
+  }
+
+  const subjectProgress: SubjectProgressItem[] = [
     {
       name: langSubjectName,
       nameGu: langSubjectNameGu,
@@ -185,7 +198,7 @@ export default function ProgressScreen() {
       done: langDone,
       total: Math.max(langLessons.length, 1),
       color: '#EC4899',
-      route: '/lessons?categoryId=' + langCatIds[0],
+      route: `/lessons?categoryId=${langCatIds[0]}`,
     },
     {
       name: 'Mathematics',
@@ -209,7 +222,7 @@ export default function ProgressScreen() {
           color: '#3B82F6',
           route: '/lessons?categoryId=en-alphabet',
         },
-      ]
+      ] satisfies SubjectProgressItem[]
       : []),
     {
       name: 'Animals & Birds',
@@ -443,9 +456,9 @@ export default function ProgressScreen() {
           <View
             style={[
               styles.metricCard,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -460,9 +473,9 @@ export default function ProgressScreen() {
           <View
             style={[
               styles.metricCard,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -477,9 +490,9 @@ export default function ProgressScreen() {
           <View
             style={[
               styles.metricCard,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -496,9 +509,9 @@ export default function ProgressScreen() {
           <View
             style={[
               styles.metricCard,
-              Platform.OS === 'web' && ({
+              webStyle({
                 boxShadow: '0 4px 14px rgba(0, 0, 0, 0.04)',
-              } as any),
+              }),
             ]}
           >
             <View style={{ marginBottom: 6 }}>
@@ -696,14 +709,14 @@ export default function ProgressScreen() {
                   key={idx}
                   style={[
                     styles.subjectCardItem,
-                    Platform.OS === 'web' && ({
+                    webStyle({
                       boxShadow: '0 8px 24px rgba(128, 98, 245, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03)',
                       cursor: 'pointer',
-                    } as any),
+                    }),
                   ]}
                   onPress={() => {
                     soundEffects.playBubblePop();
-                    router.push(sub.route as any);
+                    router.push(sub.route);
                   }}
                   activeOpacity={0.88}
                   accessibilityRole="button"
@@ -1026,7 +1039,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginBottom: 6,
     ...Platform.select({
-      web: { boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)' } as any,
+      web: webStyle({ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)' }),
     }),
   },
   barTrackFuture: {
@@ -1037,7 +1050,7 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     borderColor: '#0284C7',
     ...Platform.select({
-      web: { boxShadow: '0 0 10px rgba(2, 132, 199, 0.25)' } as any,
+      web: webStyle({ boxShadow: '0 0 10px rgba(2, 132, 199, 0.25)' }),
     }),
   },
   barFill: {
@@ -1153,10 +1166,10 @@ const styles = StyleSheet.create({
     padding: 16,
     borderColor: '#F1EDFF',
     marginBottom: 4,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 8px 24px rgba(128, 98, 245, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03)',
       cursor: 'pointer',
-    } as any)),
+    })),
     // design system: clay
     borderRadius: kidRadii.card,
     borderWidth: 1.5,
@@ -1171,9 +1184,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#EAE6F8',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.03)',
-    } as any)),
+    })),
   },
   subjectInfoCol: {
     flex: 1,
@@ -1234,9 +1247,9 @@ const styles = StyleSheet.create({
   },
   circularActionButtonMastered: {
     backgroundColor: '#10B981',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-    } as any)),
+    })),
   },
   parentGateBtn: {
     flexDirection: 'row',
@@ -1387,9 +1400,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   guestProgressBtnText: {
     color: '#FFFFFF',

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, type ImageSourcePropType } from 'react-native';
 import { AppLanguage } from '../types';
 import { AppIcon } from './AppIcon';
 import { PastelButton } from './PastelButton';
@@ -32,7 +32,7 @@ export interface LessonActionSectionProps {
   onPlayRealVoice?: () => void;
   hasRealVoice?: boolean;
   realVoiceInfo?: RealVoiceInfo | null;
-  characterImage?: any;
+  characterImage?: ImageSourcePropType;
   phonicsPrompt?: PhonicsPromptInfo | null;
   onPlayPhonics?: () => void;
   canTrace?: boolean;

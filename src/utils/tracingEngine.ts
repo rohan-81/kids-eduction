@@ -77,6 +77,10 @@ export interface TracingEvaluationResult {
   segmentCompletionRatio: number;
   /** List of IDs of missing or insufficiently traced structural segments */
   missingSegmentIds: string[];
+  /** IDs of segments traced predominantly against their reference stroke direction */
+  reversedSegmentIds: string[];
+  /** Total user path length divided by the reference path length */
+  pathLengthRatio: number;
   /** Strict boolean indicating whether the entire character/word is authentically complete */
   isComplete: boolean;
   /** Number of stars earned: 0 (<50%), 1 (50-74%), 2 (75-89%), 3 (90-100%) */
@@ -98,7 +102,20 @@ export interface EngineConfig {
   minSegmentCoverage?: number;
   /** Minimum overall trajectory coverage required for 100% completion. Default: 0.94 */
   requiredCompletionCoverage?: number;
+  /** When true, segments traced against the reference direction block 3 stars. Default: true */
+  enforceDirection?: boolean;
 }
+
+/**
+ * A genuine trace is ~1.0-2.0x the reference length (2x = the child traced it twice).
+ * Area-filling zigzags and "colouring in" reach full coverage with high precision but are
+ * 4-10x longer, so anything above this ratio is capped below 75% and can never complete.
+ */
+export const MAX_PATH_LENGTH_RATIO = 2.6;
+/** Accuracy ceiling (2 stars) when a segment is traced against its stroke direction. */
+const REVERSED_DIRECTION_CAP = 89;
+/** Minimum local direction samples on a segment before its direction is judged. */
+const MIN_DIRECTION_SAMPLES = 8;
 
 const DEFAULT_CONFIG: Required<EngineConfig> = {
   reachTolerance: 9,
@@ -107,6 +124,7 @@ const DEFAULT_CONFIG: Required<EngineConfig> = {
   strayTolerance: 26,
   minSegmentCoverage: 0.60,
   requiredCompletionCoverage: 0.97,
+  enforceDirection: true,
 };
 
 /**
@@ -274,52 +292,58 @@ export function isPointOnGlyph(
  * - Accurate star awarding: 3 stars (90-100%), 2 stars (75-89%), 1 star (50-74%), 0 stars (<50%)
  */
 export function evaluateTracingAccuracy(
-  userPoints: Point2D[],
+  userInput: Point2D[] | Point2D[][],
   reference: ReferenceGlyphData,
   config?: EngineConfig
 ): TracingEvaluationResult {
   const cfg = { ...DEFAULT_CONFIG, ...config };
 
-  if (!userPoints || userPoints.length < 3 || reference.totalReferencePoints === 0) {
-    return {
-      accuracy: 0,
-      coverageRatio: 0,
-      precision: 0,
-      segmentCompletionRatio: 0,
-      missingSegmentIds: reference.segments.map((s) => s.id),
-      isComplete: false,
-      stars: 0,
-      status: 'empty',
-    };
+  // Accept either one flat point list (legacy) or one array per finger-down stroke. Strokes are
+  // densified independently so a finger lift is never bridged with synthetic "drawn" points.
+  const userStrokes: Point2D[][] = !userInput
+    ? []
+    : userInput.length > 0 && Array.isArray(userInput[0])
+      ? (userInput as Point2D[][]).filter((st) => Array.isArray(st) && st.length > 0)
+      : [userInput as Point2D[]];
+  const rawCount = userStrokes.reduce((n, st) => n + st.length, 0);
+
+  const emptyResult = (): TracingEvaluationResult => ({
+    accuracy: 0,
+    coverageRatio: 0,
+    precision: 0,
+    segmentCompletionRatio: 0,
+    missingSegmentIds: reference.segments.map((s) => s.id),
+    reversedSegmentIds: [],
+    pathLengthRatio: 0,
+    isComplete: false,
+    stars: 0,
+    status: 'empty',
+  });
+
+  if (rawCount < 3 || reference.totalReferencePoints === 0) {
+    return emptyResult();
   }
 
-  // 1. Densify user strokes so fast finger movement has no coordinate gaps
-  const densePoints = densifyStrokePoints(userPoints, 3.0);
+  // 1. Densify each user stroke so fast finger movement has no coordinate gaps
+  const denseStrokes = userStrokes.map((st) => densifyStrokePoints(st, 3.0)).filter((st) => st.length > 0);
+  const densePoints: Point2D[] = denseStrokes.flat();
   if (densePoints.length < 3) {
-    return {
-      accuracy: 0,
-      coverageRatio: 0,
-      precision: 0,
-      segmentCompletionRatio: 0,
-      missingSegmentIds: reference.segments.map((s) => s.id),
-      isComplete: false,
-      stars: 0,
-      status: 'empty',
-    };
+    return emptyResult();
   }
 
-  // Compute total user path length
+  // Compute total user path length (within strokes only: lift-off jumps are not drawn ink)
   let totalUserLength = 0;
   let userMinX = Infinity, userMaxX = -Infinity, userMinY = Infinity, userMaxY = -Infinity;
-  for (let i = 0; i < densePoints.length; i++) {
-    const p = densePoints[i];
-    if (p.x < userMinX) userMinX = p.x;
-    if (p.x > userMaxX) userMaxX = p.x;
-    if (p.y < userMinY) userMinY = p.y;
-    if (p.y > userMaxY) userMaxY = p.y;
-
-    if (i > 0) {
-      totalUserLength += Math.hypot(p.x - densePoints[i - 1].x, p.y - densePoints[i - 1].y);
+  for (const st of denseStrokes) {
+    for (let i = 0; i < st.length; i++) {
+      const p = st[i];
+      if (p.x < userMinX) userMinX = p.x;
+      if (p.x > userMaxX) userMaxX = p.x;
+      if (p.y < userMinY) userMinY = p.y;
+      if (p.y > userMaxY) userMaxY = p.y;
+      if (i > 0) {
+        totalUserLength += Math.hypot(p.x - st[i - 1].x, p.y - st[i - 1].y);
+      }
     }
   }
 
@@ -469,6 +493,67 @@ export function evaluateTracingAccuracy(
     }
   }
 
+  // 5b. Stroke Direction Validation
+  // For every user stroke, follow the index of the nearest point on each segment. A correctly
+  // directed trace mostly steps forward through the segment's point order; a reversed one mostly
+  // steps backward. Closed loops (start ~ end) wrap around so any starting point is accepted.
+  const reversedSegmentIds: string[] = [];
+  if (cfg.enforceDirection) {
+    for (const seg of reference.segments) {
+      const n = seg.points.length;
+      if (n < 6) continue;
+      const first = seg.points[0];
+      const last = seg.points[n - 1];
+      const isClosed = Math.hypot(first.x - last.x, first.y - last.y) <= cfg.reachTolerance * 2;
+      const pad = cfg.reachTolerance;
+      let forward = 0;
+      let backward = 0;
+
+      for (const st of denseStrokes) {
+        let prevIdx = -1;
+        for (const up of st) {
+          if (up.x < seg.minX - pad || up.x > seg.maxX + pad || up.y < seg.minY - pad || up.y > seg.maxY + pad) {
+            prevIdx = -1;
+            continue;
+          }
+          let bestIdx = -1;
+          let bestD2 = reachSq;
+          for (let k = 0; k < n; k++) {
+            const sp = seg.points[k];
+            const d2 = (sp.x - up.x) * (sp.x - up.x) + (sp.y - up.y) * (sp.y - up.y);
+            if (d2 <= bestD2) {
+              bestD2 = d2;
+              bestIdx = k;
+            }
+          }
+          if (bestIdx < 0) {
+            prevIdx = -1;
+            continue;
+          }
+          if (prevIdx >= 0 && bestIdx !== prevIdx) {
+            let delta = bestIdx - prevIdx;
+            if (isClosed) {
+              if (delta > n / 2) delta -= n;
+              else if (delta < -n / 2) delta += n;
+            }
+            // Only local steps count; large jumps are junction crossings or re-entries.
+            if (Math.abs(delta) <= 10) {
+              if (delta > 0) forward++;
+              else backward++;
+            }
+          }
+          prevIdx = bestIdx;
+        }
+      }
+
+      const samples = forward + backward;
+      if (samples >= MIN_DIRECTION_SAMPLES && backward > forward * 2) {
+        reversedSegmentIds.push(seg.id);
+      }
+    }
+  }
+  const hasReversedSegments = reversedSegmentIds.length > 0;
+
   const totalSegments = Math.max(1, reference.segments.length);
   const segmentCompletionRatio = traversedSegments / totalSegments;
   const allSegmentsCovered = missingSegmentIds.length === 0;
@@ -502,6 +587,18 @@ export function evaluateTracingAccuracy(
 
   // 7. Progressive Mathematical Accuracy Computation
   let rawAccuracy = coverageRatio * 100;
+
+  // Path-efficiency guard (anti-scribble): see MAX_PATH_LENGTH_RATIO.
+  const pathLengthRatio = totalUserLength / refLength;
+  const isInefficientPath = pathLengthRatio > MAX_PATH_LENGTH_RATIO;
+  if (isInefficientPath) {
+    rawAccuracy = Math.min(74, rawAccuracy * Math.max(0.3, MAX_PATH_LENGTH_RATIO / pathLengthRatio));
+  }
+
+  // Wrong stroke direction: still rewarded (2 stars max) but never counted as mastered.
+  if (hasReversedSegments) {
+    rawAccuracy = Math.min(REVERSED_DIRECTION_CAP, rawAccuracy);
+  }
 
   // Penalize based on precision (off-path strokes)
   if (precision < 0.60) {
@@ -557,6 +654,8 @@ export function evaluateTracingAccuracy(
     precision >= 0.70 &&
     strayRatio <= 0.10 &&
     !isOversizedDrawing &&
+    !isInefficientPath &&
+    !hasReversedSegments &&
     accuracy >= Math.round(cfg.requiredCompletionCoverage * 100);
 
   if (isComplete) {
@@ -589,6 +688,8 @@ export function evaluateTracingAccuracy(
     precision,
     segmentCompletionRatio,
     missingSegmentIds,
+    reversedSegmentIds,
+    pathLengthRatio,
     isComplete,
     stars,
     status,

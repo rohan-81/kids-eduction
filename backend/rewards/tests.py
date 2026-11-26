@@ -5,19 +5,31 @@ from .models import Reward
 
 class RewardAPITest(TestCase):
     def setUp(self):
+        from django.contrib.auth.models import User
+        from child_profiles.models import ChildProfile
         self.client = APIClient()
+        self.parent = User.objects.create_user(username='reward_parent', password='Password123!')
+        self.child = ChildProfile.objects.create(parent=self.parent, nickname='Star', age_group='2-4')
 
     def test_create_and_fetch_reward(self):
+        self.client.force_authenticate(self.parent)
         res = self.client.post('/api/rewards/', {
+            'child_profile': self.child.id,
             'reward_type': 'badge',
             'title': 'Alphabet Master',
             'icon': '⭐',
         })
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertEqual(res.data['title'], 'Alphabet Master')
+        self.assertEqual(Reward.objects.get().child_profile, self.child)
 
         get_res = self.client.get('/api/rewards/')
         self.assertEqual(get_res.status_code, status.HTTP_200_OK)
+
+    def test_anonymous_reward_creation_rejected(self):
+        res = self.client.post('/api/rewards/', {'reward_type': 'badge', 'title': 'Free Badge', 'icon': '⭐'})
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertFalse(Reward.objects.exists())
 
 
 class StickerAPITest(TestCase):

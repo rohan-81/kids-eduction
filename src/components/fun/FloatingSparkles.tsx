@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, View, type DimensionValue } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 const STAR = 'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z';
@@ -31,7 +31,7 @@ function rand(seed: number) {
   return x - Math.floor(x);
 }
 
-const Sparkle: React.FC<{ emoji: string; top: string; left: string; delay: number; size: number; opacity: number }> = ({
+const Sparkle: React.FC<{ emoji: string; top: DimensionValue; left: DimensionValue; delay: number; size: number; opacity: number }> = ({
   emoji,
   top,
   left,
@@ -62,7 +62,7 @@ const Sparkle: React.FC<{ emoji: string; top: string; left: string; delay: numbe
     <Animated.View
       style={[
         styles.sparkle,
-        { top: top as any, left: left as any, opacity, transform: [{ translateY }, { scale }, { rotate }] },
+        { top, left, opacity, transform: [{ translateY }, { scale }, { rotate }] },
       ]}
     >
       <Svg width={size} height={size} viewBox="0 0 24 24">

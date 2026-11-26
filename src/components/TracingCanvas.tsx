@@ -9,6 +9,7 @@ import {
   Platform,
   Dimensions,
   PanResponderGestureState,
+  type PointerEvent
 } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { colors } from '../theme/colors';
@@ -37,6 +38,17 @@ interface TracingCanvasProps {
  * Converts a sequence of points into a butter-smooth quadratic Bézier SVG path.
  * Eliminates jagged joints and gaps while ensuring rounded caps and joins.
  */
+/** Splits the flat point log into one array per finger-down stroke using recorded start indices. */
+function splitIntoStrokes<T>(pts: T[], starts: number[]): T[][] {
+  if (starts.length <= 1) return [pts];
+  const out: T[][] = [];
+  for (let i = 0; i < starts.length; i++) {
+    const seg = pts.slice(starts[i], i + 1 < starts.length ? starts[i + 1] : pts.length);
+    if (seg.length > 0) out.push(seg);
+  }
+  return out.length > 0 ? out : [pts];
+}
+
 function pointsToSmoothSvgPath(pts: { x: number; y: number }[]): string {
   if (!pts || pts.length === 0) return '';
   if (pts.length === 1) {
@@ -65,10 +77,17 @@ import {
   ReferenceGlyphData,
   TracingEvaluationResult,
 } from '../utils/tracingEngine';
+import type { TimerHandle } from '../utils/runtime';
+import { webStyle, webDomNode, type WebClientPoint } from '../utils/webStyle';
 
 // Safe requestAnimationFrame / cancelAnimationFrame cross-platform helpers
-const requestFrame = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb: any) => setTimeout(cb, 16);
-const cancelFrame = typeof cancelAnimationFrame === 'function' ? cancelAnimationFrame : (id: any) => clearTimeout(id);
+type FrameHandle = number | TimerHandle;
+const hasRaf = typeof requestAnimationFrame === 'function' && typeof cancelAnimationFrame === 'function';
+const requestFrame = (cb: () => void): FrameHandle => (hasRaf ? requestAnimationFrame(cb) : setTimeout(cb, 16));
+const cancelFrame = (id: FrameHandle): void => {
+  if (hasRaf && typeof id === 'number') cancelAnimationFrame(id);
+  else clearTimeout(id as TimerHandle);
+};
 
 export const TracingCanvas: React.FC<TracingCanvasProps> = ({
   symbol,
@@ -111,6 +130,8 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
   pointsRef.current = points;
 
   const activeStrokePtsRef = useRef<Point[]>([]);
+  // Index in pointsRef where each finger-down stroke begins, so the evaluator never bridges lifts.
+  const strokeStartsRef = useRef<number[]>([]);
 
   const activeColorRef = useRef<string>(activeColor);
   activeColorRef.current = activeColor;
@@ -121,11 +142,11 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
   const onTraceCompleteRef = useRef(onTraceComplete);
   onTraceCompleteRef.current = onTraceComplete;
 
-  const canvasRef = useRef<any>(null);
+  const canvasRef = useRef<React.ComponentRef<typeof View>>(null);
   const lastPtRef = useRef<{ x: number; y: number } | null>(null);
   const lastThrottleTimeRef = useRef<number>(0);
-  const hintTimerRef = useRef<any>(null);
-  const rafIdRef = useRef<any>(null);
+  const hintTimerRef = useRef<TimerHandle | null>(null);
+  const rafIdRef = useRef<FrameHandle | null>(null);
 
   const scheduleStrokeRender = (color: string) => {
     if (rafIdRef.current === null) {
@@ -155,6 +176,7 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
   useEffect(() => {
     setPoints([]);
     pointsRef.current = [];
+    strokeStartsRef.current = [];
     setStrokes([]);
     setCurrentStroke(null);
     currentStrokeRef.current = null;
@@ -174,7 +196,10 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
     if (!pts || pts.length < 5 || targetDataRef.current.totalReferencePoints === 0) {
       return { isComplete: false, pct: 0, stars: 0, status: 'empty' };
     }
-    const evalResult: TracingEvaluationResult = evaluateTracingAccuracy(pts, targetDataRef.current);
+    const evalResult: TracingEvaluationResult = evaluateTracingAccuracy(
+      splitIntoStrokes(pts, strokeStartsRef.current),
+      targetDataRef.current
+    );
     return {
       isComplete: evalResult.isComplete,
       pct: evalResult.accuracy,
@@ -201,17 +226,12 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
 
     // 1. Web browser client bounds calculation (accounts for devicePixelRatio, CSS scaling, border offsets)
     if (Platform.OS === 'web' && canvasRef.current) {
-      const node = canvasRef.current as any;
-      if (typeof node?.getBoundingClientRect === 'function') {
+      const node = webDomNode(canvasRef.current);
+      if (node) {
         const rect = node.getBoundingClientRect();
-        const clientX =
-          (evt.nativeEvent as any).clientX ??
-          (evt.nativeEvent as any).touches?.[0]?.clientX ??
-          evt.nativeEvent.pageX;
-        const clientY =
-          (evt.nativeEvent as any).clientY ??
-          (evt.nativeEvent as any).touches?.[0]?.clientY ??
-          evt.nativeEvent.pageY;
+        const web = evt.nativeEvent as typeof evt.nativeEvent & WebClientPoint;
+        const clientX = web.clientX ?? web.touches?.[0]?.clientX ?? evt.nativeEvent.pageX;
+        const clientY = web.clientY ?? web.touches?.[0]?.clientY ?? evt.nativeEvent.pageY;
 
         if (clientX !== undefined && clientY !== undefined) {
           const borderL = node.clientLeft || 0;
@@ -255,7 +275,10 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
     currentStrokeRef.current = initStroke;
     setCurrentStroke(initStroke);
 
-    pointsRef.current.push({ x, y, color });
+    if (pointsRef.current.length < 3500) {
+      strokeStartsRef.current.push(pointsRef.current.length);
+      pointsRef.current.push({ x, y, color });
+    }
     setPoints([...pointsRef.current]);
   };
 
@@ -333,12 +356,14 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
   };
 
   const isPointerDownRef = useRef(false);
-  const getWebPointerCoords = (e: any) => {
-    const node = canvasRef.current as any;
-    if (node?.getBoundingClientRect) {
+  /** On react-native-web, `e.nativeEvent` is the DOM PointerEvent (clientX/clientY/pointerId). */
+  const getWebPointerCoords = (e: PointerEvent) => {
+    const node = webDomNode(canvasRef.current);
+    if (node) {
       const rect = node.getBoundingClientRect();
-      const x = Math.max(0, Math.min(canvasDimsRef.current.width, e.clientX - rect.left - (node.clientLeft || 0)));
-      const y = Math.max(0, Math.min(canvasDimsRef.current.height, e.clientY - rect.top - (node.clientTop || 0)));
+      const { clientX, clientY } = e.nativeEvent;
+      const x = Math.max(0, Math.min(canvasDimsRef.current.width, clientX - rect.left - (node.clientLeft || 0)));
+      const y = Math.max(0, Math.min(canvasDimsRef.current.height, clientY - rect.top - (node.clientTop || 0)));
       return { x, y };
     }
     return { x: 0, y: 0 };
@@ -400,39 +425,39 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
   ).current;
 
   const overlayHandlers = Platform.OS === 'web' ? {
-    onPointerDown: (e: any) => {
+    onPointerDown: (e: PointerEvent) => {
       // Only the first finger/pen draws; a resting palm or second finger is ignored.
       if (isPointerDownRef.current) return;
       isPointerDownRef.current = true;
-      activePointerIdRef.current = typeof e?.pointerId === 'number' ? e.pointerId : null;
+      activePointerIdRef.current = typeof e.nativeEvent.pointerId === 'number' ? e.nativeEvent.pointerId : null;
       const { x, y } = getWebPointerCoords(e);
       startStrokeAt(x, y);
     },
-    onPointerMove: (e: any) => {
+    onPointerMove: (e: PointerEvent) => {
       if (!isPointerDownRef.current) return;
-      if (activePointerIdRef.current !== null && e?.pointerId !== activePointerIdRef.current) return;
+      if (activePointerIdRef.current !== null && e.nativeEvent.pointerId !== activePointerIdRef.current) return;
       const { x, y } = getWebPointerCoords(e);
       moveStrokeAt(x, y);
     },
-    onPointerUp: (e: any) => {
-      if (activePointerIdRef.current !== null && e?.pointerId !== activePointerIdRef.current) return;
+    onPointerUp: (e: PointerEvent) => {
+      if (activePointerIdRef.current !== null && e.nativeEvent.pointerId !== activePointerIdRef.current) return;
       if (isPointerDownRef.current) {
         isPointerDownRef.current = false;
         activePointerIdRef.current = null;
         endStrokeAt();
       }
     },
-    onPointerLeave: (e: any) => {
-      if (activePointerIdRef.current !== null && e?.pointerId !== activePointerIdRef.current) return;
+    onPointerLeave: (e: PointerEvent) => {
+      if (activePointerIdRef.current !== null && e.nativeEvent.pointerId !== activePointerIdRef.current) return;
       if (isPointerDownRef.current) {
         isPointerDownRef.current = false;
         activePointerIdRef.current = null;
         endStrokeAt();
       }
     },
-    onPointerCancel: (e: any) => {
+    onPointerCancel: (e: PointerEvent) => {
       // Browser took the touch (scroll/zoom gesture): close the stroke instead of leaving it stuck.
-      if (activePointerIdRef.current !== null && e?.pointerId !== activePointerIdRef.current) return;
+      if (activePointerIdRef.current !== null && e.nativeEvent.pointerId !== activePointerIdRef.current) return;
       if (isPointerDownRef.current) {
         isPointerDownRef.current = false;
         activePointerIdRef.current = null;
@@ -445,6 +470,7 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
     soundEffects.playBubblePop();
     setPoints([]);
     pointsRef.current = [];
+    strokeStartsRef.current = [];
     activeStrokePtsRef.current = [];
     setStrokes([]);
     setCurrentStroke(null);
@@ -604,7 +630,7 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
 
         {/* SVG Tracing Guide Track & User Line Layer */}
         {Platform.OS === 'web' ? (
-          // @ts-ignore
+          // Web: a real DOM <svg> (react-native-web renders it directly) for crisp, GPU-cheap strokes.
           <svg
             style={{
               position: 'absolute',
@@ -767,7 +793,8 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
         <View
           style={[
             StyleSheet.absoluteFill,
-            { backgroundColor: 'rgba(255, 255, 255, 0.01)', zIndex: 999, touchAction: 'none' } as any,
+            { backgroundColor: 'rgba(255, 255, 255, 0.01)', zIndex: 999 },
+            webStyle({ touchAction: 'none' }),
           ]}
           {...overlayHandlers}
           collapsable={false}
@@ -851,7 +878,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0FDF4',
   },
   guideLinesLayer: {
-    ...(StyleSheet.absoluteFill as any),
+    ...StyleSheet.absoluteFill,
   },
   guideLineTop: {
     position: 'absolute',
@@ -880,7 +907,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.25)',
   },
   guideTextWrapper: {
-    ...(StyleSheet.absoluteFill as any),
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

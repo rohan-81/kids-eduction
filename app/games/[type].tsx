@@ -24,7 +24,6 @@ import { GAME_QUESTIONS, PUZZLE_PICTURES } from '../../src/data/gamesData';
 import { GameType, GameQuestion, GameOption } from '../../src/types';
 import { soundEffects } from '../../src/services/soundEffects';
 import { audioService } from '../../src/services/audioService';
-import { backendService } from '../../src/services/backendService';
 import { apiService } from '../../src/services/apiService';
 import { ClayButton } from '../../src/components/clay';
 import { HeartMeter, StarMeter, CoinBurst, KidModal, Glyph } from '../../src/components/fun';
@@ -37,6 +36,7 @@ import { AppGlobalBackground } from '../../src/components/common/AppGlobalBackgr
 import * as Art from '../../src/components/art3d/Art3D';
 import { VisualArt, EmojiArt, splitEmojiLabel } from '../../src/components/art3d/ContentArt';
 import { resolveOfflineMediaSource } from '../../src/utils/remoteAssets';
+import type { TimerHandle } from '../../src/utils/runtime';
 
 const MEMORY_EMOJI_BANK = [
   '🦁', '🐰', '🐢', '🦊', '🐯', '🐬', '🐘', '🦄', '🐒', '🐶',
@@ -149,7 +149,14 @@ export default function GameRunnerScreen() {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const isAnsweredRef = useRef(false);
-  const [score, setScore] = useState(0);
+  const [score, setScoreState] = useState(0);
+  // Timers and speech callbacks run with the closure of the render that scheduled them, so the
+  // final result is read from this ref; the state copy (one tap behind) undercounted by one.
+  const scoreRef = useRef(0);
+  const setScore = (next: number | ((prev: number) => number)) => {
+    scoreRef.current = typeof next === 'function' ? next(scoreRef.current) : next;
+    setScoreState(scoreRef.current);
+  };
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; text: string } | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
 
@@ -167,10 +174,10 @@ export default function GameRunnerScreen() {
   const [isPuzzleSolved, setIsPuzzleSolved] = useState(false);
   const [showPuzzlePeek, setShowPuzzlePeek] = useState(false);
   const [puzzleMoveCount, setPuzzleMoveCount] = useState(0);
-  const promptTimerRef = useRef<any>(null);
-  const advanceTimerRef = useRef<any>(null);
-  const speechTimerRef = useRef<any>(null);
-  const memoryTimerRef = useRef<any>(null);
+  const promptTimerRef = useRef<TimerHandle | null>(null);
+  const advanceTimerRef = useRef<TimerHandle | null>(null);
+  const speechTimerRef = useRef<TimerHandle | null>(null);
+  const memoryTimerRef = useRef<TimerHandle | null>(null);
   const isMountedRef = useRef(true);
   const loadIdRef = useRef(0);
 
@@ -516,8 +523,7 @@ export default function GameRunnerScreen() {
             audioService.stop();
             setOutOfLives(true);
             setIsGameOver(true);
-            recordScore(gameType, score);
-            backendService.syncGameResult(gameType, score, questions.length);
+            recordScore(gameType, scoreRef.current, questions.length);
           }, 1800);
         }
       }
@@ -626,11 +632,10 @@ export default function GameRunnerScreen() {
       }
     } else {
       // Game Completed
-      const finalScore = score;
+      const finalScore = scoreRef.current;
       soundEffects.playTadaaa();
       setIsGameOver(true);
-      recordScore(gameType, finalScore);
-      backendService.syncGameResult(gameType, finalScore, questions.length);
+      recordScore(gameType, finalScore, questions.length);
     }
   };
 
@@ -666,8 +671,7 @@ export default function GameRunnerScreen() {
             ? 'शाबाश! आपने पहेली पूरी कर ली!'
             : 'Super! You completed the puzzle!';
         speak(praise, language);
-        recordScore('picture-puzzle', earnedStars);
-        backendService.syncGameResult('picture-puzzle', earnedStars, 10);
+        recordScore('picture-puzzle', earnedStars, 10);
       }
     }
   };
@@ -733,8 +737,7 @@ export default function GameRunnerScreen() {
             const pairTotal = Math.floor(updated.length / 2);
             soundEffects.playTadaaa();
             setIsGameOver(true);
-            recordScore('memory-match', pairTotal);
-            backendService.syncGameResult('memory-match', pairTotal, pairTotal);
+            recordScore('memory-match', pairTotal, pairTotal);
           }
         }, 500);
       } else {
@@ -801,13 +804,13 @@ export default function GameRunnerScreen() {
           router.back();
           setTimeout(() => {
             if (typeof window !== 'undefined' && window.location.pathname + window.location.search === currentPath) {
-              router.replace('/games' as any);
+              router.replace('/games');
             }
           }, 150);
           return;
         }
       } catch {}
-      router.replace('/games' as any);
+      router.replace('/games');
       return;
     }
 
@@ -817,7 +820,7 @@ export default function GameRunnerScreen() {
         return;
       }
     } catch {}
-    router.replace('/games' as any);
+    router.replace('/games');
   };
 
   if (!currentQ && gameType !== 'memory-match' && gameType !== 'picture-puzzle') {
@@ -1542,7 +1545,7 @@ export default function GameRunnerScreen() {
             emblem={outOfLives ? '💪' : stars === 3 ? '🏆' : '🌟'}
             tone={outOfLives ? 'coral' : 'sun'}
             sparkles
-            onClose={() => router.replace('/games' as any)}
+            onClose={() => router.replace('/games')}
             title={
               outOfLives
                 ? language === 'gu'
@@ -1598,7 +1601,7 @@ export default function GameRunnerScreen() {
                   size="lg"
                   icon={<Glyph name="next" size={20} />}
                   title={language === 'gu' ? 'આગલી રમત' : language === 'hi' ? 'अगला खेल' : 'Next Game'}
-                  onPress={() => router.replace(nextGameRoute as any)}
+                  onPress={() => router.replace(nextGameRoute)}
                   style={styles.victoryBtn}
                 />
               ) : null}
@@ -1609,7 +1612,7 @@ export default function GameRunnerScreen() {
               icon={<Art.GamepadArt size={23} />}
               title={t('games.title')}
               textStyle={{ color: kidPalette.inkSoft }}
-              onPress={() => router.replace('/games' as any)}
+              onPress={() => router.replace('/games')}
               style={{ alignSelf: 'center', minWidth: 180 }}
             />
           </KidModal>

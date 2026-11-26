@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, ImageStyle, Platform, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Animated, Easing, Image, ImageStyle, Platform, StyleProp, StyleSheet, Text, View, ViewStyle, type ImageSourcePropType } from 'react-native';
 import Svg, { Defs, LinearGradient, RadialGradient, Stop, Rect, Circle, Ellipse, Path, G } from 'react-native-svg';
 import { SceneComposition, SceneSetting, castScene } from '../../utils/storyArt';
 import { STORY_CHARACTER_IMAGES, STORY_PROP_IMAGES } from '../../utils/imageHelper';
 import { resolveOfflineMediaSource } from '../../utils/remoteAssets';
 import { Remote3DImage } from '../common/Remote3DImage';
+import { webStyle } from '../../utils/webStyle';
 
 const useNative = Platform.OS !== 'web';
 
@@ -32,7 +33,7 @@ export const CHARACTER_FRAMING: Record<string, CharacterFraming> = {
 
 interface StoryIllustrationProps {
   /** Real artwork (require() or { uri }) - preferred when present. */
-  image?: any | null;
+  image?: ImageSourcePropType | null;
   composition: SceneComposition;
   /** Unique id so SVG gradient ids never collide between instances (they are global on web). */
   artId: string;
@@ -207,7 +208,7 @@ const lookupCharacter = (glyph: string) => STORY_CHARACTER_IMAGES[glyph] || STOR
  * shadow that shrinks as it bobs up, and a gentle bounce. Emoji text is only used if a
  * glyph has no character art at all.
  */
-const Actor: React.FC<{ glyph: string; source?: any; size: number; index: number; animated: boolean }> = ({
+const Actor: React.FC<{ glyph: string; source?: ImageSourcePropType; size: number; index: number; animated: boolean }> = ({
   glyph,
   source,
   size,
@@ -315,7 +316,7 @@ export const StoryIllustration: React.FC<StoryIllustrationProps> = ({
           onError={() => setFailed(true)}
           style={[
             StyleSheet.absoluteFill,
-            Platform.OS === 'web' && ({ objectPosition: 'center 70%' } as any),
+            webStyle({ objectPosition: 'center 70%' }),
             imageStyle,
           ]}
         />
@@ -326,7 +327,7 @@ export const StoryIllustration: React.FC<StoryIllustrationProps> = ({
           </View>
           <View style={[styles.stageRow, { bottom: Math.round(height * 0.20) }]} pointerEvents="none">
             {actors.map((a, i) => (
-              <Actor key={`${artId}-${i}-${a.glyph}`} glyph={a.glyph} source={a.source} size={size} index={i} animated={animated} />
+              <Actor key={`${artId}-${i}-${a.glyph}`} glyph={a.glyph} source={a.source ?? undefined} size={size} index={i} animated={animated} />
             ))}
           </View>
           {cast.length > 0 && props.length > 0 ? (

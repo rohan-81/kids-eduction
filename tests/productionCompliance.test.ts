@@ -306,7 +306,8 @@ describe('backendService.getProfiles (cache-first)', () => {
     const code = read('src/services/backendService.ts');
     const fn = code.slice(code.indexOf('async getProfiles()'), code.indexOf('// Set dedicated guest profile'));
     expect(fn).not.toContain('fetch(');
-    expect((code.match(/fetch\(`\$\{safeGetApiBaseUrl\(\)\}\/profiles\/`, \{\s*headers/g) || []).length).toBe(1);
+    expect(fn).not.toContain('fetchJson(');
+    expect((code.match(/fetchJson\(`\$\{safeGetApiBaseUrl\(\)\}\/profiles\/`, \{\s*headers/g) || []).length).toBe(1);
   });
 });
 

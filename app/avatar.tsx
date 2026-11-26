@@ -33,6 +33,7 @@ import { is3DAvatar } from '../src/utils/avatarHelper';
 import { GoldCoinIcon, CoinLabel } from '../src/components/common/GoldCoinIcon';
 import * as Art from '../src/components/art3d/Art3D';
 import { Glyph } from '../src/components/fun/KidIcons';
+import { webStyle } from '../src/utils/webStyle';
 
 interface AvatarOption {
   id: string;
@@ -1479,7 +1480,7 @@ const styles = StyleSheet.create({
     fontSize: 16.5,
     fontWeight: '800',
     color: '#1E293B',
-    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {}),
+    ...webStyle({ outlineStyle: 'none' }),
   },
   funBtnRow: {
     flexDirection: 'row',

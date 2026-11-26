@@ -2,14 +2,17 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from django.http import HttpResponse, FileResponse
 from django.conf import settings
 from pathlib import Path
 import urllib.request
 import urllib.parse
+import logging
 from .models import Category, Lesson, CharacterAsset
 from .serializers import CategorySerializer, LessonSerializer, CharacterAssetSerializer
 
+logger = logging.getLogger(__name__)
 _TTS_CACHE = {}
 
 
@@ -43,52 +46,63 @@ class AnimalAudioView(APIView):
             response['Accept-Ranges'] = 'bytes'
             response['Content-Disposition'] = f'inline; filename="{target_file.name}"'
             return response
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except OSError:
+            logger.exception('Failed to read animal audio %s', target_file.name)
+            return Response({'error': 'Audio could not be loaded.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class TTSAudioView(APIView):
     """
-    Proxies native high-fidelity audio pronunciation from Google TTS.
-    Delivers 100% authentic native Gujarati pronunciation without Hindi accent distortion.
-    Includes in-memory LRU caching for instant repeated playback.
+    Proxies native audio pronunciation from Google TTS for the web build.
+
+    Hardening (audit P1-6):
+    - `lang` is restricted to the app's three languages (it is interpolated into the upstream URL).
+    - Text length is capped and requests are rate limited (`tts` throttle scope), so the endpoint
+      cannot be used as an open relay.
+    - Upstream errors are not echoed back to the caller.
+    - The client masks the child's name before calling this endpoint (see audioService).
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'tts'
+
+    ALLOWED_LANGS = {'gu', 'hi', 'en'}
+    MAX_TEXT_CHARS = 190
+    MAX_CACHE_ENTRIES = 500
 
     def get(self, request):
         text = (request.query_params.get('text') or '').strip()
         lang = (request.query_params.get('lang') or 'gu').strip().lower()
         if not text:
             return Response({'error': 'text parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if lang not in self.ALLOWED_LANGS:
+            return Response({'error': 'Unsupported language.'}, status=status.HTTP_400_BAD_REQUEST)
+        text = text[: self.MAX_TEXT_CHARS]
 
-        cache_key = f"{lang}:{text[:250]}"
-        if cache_key in _TTS_CACHE:
-            content = _TTS_CACHE[cache_key]
-            response = HttpResponse(content, content_type='audio/mpeg')
-            response['Cache-Control'] = 'public, max-age=604800'
-            response['Content-Length'] = str(len(content))
-            response['Accept-Ranges'] = 'bytes'
-            response['Content-Disposition'] = 'inline; filename="tts.mp3"'
-            return response
+        cache_key = f"{lang}:{text}"
+        content = _TTS_CACHE.get(cache_key)
+        if content is None:
+            query = urllib.parse.urlencode({'ie': 'UTF-8', 'client': 'tw-ob', 'tl': lang, 'q': text})
+            url = f"https://translate.google.com/translate_tts?{query}"
+            try:
+                req = urllib.request.Request(
+                    url,
+                    headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+                )
+                with urllib.request.urlopen(req, timeout=4.0) as res:
+                    content = res.read(2 * 1024 * 1024)  # an utterance is a few KB; cap runaway bodies
+            except Exception:
+                logger.warning('TTS upstream request failed', exc_info=True)
+                return Response({'error': 'Speech service unavailable.'}, status=status.HTTP_502_BAD_GATEWAY)
+            if len(_TTS_CACHE) >= self.MAX_CACHE_ENTRIES:
+                _TTS_CACHE.pop(next(iter(_TTS_CACHE)))  # evict oldest (dicts keep insertion order)
+            _TTS_CACHE[cache_key] = content
 
-        encoded = urllib.parse.quote(text[:190])
-        url = f"https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl={lang}&q={encoded}"
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-            )
-            with urllib.request.urlopen(req, timeout=4.0) as res:
-                content = res.read()
-                if len(_TTS_CACHE) < 500:
-                    _TTS_CACHE[cache_key] = content
-                response = HttpResponse(content, content_type='audio/mpeg')
-                response['Cache-Control'] = 'public, max-age=604800'
-                response['Content-Length'] = str(len(content))
-                response['Accept-Ranges'] = 'bytes'
-                response['Content-Disposition'] = 'inline; filename="tts.mp3"'
-                return response
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_502_BAD_GATEWAY)
+        response = HttpResponse(content, content_type='audio/mpeg')
+        response['Cache-Control'] = 'public, max-age=604800'
+        response['Content-Length'] = str(len(content))
+        response['Accept-Ranges'] = 'bytes'
+        response['Content-Disposition'] = 'inline; filename="tts.mp3"'
+        return response
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):

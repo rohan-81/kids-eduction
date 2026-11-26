@@ -1,3 +1,5 @@
+import type { UserProgress } from '../types';
+
 export interface BadgeItemDef {
   id: string;
   emoji: string;
@@ -13,8 +15,11 @@ export interface BadgeItemDef {
   rewardCoins: number;
   iconBg: string;
   iconBorder: string;
-  checkUnlocked: (progress: any) => boolean;
-  getProgress: (progress: any) => { current: number; total: number };
+  /** Lessons required for backend-defined badges (functions are lost when cached as JSON). */
+  requirementValue?: number;
+  /** Rules read progress defensively, so any partial snapshot can be evaluated. */
+  checkUnlocked: (progress: Partial<UserProgress>) => boolean;
+  getProgress: (progress: Partial<UserProgress>) => { current: number; total: number };
 }
 
 export const BADGE_DEFINITIONS: BadgeItemDef[] = [

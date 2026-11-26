@@ -76,7 +76,7 @@ export const ProgressRing: React.FC<ProgressRingProps> = ({
               style={{
                 fontSize: Math.max(10, size * 0.24),
                 fontWeight: '700',
-                fontFamily: (Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined) as any,
+                fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
                 color: spec.text,
               }}
             >

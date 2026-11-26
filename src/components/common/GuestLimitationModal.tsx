@@ -12,6 +12,7 @@ import { AppLanguage } from '../../types';
 import { soundEffects } from '../../services/soundEffects';
 import * as Art from '../art3d/Art3D';
 import { ClayBadgeToken } from '../SubjectBadgeIcons';
+import { webStyle } from '../../utils/webStyle';
 
 /** Feature-lock icons (kept as emoji ids in data) rendered as 3D vector art. */
 const LOCK_ART: Record<string, React.FC<{ size?: number }>> = {
@@ -267,9 +268,9 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingHorizontal: 24,
     alignItems: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 20px 48px rgba(0, 0, 0, 0.22), 0 4px 12px rgba(0, 0, 0, 0.08)',
-    } as any)),
+    })),
     elevation: 12,
   },
   emojiBubble: {
@@ -344,10 +345,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 6px 18px rgba(108, 92, 231, 0.4)',
       cursor: 'pointer',
-    } as any)),
+    })),
     elevation: 4,
   },
   primaryBtnText: {

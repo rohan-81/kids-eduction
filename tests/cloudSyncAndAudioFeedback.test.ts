@@ -75,12 +75,34 @@ describe('Cloud Sync, Mystery Box Persistence and Adventure Challenge Speech', (
     expect(backendServiceFile).toContain('explicitProfileId?: number | string');
     expect(backendServiceFile).toContain('async getActiveProfileId(): Promise<number>');
 
-    // AppContext merges cloud wallet and adventureLevel on loadData and loginUser
+    // AppContext merges cloud wallet and adventureLevel on loadData, login and profile switch
+    // through one shared, typed helper (previously three copy-pasted blocks).
     expect(appContextFile).toContain('syncAllProgressWithCloud');
-    expect(appContextFile).toContain('serverState.wallet');
-    expect(appContextFile).toContain('Math.max(activeProg.coins');
-    expect(appContextFile).toContain('Math.max(activeProg.stars');
-    expect(appContextFile).toContain('Math.max(activeProg.adventureLevel');
+    expect((appContextFile.match(/mergeServerProgress\(/g) || []).length).toBe(3);
+
+    const { mergeServerProgress } = require('../src/utils/progressMerge');
+    const server = {
+      status: 'synchronized',
+      server_time: '',
+      child_profile_id: 7,
+      adventure_level: 6,
+      lessons: [{ lesson_slug: 'gu-ka', completed: true, stars: 3, best_score: 1 }],
+      wallet: { total_coins: 120, total_stars: 4 },
+      streak: { current_streak: 1, longest_streak: 1 },
+      avatar: {},
+      garden: [],
+    };
+    // Max for counters, union for lessons.
+    expect(mergeServerProgress({ coins: 80, stars: 9, adventureLevel: 3, completedLessons: ['gu-kha'] }, server)).toEqual({
+      coins: 120,
+      stars: 9,
+      adventureLevel: 6,
+      completedLessons: ['gu-kha', 'gu-ka'],
+      coinsSpentTotal: 0, // no device spending reported by either side
+    });
+    // Nothing to change -> null (no needless storage write / re-render).
+    expect(mergeServerProgress({ coins: 200, stars: 9, adventureLevel: 9, completedLessons: ['gu-ka'] }, server)).toBeNull();
+    expect(mergeServerProgress({ coins: 1, stars: 1, adventureLevel: 1, completedLessons: [] }, null)).toBeNull();
   });
 
   test('Say It Loud / KidsMicrophonePractice does not blindly grant stars without speech', () => {
@@ -110,8 +132,11 @@ describe('Cloud Sync, Mystery Box Persistence and Adventure Challenge Speech', (
     );
 
     expect(viewsFile).toContain('TokenAuthentication');
-    expect(viewsFile).toContain('Sync Adventure Progress');
+    expect(viewsFile).toContain('Adventure progress');
     expect(viewsFile).toContain("'adventure_level': server_adv_level");
+    // Audit P0-3: the level loop must never be driven by unbounded client input.
+    expect(viewsFile).not.toMatch(/range\(1,\s*adv_level_in\)/);
+    expect(viewsFile).toContain('permission_classes = PARENT_ONLY');
   });
 
   test('Authentic animal sound button in lesson screen utilizes local bundled asset with graceful speech fallback', () => {

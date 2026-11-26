@@ -25,16 +25,19 @@ export function getTranslation(
   const currentDict = translations[lang] || translations.en;
   const parts = path.split('.');
   
-  let current: any = currentDict;
+  const child = (node: unknown, key: string): unknown =>
+    node && typeof node === 'object' && key in node ? (node as Record<string, unknown>)[key] : undefined;
+
+  let current: unknown = currentDict;
   for (const part of parts) {
     if (current && typeof current === 'object' && part in current) {
-      current = current[part];
+      current = child(current, part);
     } else {
       // Fallback to English
-      let fallback: any = translations.en;
+      let fallback: unknown = translations.en;
       for (const fbPart of parts) {
         if (fallback && typeof fallback === 'object' && fbPart in fallback) {
-          fallback = fallback[fbPart];
+          fallback = child(fallback, fbPart);
         } else {
           return path;
         }

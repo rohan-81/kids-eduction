@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 import {
   AppLanguage,
   AgeGroup,
@@ -21,6 +22,7 @@ import {
 import { authService } from '../services/authService';
 import { sessionService } from '../services/sessionService';
 import { backendService } from '../services/backendService';
+import { mergeServerProgress } from '../utils/progressMerge';
 import { getTranslation } from '../localization';
 import { audioService } from '../services/audioService';
 import { soundEffects } from '../services/soundEffects';
@@ -46,7 +48,8 @@ interface AppContextValue {
   toggleSound: () => Promise<void>;
   finishOnboarding: (lang: AppLanguage, age: AgeGroup, childName?: string, dob?: string) => Promise<void>;
   completeLesson: (lessonId: string) => Promise<{ isFirstTime: boolean; newStars: number }>;
-  recordScore: (gameType: string, score: number) => Promise<void>;
+  /** Saves a game score locally and (signed-in parents only) reports it once to the backend. */
+  recordScore: (gameType: string, score: number, totalQuestions?: number) => Promise<void>;
   updateProgress: (newProg: Partial<UserProgress>) => Promise<void>;
   addCoins: (amount: number) => Promise<void>;
   spendCoins: (amount: number) => Promise<boolean>;
@@ -74,6 +77,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [progress, setProgress] = useState<UserProgress>(DEFAULT_PROGRESS);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
+  const logoutUserRef = React.useRef<(() => Promise<void>) | null>(null);
   const [session, setSession] = useState<SessionData | null>(null);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [activeProfileId, setActiveProfileId] = useState<number | string>(1);
@@ -81,6 +85,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [voiceRate, setVoiceRateState] = useState<number>(audioService.getVoiceRate());
   const [voicePitch, setVoicePitchState] = useState<number>(audioService.getVoicePitch());
   const [isLoading, setIsLoading] = useState(true);
+
+  // Keep the remote-TTS name mask current: the child's and parent's names are replaced with a
+  // neutral placeholder before any text is sent to the TTS proxy / Google (audit P1-6).
+  useEffect(() => {
+    audioService.setPrivateNames([
+      progress.childName,
+      progress.firstName,
+      progress.lastName,
+      currentUser?.first_name,
+      currentUser?.last_name,
+      currentUser?.username,
+    ]);
+  }, [progress.childName, progress.firstName, progress.lastName, currentUser?.first_name, currentUser?.last_name, currentUser?.username]);
 
   useEffect(() => {
     async function loadData() {
@@ -172,9 +189,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         if (activeSession && activeSession.token && activeSession.user) {
           // Verify session freshness with backend in background
-          sessionService.verifyBackendSession().then((verification) => {
+          sessionService.verifyBackendSession().then(async (verification) => {
             if (verification.user) {
               setCurrentUser(verification.user);
+            } else if (!verification.isValid) {
+              // The server revoked the token (logout elsewhere, password reset, account removed).
+              // sessionService already cleared storage; without this the UI stayed "signed in"
+              // while every sync silently failed with 401.
+              await logoutUserRef.current?.();
+              router.replace('/login');
             }
           }).catch(() => {});
         } else {
@@ -190,31 +213,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Trigger background cloud synchronization with Django backend
         if (activeSession && activeSession.token && activeSession.user) {
           backendService.syncAllProgressWithCloud(activeProg, false, Number(resolvedActiveId)).then(async (serverState) => {
-            if (serverState?.wallet) {
-              const serverCoins = Number(serverState.wallet.total_coins ?? serverState.wallet.coins ?? 0);
-              const serverStars = Number(serverState.wallet.total_stars ?? serverState.wallet.stars ?? 0);
-              const serverAdventure = Number(serverState.adventure_level || 1);
-              const serverLessons = (serverState.lessons || []).map((l: any) => l.lesson_slug || l.lesson_id).filter(Boolean);
-
-              const mergedCoins = Math.max(activeProg.coins || 0, serverCoins);
-              const mergedStars = Math.max(activeProg.stars || 0, serverStars);
-              const mergedAdventure = Math.max(activeProg.adventureLevel || 1, serverAdventure);
-              const mergedLessons = Array.from(new Set([...(activeProg.completedLessons || []), ...serverLessons]));
-
-              if (
-                mergedCoins !== activeProg.coins ||
-                mergedStars !== activeProg.stars ||
-                mergedAdventure !== activeProg.adventureLevel ||
-                mergedLessons.length !== (activeProg.completedLessons || []).length
-              ) {
-                const merged = await storageService.saveProgress({
-                  coins: mergedCoins,
-                  stars: mergedStars,
-                  adventureLevel: mergedAdventure,
-                  completedLessons: mergedLessons,
-                });
-                setProgress(merged);
-              }
+            const update = mergeServerProgress(activeProg, serverState);
+            if (update) {
+              setProgress(await storageService.saveProgress(update));
             }
           }).catch(() => {});
         }
@@ -325,15 +326,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const res = await storageService.markLessonCompleted(lessonId);
     const updatedProg = await storageService.getProgress();
     setProgress(updatedProg);
-    backendService.syncLessonProgress(lessonId, true).catch(() => {});
+    // Guest progress stays on the device; only a signed-in parent's child syncs (audit P0-2).
+    if (authToken && !isGuest) {
+      backendService.syncLessonProgress(lessonId, true).catch(() => {});
+    }
     return res;
   };
 
-  const recordScore = async (gameType: string, score: number) => {
+  const recordScore = async (gameType: string, score: number, totalQuestions?: number) => {
     await storageService.recordGameScore(gameType, score);
     const updatedProg = await storageService.getProgress();
     setProgress(updatedProg);
-    backendService.syncGameResult(gameType, score, 5).catch(() => {});
+    if (authToken && !isGuest) {
+      // Single reporting path (games used to post a second, duplicate result with total=5).
+      const total = Math.max(score, totalQuestions ?? score);
+      backendService.syncGameResult(gameType, score, total).catch(() => {});
+    }
   };
 
   const updateProgress = async (newProg: Partial<UserProgress>) => {
@@ -345,9 +353,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addCoins = async (amount: number) => {
-    const current = await storageService.getProgress();
-    const updated = await storageService.saveProgress({ coins: (current.coins || 0) + amount });
-    setProgress(updated);
+    setProgress(await storageService.addCoins(amount));
   };
 
   const spendCoins = async (amount: number): Promise<boolean> => {
@@ -426,7 +432,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await storageService.overwriteProgress(cleanProgress);
     await storageService.resetUserProgress(cleanProgress.childName);
     setProgress(cleanProgress);
-    backendService.syncAllProgressWithCloud(cleanProgress, true).catch(() => {});
+    if (authToken && !isGuest) {
+      // backendService persists a pending-reset flag and re-sends `is_reset: true` on every
+      // later sync until the server acknowledges it, so an offline reset is not undone (P1-3).
+      backendService.syncAllProgressWithCloud(cleanProgress, true, Number(activeProfileId)).catch(() => {});
+    }
   };
 
   const resetAll = async () => {
@@ -481,31 +491,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const targetChildId = result.user.child_profiles?.[0]?.id;
       backendService.syncAllProgressWithCloud(userProg, false, targetChildId).then(async (serverState) => {
-        if (serverState?.wallet) {
-          const serverCoins = Number(serverState.wallet.total_coins ?? serverState.wallet.coins ?? 0);
-          const serverStars = Number(serverState.wallet.total_stars ?? serverState.wallet.stars ?? 0);
-          const serverAdventure = Number(serverState.adventure_level || 1);
-          const serverLessons = (serverState.lessons || []).map((l: any) => l.lesson_slug || l.lesson_id).filter(Boolean);
-
-          const mergedCoins = Math.max(userProg.coins || 0, serverCoins);
-          const mergedStars = Math.max(userProg.stars || 0, serverStars);
-          const mergedAdventure = Math.max(userProg.adventureLevel || 1, serverAdventure);
-          const mergedLessons = Array.from(new Set([...(userProg.completedLessons || []), ...serverLessons]));
-
-          if (
-            mergedCoins !== userProg.coins ||
-            mergedStars !== userProg.stars ||
-            mergedAdventure !== userProg.adventureLevel ||
-            mergedLessons.length !== (userProg.completedLessons || []).length
-          ) {
-            const merged = await storageService.saveProgress({
-              coins: mergedCoins,
-              stars: mergedStars,
-              adventureLevel: mergedAdventure,
-              completedLessons: mergedLessons,
-            });
-            setProgress(merged);
-          }
+        const update = mergeServerProgress(userProg, serverState);
+        if (update) {
+          setProgress(await storageService.saveProgress(update));
         }
       }).catch(() => {});
     }
@@ -619,31 +607,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setProgress(profProgress);
     backendService.syncAllProgressWithCloud(profProgress, false, Number(profileId)).then(async (serverState) => {
-      if (serverState?.wallet) {
-        const serverCoins = Number(serverState.wallet.total_coins ?? serverState.wallet.coins ?? 0);
-        const serverStars = Number(serverState.wallet.total_stars ?? serverState.wallet.stars ?? 0);
-        const serverAdventure = Number(serverState.adventure_level || 1);
-        const serverLessons = (serverState.lessons || []).map((l: any) => l.lesson_slug || l.lesson_id).filter(Boolean);
-
-        const mergedCoins = Math.max(profProgress.coins || 0, serverCoins);
-        const mergedStars = Math.max(profProgress.stars || 0, serverStars);
-        const mergedAdventure = Math.max(profProgress.adventureLevel || 1, serverAdventure);
-        const mergedLessons = Array.from(new Set([...(profProgress.completedLessons || []), ...serverLessons]));
-
-        if (
-          mergedCoins !== profProgress.coins ||
-          mergedStars !== profProgress.stars ||
-          mergedAdventure !== profProgress.adventureLevel ||
-          mergedLessons.length !== (profProgress.completedLessons || []).length
-        ) {
-          const merged = await storageService.saveProgress({
-            coins: mergedCoins,
-            stars: mergedStars,
-            adventureLevel: mergedAdventure,
-            completedLessons: mergedLessons,
-          });
-          setProgress(merged);
-        }
+      const update = mergeServerProgress(profProgress, serverState);
+      if (update) {
+        setProgress(await storageService.saveProgress(update));
       }
     }).catch(() => {});
     return profProgress;
@@ -665,6 +631,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await storageService.savePreferences({ isGuest: false });
     } catch {}
   };
+
+  logoutUserRef.current = logoutUser;
 
   const contextValue = React.useMemo<AppContextValue>(
     () => ({

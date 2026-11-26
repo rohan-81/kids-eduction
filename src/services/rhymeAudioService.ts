@@ -1,20 +1,10 @@
 import { Platform } from 'react-native';
 import { RhymeItem } from '../data/rhymesData';
+import { loadExpoAudio, loadFileSystemLegacy, type AudioPlayer, type AudioStatus, type AudioSubscription } from './nativeModules';
 import { safeGetApiBaseUrl, API_BASE_URL } from './apiConfig';
 import { getMediaBaseUrl, resolvePackFileUri } from '../utils/remoteAssets';
 
-let ExpoFileSystem: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  ExpoFileSystem = require('expo-file-system/legacy');
-} catch {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    ExpoFileSystem = require('expo-file-system');
-  } catch {
-    ExpoFileSystem = null;
-  }
-}
+const ExpoFileSystem = loadFileSystemLegacy();
 
 function getRhymeCachePath(rhymeId: string): string | null {
   const baseDir = ExpoFileSystem?.documentDirectory || ExpoFileSystem?.cacheDirectory;
@@ -44,16 +34,7 @@ async function resolveExistingRhymeLocalUri(rhymeId: string): Promise<string | n
 }
 
 // Safely obtain native audio player factory if available (Expo SDK 53+ uses expo-audio)
-let createAudioPlayerFn: ((source: any) => any) | null = null;
-let setAudioModeAsyncFn: ((mode: any) => Promise<any>) | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const ExpoAudio = require('expo-audio');
-  createAudioPlayerFn = ExpoAudio?.createAudioPlayer || ExpoAudio?.default?.createAudioPlayer || null;
-  setAudioModeAsyncFn = ExpoAudio?.setAudioModeAsync || ExpoAudio?.default?.setAudioModeAsync || null;
-} catch {
-  // Native module not linked or not supported
-}
+const { createAudioPlayer: createAudioPlayerFn, setAudioModeAsync: setAudioModeAsyncFn } = loadExpoAudio();
 
 export interface RhymePlaybackStatus {
   isPlaying: boolean;
@@ -73,16 +54,16 @@ export type RhymePlayOutcome = 'started' | 'superseded' | 'unavailable' | 'netwo
 export type RhymeStatusListener = (status: RhymePlaybackStatus) => void;
 
 class RhymeAudioService {
-  private currentWebAudio: any = null;
-  private currentNativePlayer: any = null;
-  private currentNativeSubscription: any = null;
+  private currentWebAudio: HTMLAudioElement | null = null;
+  private currentNativePlayer: AudioPlayer | null = null;
+  private currentNativeSubscription: AudioSubscription | null = null;
   private activeRhyme: RhymeItem | null = null;
   private isPlayingState: boolean = false;
   private isPausedState: boolean = false;
   private currentTimeState: number = 0;
   private durationState: number = 0;
   private listeners = new Set<RhymeStatusListener>();
-  private pollInterval: any = null;
+  private pollInterval: ReturnType<typeof setInterval> | null = null;
   private playRequestId: number = 0;
 
   public addListener(fn: RhymeStatusListener): () => void {
@@ -214,11 +195,11 @@ class RhymeAudioService {
     if (this.playRequestId !== requestId) return 'superseded';
 
     // 1. Web Playback via HTMLAudioElement
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof (window as any).Audio !== 'undefined') {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.Audio !== 'undefined') {
       for (const url of candidateUrls) {
         if (this.playRequestId !== requestId) return 'superseded';
         try {
-          const audio = new (window as any).Audio(url);
+          const audio = new window.Audio(url);
           this.currentWebAudio = audio;
           audio.volume = 1.0;
 
@@ -286,7 +267,7 @@ class RhymeAudioService {
             this.currentNativePlayer = cachedPlayer;
             try { cachedPlayer.volume = 1.0; } catch {}
             if (typeof cachedPlayer.addListener === 'function') {
-              this.currentNativeSubscription = cachedPlayer.addListener('playbackStatusUpdate', (status: any) => {
+              this.currentNativeSubscription = cachedPlayer.addListener('playbackStatusUpdate', (status: AudioStatus) => {
                 if (this.currentNativePlayer !== cachedPlayer) return;
                 if (status?.duration) this.durationState = status.duration;
                 if (status?.currentTime !== undefined) this.currentTimeState = status.currentTime;
@@ -348,7 +329,7 @@ class RhymeAudioService {
           try { player.volume = 1.0; } catch {}
 
           if (typeof player.addListener === 'function') {
-            this.currentNativeSubscription = player.addListener('playbackStatusUpdate', (status: any) => {
+            this.currentNativeSubscription = player.addListener('playbackStatusUpdate', (status: AudioStatus) => {
               if (this.currentNativePlayer !== player) return;
               if (status?.duration) {
                 // expo-audio reports duration in seconds
@@ -420,10 +401,18 @@ class RhymeAudioService {
   public resume(): void {
     if (this.currentWebAudio) {
       try {
-        this.currentWebAudio.play();
+        const audio = this.currentWebAudio;
         this.isPlayingState = true;
         this.isPausedState = false;
         this.emitStatus();
+        // play() rejects when the browser blocks playback (autoplay policy) or the source failed;
+        // revert to paused instead of showing a "playing" rhyme that makes no sound.
+        audio.play().catch(() => {
+          if (this.currentWebAudio !== audio) return;
+          this.isPlayingState = false;
+          this.isPausedState = true;
+          this.emitStatus();
+        });
         return;
       } catch {}
     }
@@ -455,7 +444,7 @@ class RhymeAudioService {
       try {
         if (typeof this.currentNativePlayer.seekTo === 'function') {
           // expo-audio seekTo takes seconds
-          this.currentNativePlayer.seekTo(target);
+          Promise.resolve(this.currentNativePlayer.seekTo(target)).catch(() => {});
         }
       } catch {}
     }

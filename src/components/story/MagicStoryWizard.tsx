@@ -12,6 +12,9 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type StyleProp,
+  type ViewStyle,
+  type DimensionValue
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { ClayButton } from '../clay';
@@ -29,7 +32,8 @@ import {
 } from '../../utils/magicStoryGenerator';
 import { AppLanguage } from '../../types';
 import { Remote3DImage } from '../common/Remote3DImage';
-import { resolveOfflineMediaSource } from '../../utils/remoteAssets';
+import { resolveOfflineMediaSource, type ImageAsset } from '../../utils/remoteAssets';
+import { webStyle } from '../../utils/webStyle';
 
 const useNative = Platform.OS !== 'web';
 
@@ -63,7 +67,7 @@ interface MagicStoryWizardProps {
 interface HeroOption {
   key: string;
   name: string;
-  image: any;
+  image: ImageAsset;
 }
 
 // ---------------------------------------------------------------- small pieces
@@ -87,7 +91,7 @@ const TWINKLES = [
   { left: '64%', top: 92, size: 11, delay: 300 },
 ] as const;
 
-const Twinkle: React.FC<{ size: number; delay: number; style: any }> = ({ size, delay, style }) => {
+const Twinkle: React.FC<{ size: number; delay: number; style: StyleProp<ViewStyle> }> = ({ size, delay, style }) => {
   const t = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -126,14 +130,14 @@ const HeaderTwinkles: React.FC = () => (
  * Tap: squash-and-spring bounce.
  */
 const ChoiceCard: React.FC<{
-  image: any;
+  image: ImageAsset;
   label: string;
   selected: boolean;
   tone: PickTone;
   onPress: () => void;
   layout?: 'tile' | 'wide';
   imageSize?: number;
-  width?: any;
+  width?: DimensionValue;
 }> = ({ image, label, selected, tone, onPress, layout = 'tile', imageSize = 96, width }) => {
   const spec = PICK[tone];
   const squash = useRef(new Animated.Value(1)).current;
@@ -194,7 +198,7 @@ const ChoiceCard: React.FC<{
           selected
             ? { backgroundColor: spec.tint, borderColor: spec.fill, borderWidth: 3, borderBottomWidth: 6, borderBottomColor: spec.edge }
             : null,
-          Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+          webStyle({ cursor: 'pointer' }),
         ]}
       >
         <Animated.View style={{ transform: [{ translateY: imgLift }] }}>
@@ -268,7 +272,7 @@ const LaunchButton: React.FC<{ label: string; onPress: () => void }> = ({ label,
         onPressOut={() => Animated.spring(press, { toValue: 0, friction: 4, tension: 160, useNativeDriver: useNative }).start()}
         accessibilityRole="button"
         accessibilityLabel={label}
-        style={[styles.launchOuter, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+        style={[styles.launchOuter, webStyle({ cursor: 'pointer' })]}
       >
         <View style={styles.launchLip} />
         <Animated.View style={[styles.launchFace, { transform: [{ translateY: sink }] }]}>
@@ -304,14 +308,14 @@ export const MagicStoryWizard: React.FC<MagicStoryWizardProps> = ({
   const [step, setStep] = useState<WizardStep>(1);
   const [heroes, setHeroes] = useState<HeroOption[]>([]);
   const [heroName, setHeroName] = useState(defaultHeroName);
-  const [selectedHeroImage, setSelectedHeroImage] = useState<any>(AVATAR_3D_BOY);
+  const [selectedHeroImage, setSelectedHeroImage] = useState<ImageAsset>(AVATAR_3D_BOY);
   const [companionId, setCompanionId] = useState<string>(companions[0]?.id || 'lion');
   const [themeId, setThemeId] = useState<string>(quests[0]?.id || 'rainbow');
   const [toolId, setToolId] = useState<string>(tools[0]?.id || 'wand');
   const [customHeroName, setCustomHeroName] = useState('');
   const [isCustomActive, setIsCustomActive] = useState(false);
   const [isCustomFocused, setIsCustomFocused] = useState(false);
-  const customInputRef = useRef<any>(null);
+  const customInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
   const speakTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heroBob = useRef(new Animated.Value(0)).current;
 
@@ -824,7 +828,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     overflow: 'hidden',
     ...Platform.select({
-      web: { boxShadow: '0 24px 60px rgba(120,72,32,0.16), 0 6px 16px rgba(15,23,42,0.06)' } as any,
+      web: webStyle({ boxShadow: '0 24px 60px rgba(120,72,32,0.16), 0 6px 16px rgba(15,23,42,0.06)' }),
       default: { shadowColor: '#784820', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.16, shadowRadius: 24, elevation: 14 },
     }),
   },
@@ -943,7 +947,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 4,
     ...Platform.select({
-      web: { boxShadow: '0 4px 12px rgba(15,23,42,0.06)', cursor: 'pointer' } as any,
+      web: webStyle({ boxShadow: '0 4px 12px rgba(15,23,42,0.06)', cursor: 'pointer' }),
       default: {
         shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 4 },
@@ -1021,7 +1025,7 @@ const styles = StyleSheet.create({
     padding: 0,
     minHeight: 38,
     ...Platform.select({
-      web: { outlineStyle: 'none' } as any,
+      web: webStyle({ outlineStyle: 'none' }),
     }),
   },
   clearBtn: {
@@ -1119,7 +1123,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
-      web: { boxShadow: '0 4px 12px rgba(15,23,42,0.06)' } as any,
+      web: webStyle({ boxShadow: '0 4px 12px rgba(15,23,42,0.06)' }),
       default: { shadowColor: '#0F172A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
     }),
   },

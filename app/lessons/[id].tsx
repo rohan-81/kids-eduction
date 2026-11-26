@@ -29,7 +29,6 @@ import { renderMathCardVisual } from '../../src/components/MathCardVisuals';
 import { renderLesson3DVisual } from '../../src/components/Lesson3DVisuals';
 import { soundEffects } from '../../src/services/soundEffects';
 import { audioService } from '../../src/services/audioService';
-import { backendService } from '../../src/services/backendService';
 import { apiService, findBundledLesson, mergeLesson } from '../../src/services/apiService';
 import { ClayButton, ImageFrame } from '../../src/components/clay';
 import { KidModal, Glyph } from '../../src/components/fun';
@@ -51,6 +50,7 @@ import {
 import { getAnimalSoundInfo, getPhonicsPrompt } from '../../src/utils/phonicsData';
 import { filterLessonsForClass } from '../../src/utils/ageDetailHelper';
 import { getLessonAgeAdaptation } from '../../src/utils/ageDetailHelper';
+import { webStyle } from '../../src/utils/webStyle';
 
 /** Coins awarded for a lesson result (shared by the reward and the popup so they can't drift). */
 const coinsForStars = (stars: number) => (stars >= 3 ? 15 : stars === 2 ? 10 : 5);
@@ -145,6 +145,7 @@ export default function LessonDetailScreen() {
   const speakRef = useRef(speak);
   speakRef.current = speak;
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishingRef = useRef(false);
 
   // Silence all audio immediately when this screen loses focus or user navigates to another page
   useFocusEffect(
@@ -159,6 +160,10 @@ export default function LessonDetailScreen() {
       };
     }, [])
   );
+
+  useEffect(() => {
+    if (!showCelebration) finishingRef.current = false;
+  }, [showCelebration]);
 
   useEffect(() => {
     // Immediately stop any leftover audio from previous screen
@@ -294,7 +299,7 @@ export default function LessonDetailScreen() {
       const played = await soundEffects.playAnimalSound(
         animalSoundInfo.soundKey,
         2800,
-        currentLesson?.audioUrl || (currentLesson as any)?.lessonData?.audioUrl
+        currentLesson?.audioUrl || currentLesson?.lessonData?.audioUrl
       );
 
       // Robust fallback: if native audio playback is silenced or unavailable, speak onomatopoeia
@@ -321,6 +326,10 @@ export default function LessonDetailScreen() {
   };
 
   const handleFinish = async (customResult?: { pct: number; stars: number }) => {
+    // Double tap on "Complete" (or a trace completing while the button is pressed) used to pay
+    // the coins twice. Released when the celebration closes (Retry / Next / dismiss).
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     audioService.stop();
     soundEffects.stopAnimalSound();
     soundEffects.playTadaaa();
@@ -352,8 +361,9 @@ export default function LessonDetailScreen() {
     speak(praise, language);
 
     if (currentLesson) {
-      await completeLesson(currentLesson.id);
-      backendService.syncLessonProgress(currentLesson.id);
+      // completeLesson already reports to the backend (signed-in parents only); a second,
+      // uncaught syncLessonProgress call here double-counted plays on the server.
+      await completeLesson(currentLesson.id).catch(() => undefined);
     }
     setShowCelebration(true);
   };
@@ -367,7 +377,7 @@ export default function LessonDetailScreen() {
       router.back();
     } else {
       // Deep link / web refresh on the last lesson: no history to pop
-      router.replace(`/lessons?categoryId=${currentLesson.categoryId}` as any);
+      router.replace(`/lessons?categoryId=${currentLesson.categoryId}`);
     }
   };
 
@@ -531,13 +541,13 @@ export default function LessonDetailScreen() {
           router.back();
           setTimeout(() => {
             if (typeof window !== 'undefined' && window.location.pathname + window.location.search === currentPath) {
-              router.replace(`/lessons?categoryId=${currentLesson.categoryId}` as any);
+              router.replace(`/lessons?categoryId=${currentLesson.categoryId}`);
             }
           }, 150);
           return;
         }
       } catch {}
-      router.replace(`/lessons?categoryId=${currentLesson.categoryId}` as any);
+      router.replace(`/lessons?categoryId=${currentLesson.categoryId}`);
       return;
     }
 
@@ -547,7 +557,7 @@ export default function LessonDetailScreen() {
         return;
       }
     } catch {}
-    router.replace(`/lessons?categoryId=${currentLesson.categoryId}` as any);
+    router.replace(`/lessons?categoryId=${currentLesson.categoryId}`);
   };
 
   return (
@@ -580,9 +590,9 @@ export default function LessonDetailScreen() {
         <View
           style={[
             styles.card,
-            Platform.OS === 'web' && ({
+            webStyle({
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.05)',
-            } as any),
+            }),
           ]}
         >
           {/* Top Class Adaptation Badge */}
@@ -649,7 +659,7 @@ export default function LessonDetailScreen() {
                 // Fixed 280x230 rounded frame, resizeMode="contain": entire animal or bird is always 100% visible without cropping.
                 return (
                   <ImageFrame
-                    source={imgSource as any}
+                    source={imgSource}
                     emoji={displayedSymbol}
                     variant="detail"
                     tone="sky"
@@ -705,7 +715,7 @@ export default function LessonDetailScreen() {
             onPlayRealVoice={animalSoundInfo ? handlePlayRealAnimalVoice : undefined}
             hasRealVoice={Boolean(animalSoundInfo)}
             realVoiceInfo={animalSoundInfo ? { emoji: animalSoundInfo.emoji, soundKey: animalSoundInfo.soundKey } : null}
-            characterImage={getLessonImageSource(currentLesson)}
+            characterImage={getLessonImageSource(currentLesson) ?? undefined}
             phonicsPrompt={phonicsPrompt}
             onPlayPhonics={handlePlayPhonicsSound}
             canTrace={canShowTracing}

@@ -16,6 +16,7 @@ import { soundEffects } from '../src/services/soundEffects';
 import { audioService } from '../src/services/audioService';
 import { CoinLabel } from '../src/components/common/GoldCoinIcon';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import type { TimerHandle } from '../src/utils/runtime';
 
 interface WordPuzzle {
   id: string;
@@ -119,7 +120,7 @@ export default function WordBuilderScreen() {
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
   const [awardedPuzzles, setAwardedPuzzles] = useState<Record<string, boolean>>({});
-  const resultTimerRef = useRef<any>(null);
+  const resultTimerRef = useRef<TimerHandle | null>(null);
 
   useEffect(() => {
     return () => {

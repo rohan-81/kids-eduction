@@ -9,6 +9,8 @@ import {
   Image,
   useWindowDimensions,
   Platform,
+  type GestureResponderEvent,
+  type DimensionValue
 } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -95,6 +97,8 @@ import {
 } from '../../src/utils/languageData';
 import { filterLessonsForClass, getAgeClassBadgeInfo } from '../../src/utils/ageDetailHelper';
 import * as Art from '../../src/components/art3d/Art3D';
+import { webStyle } from '../../src/utils/webStyle';
+import type { ImageAsset } from '../../src/utils/remoteAssets';
 
 
 export const CARD_PASTEL_THEMES = [
@@ -160,7 +164,7 @@ const CATEGORY_THEMES: Record<
 };
 
 /** Categories with bundled 3D cartoon art (others keep their topic badge). */
-const CATEGORY_3D_ART: Record<string, any> = {
+const CATEGORY_3D_ART: Record<string, ImageAsset> = {
   'gu-varnamala': HOME_CARD_ART.abc.gu,
   'gu-barakhadi': HOME_CARD_ART.abc.gu,
   'hi-varnamala': HOME_CARD_ART.abc.hi,
@@ -661,7 +665,7 @@ export default function CategoryLessonsScreen() {
             : width < 1050
               ? 3
               : 4;
-  const gridItemWidth =
+  const gridItemWidth: DimensionValue =
     numGridCols === 1
       ? '100%'
       : Platform.OS === 'web'
@@ -1349,7 +1353,7 @@ export default function CategoryLessonsScreen() {
 
   const MATH_OPERATIONS = rawMathOps.filter((op) => op.id === 'all' || op.count > 0);
 
-  const handleQuickPlay = async (e: any, item: LessonItem) => {
+  const handleQuickPlay = async (e: GestureResponderEvent, item: LessonItem) => {
     e?.stopPropagation?.();
     soundEffects.playBubblePop();
 
@@ -1419,9 +1423,9 @@ export default function CategoryLessonsScreen() {
           style={[
             styles.heroBanner,
             isMobile && styles.heroBannerMobile,
-            Platform.OS === 'web' && ({
+            webStyle({
               boxShadow: '0 4px 18px rgba(0, 0, 0, 0.05)',
-            } as any),
+            }),
           ]}
         >
           {/* Left Column: Title, Subtitle & Gamified Progress */}
@@ -1754,14 +1758,14 @@ export default function CategoryLessonsScreen() {
                       style={[
                         styles.card3D,
                         {
-                          width: gridItemWidth as any,
+                          width: gridItemWidth,
                           backgroundColor: cardTheme.bg,
                           borderColor: cardTheme.border,
                         },
-                        Platform.OS === 'web' && ({
+                        webStyle({
                           boxShadow: '0 4px 14px rgba(0, 0, 0, 0.05)',
                           cursor: 'pointer',
-                        } as any),
+                        }),
                       ]}
                       onPress={() => {
                         audioService.stop();
@@ -1822,7 +1826,7 @@ export default function CategoryLessonsScreen() {
                             return (
                               // Uniform 72x72 rounded frame (radius 16, resizeMode="cover")
                               <ImageFrame
-                                source={imgSource as any}
+                                source={imgSource}
                                 emoji={item.symbol}
                                 variant="card"
                                 tone="sky"

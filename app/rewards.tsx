@@ -17,6 +17,7 @@ import { AppGlobalBackground } from '../src/components/common/AppGlobalBackgroun
 import { GoldCoinIcon, CoinLabel } from '../src/components/common/GoldCoinIcon';
 import { REWARD_ART, SUBJECT_CARD_ART } from '../src/utils/imageHelper';
 import * as Art from '../src/components/art3d/Art3D';
+import { webStyle } from '../src/utils/webStyle';
 
 
 
@@ -334,7 +335,7 @@ export default function RewardsScreen() {
           style={[styles.featureActionCard, styles.stickerCard, shadows.card]}
           onPress={() => {
             soundEffects.playBubblePop();
-            router.push('/stickers' as any);
+            router.push('/stickers');
           }}
           activeOpacity={0.88}
         >
@@ -486,11 +487,9 @@ const styles = StyleSheet.create({
     borderColor: '#FEF08A',
     padding: 18,
     marginBottom: 16,
-    ...(Platform.OS === 'web'
-      ? ({
+    ...webStyle({
           boxShadow: '0 8px 24px rgba(245, 158, 11, 0.12), 0 2px 6px rgba(0,0,0,0.04)',
-        } as any)
-      : {}),
+        }),
   },
   heroTopRow: {
     flexDirection: 'row',
@@ -568,11 +567,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     padding: 14,
     alignItems: 'center',
-    ...(Platform.OS === 'web'
-      ? ({
+    ...webStyle({
           boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
-        } as any)
-      : {}),
+        }),
   },
   statIconCircle: {
     width: 44,
@@ -634,11 +631,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.8,
     padding: 14,
     backgroundColor: '#FFFFFF',
-    ...(Platform.OS === 'web'
-      ? ({
+    ...webStyle({
           boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
-        } as any)
-      : {}),
+        }),
   },
   badgeCardUnlocked: {
     borderColor: '#E2E8F0',

@@ -17,13 +17,14 @@ import { soundEffects } from '../src/services/soundEffects';
 import { GuestLimitationModal } from '../src/components/common/GuestLimitationModal';
 import { formatNumberDigits, formatMathExpression } from '../src/utils/languageData';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
-import { ClayBadgeToken, TokenTone } from '../src/components/SubjectBadgeIcons';
+import { ClayBadgeToken, TokenTone, type BadgeArt } from '../src/components/SubjectBadgeIcons';
 import * as Art from '../src/components/art3d/Art3D';
 import { HOME_CARD_ART, SUBJECT_CARD_ART } from '../src/utils/imageHelper';
 import { Glyph, PencilIcon, PrinterIcon } from '../src/components/fun';
 import { formatChildName } from '../src/utils/nameTransliterator';
+import { webDomProps } from '../src/utils/webStyle';
 
-const CERTIFICATE_CATEGORIES: { id: string; titleGu: string; titleHi: string; titleEn: string; art: any; tone: TokenTone; badgeGu: string; badgeHi: string; badgeEn: string }[] = [
+const CERTIFICATE_CATEGORIES: { id: string; titleGu: string; titleHi: string; titleEn: string; art: BadgeArt; tone: TokenTone; badgeGu: string; badgeHi: string; badgeEn: string }[] = [
   {
     id: 'all-round',
     titleGu: 'ઓલ-રાઉન્ડ સુપર સ્ટાર લર્નર',
@@ -246,7 +247,7 @@ export default function CertificateScreen() {
       <AppGlobalBackground id="certBgGrad" />
       <View
         nativeID="no-print-header"
-        {...({ id: 'no-print-header', 'data-print': 'hide' } as any)}
+        {...webDomProps({ id: 'no-print-header', 'data-print': 'hide' })}
         style={styles.noPrintArea}
       >
         <Header
@@ -261,7 +262,7 @@ export default function CertificateScreen() {
           {/* TOP CUSTOMIZER CONTROLS (Hidden during printing) */}
           <View
             nativeID="no-print-controls"
-            {...({ id: 'no-print-controls', 'data-print': 'hide' } as any)}
+            {...webDomProps({ id: 'no-print-controls', 'data-print': 'hide' })}
             style={[styles.controlsCard, styles.noPrintArea]}
           >
             {/* Student Name Editor */}
@@ -363,7 +364,7 @@ export default function CertificateScreen() {
           {/* ============================================================== */}
           <View
             nativeID="certificate-print-canvas"
-            {...({ id: 'certificate-print-canvas' } as any)}
+            {...webDomProps({ id: 'certificate-print-canvas' })}
             style={[styles.certificateCanvas, styles.printableArea]}
           >
             {/* Outer Regal Antique Border */}
@@ -1066,6 +1067,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   fontSerif: {
-    fontFamily: (Platform.OS === 'web' ? "'Cinzel', 'Playfair Display', Georgia, serif" : undefined) as any,
+    fontFamily: Platform.OS === 'web' ? "'Cinzel', 'Playfair Display', Georgia, serif" : undefined,
   },
 });

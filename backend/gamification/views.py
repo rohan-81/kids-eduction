@@ -4,6 +4,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import transaction
+from django.utils import timezone
 from .models import AdventureLevel, ChildAdventureProgress, ChildWallet, CoinTransaction, DailyStreak, LuckySpinHistory
 from .serializers import (
     AdventureLevelSerializer,
@@ -27,9 +28,9 @@ class AdventureLevelViewSet(viewsets.ReadOnlyModelViewSet):
 
 class WalletView(APIView):
     """
-    Returns wallet for a given child profile. Resolves safely for guest or parent.
+    Returns wallet for a given child profile. Signed-in parents only; guests keep this on-device.
     """
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, child_id):
         child = resolve_child_profile(request, child_id)
@@ -42,9 +43,9 @@ class WalletView(APIView):
 
 class DailyStreakView(APIView):
     """
-    Get or update daily streak for child. Resolves safely for guest or parent.
+    Get or update daily streak for child. Signed-in parents only; guests keep this on-device.
     """
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, child_id):
         child = resolve_child_profile(request, child_id)
@@ -86,7 +87,7 @@ class LuckySpinView(APIView):
     Executes a lucky wheel spin for the child.
     Awards coins or stars server-side and logs transaction.
     """
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, child_id):
         child = resolve_child_profile(request, child_id)
@@ -102,14 +103,29 @@ class LuckySpinView(APIView):
         ]
         won_prize = random.choice(prizes)
 
+        ChildWallet.objects.get_or_create(child_profile=child)
         with transaction.atomic():
-            history = LuckySpinHistory.objects.create(
+            # Lock the child's wallet row first, then check the daily limit inside the same
+            # transaction: two concurrent requests can no longer both pass the check (double
+            # spin) or overwrite each other's `+=` (lost update). PostgreSQL honours the row
+            # lock; SQLite serialises writers, which gives the same outcome.
+            wallet = ChildWallet.objects.select_for_update().get(child_profile=child)
+            today = timezone.now().date()
+            if LuckySpinHistory.objects.filter(child_profile=child, spun_at__date=today).exists():
+                return Response(
+                    {
+                        'detail': 'Daily lucky spin already used today. Come back tomorrow!',
+                        'already_claimed': True,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            LuckySpinHistory.objects.create(
                 child_profile=child,
                 prize_type=won_prize['type'],
                 prize_value=won_prize['value'],
             )
 
-            wallet, _ = ChildWallet.objects.get_or_create(child_profile=child)
             if won_prize['type'] == 'coins':
                 wallet.total_coins += won_prize['value']
                 CoinTransaction.objects.create(

@@ -1,13 +1,13 @@
 import { StoryBook, StoryScene } from '../data/storiesData';
 import { formatChildName } from './nameTransliterator';
 import { AppLanguage } from '../types';
-import { characterAsset, appAsset } from './remoteAssets';
+import { characterAsset, appAsset, type ImageAsset } from './remoteAssets';
 
 export interface MagicCompanion {
   id: string;
   emoji: string;
   /** Bundled transparent 3D PNG shown instead of the emoji in the UI. */
-  image: any;
+  image: ImageAsset;
   nameGu: string;
   nameHi: string;
   nameEn: string;
@@ -20,7 +20,7 @@ export interface MagicTheme {
   id: string;
   emoji: string;
   /** Bundled transparent 3D PNG shown instead of the emoji in the UI. */
-  image: any;
+  image: ImageAsset;
   titleGu: string;
   titleHi: string;
   titleEn: string;
@@ -34,7 +34,7 @@ export interface MagicTool {
   id: string;
   emoji: string;
   /** Bundled transparent 3D PNG shown instead of the emoji in the UI. */
-  image: any;
+  image: ImageAsset;
   nameGu: string;
   nameHi: string;
   nameEn: string;

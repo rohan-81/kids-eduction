@@ -1,6 +1,7 @@
 import { GameQuestion, GameType, AppLanguage } from '../types';
 import { colors } from '../theme/colors';
 import { LOCAL_ANIMAL_IMAGES } from '../utils/imageHelper';
+import type { ImageAsset } from '../utils/remoteAssets';
 
 export const GAME_QUESTIONS: Record<GameType, Record<AppLanguage, GameQuestion[]>> = {
   // 1. FIND THE LETTER
@@ -535,7 +536,7 @@ export interface PuzzlePicture {
   titleGu: string;
   titleHi: string;
   titleEn: string;
-  imageSource: any;
+  imageSource: ImageAsset;
   emoji: string;
 }
 

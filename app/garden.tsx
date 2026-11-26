@@ -22,6 +22,7 @@ import { SUBJECT_CARD_ART } from '../src/utils/imageHelper';
 import { Glyph } from '../src/components/fun';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
 import { formatNumberDigits } from '../src/utils/languageData';
+import type { TimerHandle } from '../src/utils/runtime';
 
 type ArtIcon = React.FC<{ size?: number }>;
 /** Saved plants keep their emoji id (backend data); the UI renders crisp 3D art for it. */
@@ -72,7 +73,7 @@ export default function VirtualGardenScreen() {
 
   const [harvestModal, setHarvestModal] = useState<string | null>(null);
   const isActionInProgressRef = useRef(false);
-  const gardenTimerRef = useRef<any>(null);
+  const gardenTimerRef = useRef<TimerHandle | null>(null);
 
   useEffect(() => {
     return () => {

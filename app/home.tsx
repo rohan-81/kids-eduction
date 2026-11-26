@@ -7,6 +7,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  type DimensionValue
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -43,7 +44,7 @@ export default function HomeScreen() {
   const containerPadding = isCompact ? 20 : isMobile ? 28 : 48;
   const availableContentWidth = Math.min(width, 1200) - containerPadding;
 
-  const bigKidCardWidth: any =
+  const bigKidCardWidth: DimensionValue =
     Platform.OS === 'web'
       ? isMobile
         ? 'calc(50% - 5px)'
@@ -52,7 +53,7 @@ export default function HomeScreen() {
         ? Math.floor((availableContentWidth - 10) / 2) - 1
         : Math.floor((availableContentWidth - 30) / 4) - 1;
 
-  const featureBtnWidth: any =
+  const featureBtnWidth: DimensionValue =
     Platform.OS === 'web'
       ? isMobile
         ? 'calc(50% - 4px)'

@@ -2,82 +2,123 @@ from datetime import date
 from django.utils import timezone
 from django.db import transaction, models
 from rest_framework import viewsets, status, permissions
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from child_profiles.models import ChildProfile
-from child_profiles.utils import resolve_child_profile
+from child_profiles.utils import resolve_child_profile, safe_int
 from lessons.models import Lesson
 from .models import LessonProgress, GameResult, DailyActivity
 from .serializers import LessonProgressSerializer, GameResultSerializer, DailyActivitySerializer
 
-from gamification.models import ChildWallet, DailyStreak, CoinTransaction, AdventureLevel, ChildAdventureProgress
+from gamification.models import ChildWallet, CoinTransaction, DailyStreak, AdventureLevel, ChildAdventureProgress
 from gamification.serializers import ChildWalletSerializer, DailyStreakSerializer
 from personalization.models import ChildAvatar, GardenPlant
 from personalization.serializers import ChildAvatarSerializer, GardenPlantSerializer
 from parent_controls.models import ScreenTimeLog
 
+# Upper bounds for untrusted client input (audit P0-3).
+MAX_LESSONS_PER_SYNC = 500
+MAX_STARS = 3
+MAX_SCORE = 100_000
+MAX_COINS = 10_000_000
+MAX_STREAK_DAYS = 3650
+MAX_SCREEN_MINUTES_PER_SYNC = 24 * 60
+MAX_SLUG_LENGTH = 120
+MAX_UNLOCKED_ITEMS = 500
+AVATAR_TEXT_FIELDS = ('base_avatar', 'equipped_hat', 'equipped_glasses', 'equipped_outfit', 'equipped_backpack')
 
-class LessonProgressViewSet(viewsets.ModelViewSet):
-    serializer_class = LessonProgressSerializer
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.AllowAny]
+# Progress endpoints are only for signed-in parents: guest progress stays on the device.
+AUTH_CLASSES = [TokenAuthentication, SessionAuthentication]
+PARENT_ONLY = [permissions.IsAuthenticated]
+
+
+def _flag(value, default=True):
+    """Lenient boolean for per-item flags: only explicit false-y values switch it off."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() not in ('false', '0', 'no', 'off', '')
+
+
+DEVICE_SPEND = 'device_spend'
+
+
+def _recorded_device_spend(child):
+    """Coins the server has already deducted for this child's in-app spending (lifetime)."""
+    total = CoinTransaction.objects.filter(child_profile=child, transaction_type=DEVICE_SPEND).aggregate(
+        s=models.Sum('amount')
+    )['s']
+    return -(total or 0)
+
+
+def _profile_not_found():
+    return Response({'error': 'Child profile not found for this account.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class _ParentScopedQuerysetMixin:
+    """Read access limited to the requesting parent's children; writes only via create()."""
+    authentication_classes = AUTH_CLASSES
+    permission_classes = PARENT_ONLY
+    http_method_names = ['get', 'post', 'head', 'options']
+    model = None
+    order_by = '-id'
 
     def get_queryset(self):
-        user = self.request.user
+        queryset = self.model.objects.filter(child_profile__parent=self.request.user).order_by(self.order_by)
         profile_id = self.request.query_params.get('profile_id') or self.request.query_params.get('child_id')
-        queryset = LessonProgress.objects.all().order_by('-updated_at')
-        if user.is_authenticated:
-            queryset = queryset.filter(child_profile__parent=user)
-        else:
-            queryset = queryset.filter(child_profile__parent__isnull=True)
         if profile_id:
-            queryset = queryset.filter(child_profile_id=profile_id)
+            queryset = queryset.filter(child_profile_id=safe_int(profile_id, default=-1, lo=-1, hi=2**62))
         return queryset
+
+
+class LessonProgressViewSet(_ParentScopedQuerysetMixin, viewsets.ModelViewSet):
+    serializer_class = LessonProgressSerializer
+    model = LessonProgress
+    order_by = '-updated_at'
 
     def create(self, request, *args, **kwargs):
         profile_id = request.data.get('child_profile') or request.data.get('child_profile_id')
-        lesson_slug = str(request.data.get('lesson_slug') or request.data.get('lesson') or request.data.get('lesson_id') or '')
+        lesson_slug = str(request.data.get('lesson_slug') or request.data.get('lesson') or request.data.get('lesson_id') or '')[:MAX_SLUG_LENGTH]
 
         if not lesson_slug:
             return Response({'error': 'lesson or lesson_slug field is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         child = resolve_child_profile(request, profile_id)
+        if not child:
+            return _profile_not_found()
 
-        lesson_obj = Lesson.objects.filter(id=lesson_slug).first() if lesson_slug.isdigit() else None
+        lesson_obj = Lesson.objects.filter(id=int(lesson_slug)).first() if lesson_slug.isdigit() else None
         if not lesson_obj:
             lesson_obj = Lesson.objects.filter(stable_id=lesson_slug).first()
 
-        completed = bool(request.data.get('completed', True))
-        stars = int(request.data.get('stars', 3))
-        best_score = int(request.data.get('best_score', 1))
+        completed = _flag(request.data.get('completed'), True)
+        stars = safe_int(request.data.get('stars'), default=MAX_STARS, lo=0, hi=MAX_STARS)
+        best_score = safe_int(request.data.get('best_score'), default=1, lo=0, hi=MAX_SCORE)
 
-        # Atomic update or create
-        progress, created = LessonProgress.objects.get_or_create(
-            child_profile=child,
-            lesson_slug=lesson_slug,
-            defaults={
-                'lesson': lesson_obj,
-                'completed': completed,
-                'stars': stars,
-                'best_score': best_score,
-                'times_played': 1,
-            }
-        )
-        if not created:
-            progress.completed = progress.completed or completed
-            progress.stars = max(progress.stars, stars)
-            progress.best_score = max(progress.best_score, best_score)
-            progress.times_played += 1
-            if lesson_obj and not progress.lesson:
-                progress.lesson = lesson_obj
-            progress.save()
+        with transaction.atomic():
+            progress, created = LessonProgress.objects.get_or_create(
+                child_profile=child,
+                lesson_slug=lesson_slug,
+                defaults={
+                    'lesson': lesson_obj,
+                    'completed': completed,
+                    'stars': stars,
+                    'best_score': best_score,
+                    'times_played': 1,
+                }
+            )
+            if not created:
+                progress.completed = progress.completed or completed
+                progress.stars = max(progress.stars, stars)
+                progress.best_score = max(progress.best_score, best_score)
+                progress.times_played += 1
+                if lesson_obj and not progress.lesson:
+                    progress.lesson = lesson_obj
+                progress.save()
 
-        # Update DailyActivity
-        if child:
-            today = date.today()
-            activity, _ = DailyActivity.objects.get_or_create(child_profile=child, date=today)
+            activity, _ = DailyActivity.objects.get_or_create(child_profile=child, date=date.today())
             activity.lessons_completed += 1
             activity.stars_earned += stars
             activity.save()
@@ -85,206 +126,235 @@ class LessonProgressViewSet(viewsets.ModelViewSet):
         return Response(LessonProgressSerializer(progress).data, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
 
 
-class GameResultViewSet(viewsets.ModelViewSet):
+class GameResultViewSet(_ParentScopedQuerysetMixin, viewsets.ModelViewSet):
     serializer_class = GameResultSerializer
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.AllowAny]
-
-    def get_queryset(self):
-        user = self.request.user
-        profile_id = self.request.query_params.get('profile_id') or self.request.query_params.get('child_id')
-        queryset = GameResult.objects.all().order_by('-played_at')
-        if user.is_authenticated:
-            queryset = queryset.filter(child_profile__parent=user)
-        else:
-            queryset = queryset.filter(child_profile__parent__isnull=True)
-        if profile_id:
-            queryset = queryset.filter(child_profile_id=profile_id)
-        return queryset
+    model = GameResult
+    order_by = '-played_at'
 
     def create(self, request, *args, **kwargs):
         profile_id = request.data.get('child_profile') or request.data.get('child_profile_id')
         child = resolve_child_profile(request, profile_id)
+        if not child:
+            return _profile_not_found()
 
-        game_type = request.data.get('game_type', 'quiz')
-        score = int(request.data.get('score', 0))
-        total_questions = int(request.data.get('total_questions', 5))
-        time_spent = int(request.data.get('time_spent_seconds', 0))
+        game_type = str(request.data.get('game_type') or 'quiz')[:60]
+        total_questions = safe_int(request.data.get('total_questions'), default=5, lo=0, hi=1000)
+        score = safe_int(request.data.get('score'), default=0, lo=0, hi=max(total_questions, 0) or 1000)
+        time_spent = safe_int(request.data.get('time_spent_seconds'), default=0, lo=0, hi=24 * 3600)
 
-        result = GameResult.objects.create(
-            child_profile=child,
-            game_type=game_type,
-            score=score,
-            total_questions=total_questions,
-            time_spent_seconds=time_spent,
-        )
-
-        if child:
-            today = date.today()
-            activity, _ = DailyActivity.objects.get_or_create(child_profile=child, date=today)
+        with transaction.atomic():
+            result = GameResult.objects.create(
+                child_profile=child,
+                game_type=game_type,
+                score=score,
+                total_questions=total_questions,
+                time_spent_seconds=time_spent,
+            )
+            activity, _ = DailyActivity.objects.get_or_create(child_profile=child, date=date.today())
             activity.games_played += 1
             activity.save()
 
         return Response(GameResultSerializer(result).data, status=status.HTTP_201_CREATED)
 
 
-class DailyActivityViewSet(viewsets.ReadOnlyModelViewSet):
+class DailyActivityViewSet(_ParentScopedQuerysetMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = DailyActivitySerializer
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.AllowAny]
-
-    def get_queryset(self):
-        user = self.request.user
-        profile_id = self.request.query_params.get('profile_id') or self.request.query_params.get('child_id')
-        queryset = DailyActivity.objects.all().order_by('-date')
-        if user.is_authenticated:
-            queryset = queryset.filter(child_profile__parent=user)
-        else:
-            queryset = queryset.filter(child_profile__parent__isnull=True)
-        if profile_id:
-            queryset = queryset.filter(child_profile_id=profile_id)
-        return queryset
+    model = DailyActivity
+    order_by = '-date'
 
 
 class CloudSyncView(APIView):
     """
-    Multi-Device Cloud Synchronization endpoint.
-    Accepts full offline batched progress, merges conflicts deterministically using max values,
-    supports explicit progress reset, and returns authoritative server state.
+    Multi-Device Cloud Synchronization endpoint (signed-in parents only).
+    Accepts batched offline progress, merges conflicts deterministically using max values,
+    supports explicit progress reset, and returns the authoritative server state.
     """
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = AUTH_CLASSES
+    permission_classes = PARENT_ONLY
 
     def post(self, request):
-        child_id = request.data.get('child_profile_id')
-        child = resolve_child_profile(request, child_id)
+        child = resolve_child_profile(request, request.data.get('child_profile_id'))
         if not child:
-            return Response({'error': 'Child profile could not be resolved.'}, status=status.HTTP_400_BAD_REQUEST)
+            return _profile_not_found()
 
-        is_reset = bool(request.data.get('is_reset', False))
+        # Destructive: only an explicit JSON `true` resets (form "false" used to be truthy).
+        is_reset = request.data.get('is_reset') is True
+
+        lessons_batch = request.data.get('lessons') or []
+        if not isinstance(lessons_batch, list):
+            return Response({'error': 'lessons must be a list.'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(lessons_batch) > MAX_LESSONS_PER_SYNC:
+            return Response(
+                {'error': f'At most {MAX_LESSONS_PER_SYNC} lessons per sync.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        max_level = AdventureLevel.objects.aggregate(m=models.Max('level_number'))['m'] or 1
+        adv_level_in = safe_int(request.data.get('adventure_level'), default=1, lo=1, hi=max_level)
 
         with transaction.atomic():
-            # If reset was requested, clear previous progress logs for this child
             if is_reset:
                 LessonProgress.objects.filter(child_profile=child).delete()
                 GameResult.objects.filter(child_profile=child).delete()
                 DailyActivity.objects.filter(child_profile=child).delete()
+                ChildAdventureProgress.objects.filter(child_profile=child).delete()
 
-            # 1. Sync Lessons Progress
-            lessons_batch = request.data.get('lessons', [])
+            # 1. Lessons: one read + bulk writes instead of 1-2 queries per lesson (500-lesson syncs).
+            incoming = {}
             for item in lessons_batch:
-                slug = str(item.get('lesson_id') or item.get('lesson_slug') or '')
+                if not isinstance(item, dict):
+                    continue
+                slug = str(item.get('lesson_id') or item.get('lesson_slug') or '')[:MAX_SLUG_LENGTH]
                 if not slug:
                     continue
-                completed = bool(item.get('completed', True))
-                stars = int(item.get('stars', 3))
-                best_score = int(item.get('best_score', 1))
+                completed = _flag(item.get('completed'), True)
+                stars = safe_int(item.get('stars'), default=MAX_STARS, lo=0, hi=MAX_STARS)
+                best_score = safe_int(item.get('best_score'), default=1, lo=0, hi=MAX_SCORE)
+                prev = incoming.get(slug)
+                if prev:
+                    completed, stars, best_score = (
+                        prev[0] or completed, max(prev[1], stars), max(prev[2], best_score)
+                    )
+                incoming[slug] = (completed, stars, best_score)
 
-                rec, created = LessonProgress.objects.get_or_create(
-                    child_profile=child,
-                    lesson_slug=slug,
-                    defaults={'completed': completed, 'stars': stars, 'best_score': best_score}
+            if incoming:
+                existing = {
+                    rec.lesson_slug: rec
+                    for rec in LessonProgress.objects.filter(child_profile=child, lesson_slug__in=list(incoming))
+                }
+                to_update = []
+                now = timezone.now()
+                for slug, (completed, stars, best_score) in incoming.items():
+                    rec = existing.get(slug)
+                    if rec is None:
+                        continue
+                    merged = (rec.completed or completed, max(rec.stars, stars), max(rec.best_score, best_score))
+                    if merged != (rec.completed, rec.stars, rec.best_score):
+                        rec.completed, rec.stars, rec.best_score = merged
+                        rec.updated_at = now  # bulk_update skips auto_now
+                        to_update.append(rec)
+                if to_update:
+                    LessonProgress.objects.bulk_update(to_update, ['completed', 'stars', 'best_score', 'updated_at'])
+                LessonProgress.objects.bulk_create(
+                    [
+                        LessonProgress(child_profile=child, lesson_slug=slug, completed=c, stars=st, best_score=b)
+                        for slug, (c, st, b) in incoming.items()
+                        if slug not in existing
+                    ],
+                    ignore_conflicts=True,
                 )
-                if not created:
-                    rec.completed = rec.completed or completed
-                    rec.stars = max(rec.stars, stars)
-                    rec.best_score = max(rec.best_score, best_score)
-                    rec.save()
 
-            # 2. Sync Wallet
+            # 2. Wallet
             wallet_data = request.data.get('wallet')
-            wallet, _ = ChildWallet.objects.get_or_create(child_profile=child)
-            if wallet_data and isinstance(wallet_data, dict):
-                local_coins = int(wallet_data.get('coins', 0))
-                local_stars = int(wallet_data.get('stars', 0))
+            wallet, _ = ChildWallet.objects.select_for_update().get_or_create(child_profile=child)
+            recorded_spent = 0 if is_reset else _recorded_device_spend(child)
+            if is_reset:
+                CoinTransaction.objects.filter(child_profile=child, transaction_type=DEVICE_SPEND).delete()
+            if isinstance(wallet_data, dict):
+                local_coins = safe_int(wallet_data.get('coins'), default=0, lo=0, hi=MAX_COINS)
+                local_stars = safe_int(wallet_data.get('stars'), default=0, lo=0, hi=MAX_COINS)
                 if is_reset:
                     wallet.total_coins = local_coins
                     wallet.total_stars = local_stars
                 else:
+                    # Coins spent on the device. `spent_total` is the device's lifetime counter, so the
+                    # ledger only applies the part not seen before: resending is a no-op. Without this,
+                    # max(server, local) refunded every purchase on the next sync.
+                    spent_total = safe_int(wallet_data.get('spent_total'), default=0, lo=0, hi=MAX_COINS)
+                    newly_spent = max(0, spent_total - recorded_spent)
+                    if newly_spent:
+                        CoinTransaction.objects.create(
+                            child_profile=child,
+                            amount=-newly_spent,
+                            transaction_type=DEVICE_SPEND,
+                            description='Coins spent in the app (synced)',
+                        )
+                        recorded_spent += newly_spent
+                        wallet.total_coins = max(0, wallet.total_coins - newly_spent)
                     wallet.total_coins = max(wallet.total_coins, local_coins)
                     wallet.total_stars = max(wallet.total_stars, local_stars)
                 wallet.save()
 
-            # 3. Sync Daily Streak
+            # 3. Daily streak
             streak_data = request.data.get('streak')
             streak, _ = DailyStreak.objects.get_or_create(child_profile=child)
-            if streak_data and isinstance(streak_data, dict):
-                local_curr = int(streak_data.get('current_streak', 0))
-                local_long = int(streak_data.get('longest_streak', 0))
+            if isinstance(streak_data, dict):
+                local_curr = safe_int(streak_data.get('current_streak'), default=0, lo=0, hi=MAX_STREAK_DAYS)
+                local_long = safe_int(streak_data.get('longest_streak'), default=local_curr, lo=0, hi=MAX_STREAK_DAYS)
+                local_long = max(local_long, local_curr)
                 if is_reset:
                     streak.current_streak = max(local_curr, 1)
                     streak.longest_streak = max(local_long, 1)
                 else:
                     streak.current_streak = max(streak.current_streak, local_curr)
-                    streak.longest_streak = max(streak.longest_streak, local_long)
+                    streak.longest_streak = max(streak.longest_streak, local_long, streak.current_streak)
                 streak.save()
 
-            # 4. Sync Avatar
+            # 4. Avatar
             avatar_data = request.data.get('avatar')
             avatar, _ = ChildAvatar.objects.get_or_create(child_profile=child)
-            if avatar_data and isinstance(avatar_data, dict):
-                if 'base_avatar' in avatar_data:
-                    avatar.base_avatar = avatar_data['base_avatar']
-                if 'equipped_hat' in avatar_data:
-                    avatar.equipped_hat = avatar_data['equipped_hat']
-                if 'equipped_glasses' in avatar_data:
-                    avatar.equipped_glasses = avatar_data['equipped_glasses']
-                if 'equipped_outfit' in avatar_data:
-                    avatar.equipped_outfit = avatar_data['equipped_outfit']
-                if 'equipped_backpack' in avatar_data:
-                    avatar.equipped_backpack = avatar_data['equipped_backpack']
-                
-                incoming_unlocked = avatar_data.get('unlocked_items', [])
-                if incoming_unlocked:
+            if isinstance(avatar_data, dict):
+                for field in AVATAR_TEXT_FIELDS:
+                    if field in avatar_data:
+                        setattr(avatar, field, str(avatar_data[field] or '')[:ChildAvatar._meta.get_field(field).max_length])
+                incoming_unlocked = avatar_data.get('unlocked_items') or []
+                if isinstance(incoming_unlocked, list) and incoming_unlocked:
                     current_items = set(avatar.unlocked_items or [])
-                    current_items.update(incoming_unlocked)
-                    avatar.unlocked_items = list(current_items)
+                    current_items.update(str(i)[:60] for i in incoming_unlocked[:MAX_UNLOCKED_ITEMS])
+                    avatar.unlocked_items = sorted(current_items)[:MAX_UNLOCKED_ITEMS]
                 avatar.save()
 
-            # 5. Sync Screen Time
+            # 5. Screen time
             screen_time_data = request.data.get('screen_time')
-            if screen_time_data and isinstance(screen_time_data, dict):
-                mins = int(screen_time_data.get('minutes_used', 0))
+            if isinstance(screen_time_data, dict):
+                mins = safe_int(screen_time_data.get('minutes_used'), default=0, lo=0, hi=MAX_SCREEN_MINUTES_PER_SYNC)
                 if mins > 0:
-                    today = date.today()
-                    log, _ = ScreenTimeLog.objects.get_or_create(child_profile=child, date=today)
+                    log, _ = ScreenTimeLog.objects.get_or_create(child_profile=child, date=date.today())
                     log.minutes_used += mins
                     log.save()
 
-            # 6. Sync Adventure Progress
-            adv_level_in = int(request.data.get('adventure_level', 1))
+            # 6. Adventure progress: bounded set-based writes (no per-level loop driven by client input)
             if adv_level_in > 1:
-                for lvl_num in range(1, adv_level_in):
-                    lvl_obj = AdventureLevel.objects.filter(level_number=lvl_num).first()
-                    if lvl_obj:
-                        cap, created = ChildAdventureProgress.objects.get_or_create(
-                            child_profile=child,
-                            level=lvl_obj,
-                            defaults={'completed': True, 'unlocked': True, 'stars_earned': 3}
+                completed_levels = list(AdventureLevel.objects.filter(level_number__lt=adv_level_in))
+                ChildAdventureProgress.objects.filter(child_profile=child, level__in=completed_levels).update(
+                    completed=True, unlocked=True
+                )
+                existing_ids = set(
+                    ChildAdventureProgress.objects.filter(child_profile=child).values_list('level_id', flat=True)
+                )
+                ChildAdventureProgress.objects.bulk_create(
+                    [
+                        ChildAdventureProgress(
+                            child_profile=child, level=lvl, completed=True, unlocked=True, stars_earned=3
                         )
-                        if not created:
-                            cap.completed = True
-                            cap.unlocked = True
-                            cap.save()
+                        for lvl in completed_levels
+                        if lvl.pk not in existing_ids
+                    ],
+                    ignore_conflicts=True,
+                )
                 curr_lvl = AdventureLevel.objects.filter(level_number=adv_level_in).first()
                 if curr_lvl:
                     p_curr, _ = ChildAdventureProgress.objects.get_or_create(child_profile=child, level=curr_lvl)
-                    p_curr.unlocked = True
-                    p_curr.save()
+                    if not p_curr.unlocked:
+                        p_curr.unlocked = True
+                        p_curr.save(update_fields=['unlocked', 'updated_at'])
 
-        # Query and return authoritative server state
         all_progress = LessonProgress.objects.filter(child_profile=child)
         all_plants = GardenPlant.objects.filter(child_profile=child)
-        max_adv = ChildAdventureProgress.objects.filter(child_profile=child, completed=True).aggregate(models.Max('level__level_number'))['level__level_number__max'] or 0
-        server_adv_level = max(max_adv + 1, int(request.data.get('adventure_level', 1)))
+        max_adv = ChildAdventureProgress.objects.filter(child_profile=child, completed=True).aggregate(
+            models.Max('level__level_number')
+        )['level__level_number__max'] or 0
+        server_adv_level = max(max_adv + 1, adv_level_in)
 
         return Response({
             'status': 'synchronized',
+            'is_reset': is_reset,
             'server_time': timezone.now().isoformat(),
             'child_profile_id': child.id,
             'adventure_level': server_adv_level,
             'lessons': LessonProgressSerializer(all_progress, many=True).data,
             'wallet': ChildWalletSerializer(wallet).data,
+            'coins_spent_total': recorded_spent,
             'streak': DailyStreakSerializer(streak).data,
             'avatar': ChildAvatarSerializer(avatar).data,
             'garden': GardenPlantSerializer(all_plants, many=True).data,

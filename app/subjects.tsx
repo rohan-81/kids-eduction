@@ -89,6 +89,8 @@ import {
 import { toGujDigits, toHiDigits, formatNumberDigits } from '../src/utils/languageData';
 import { getAgeClassBadgeInfo } from '../src/utils/ageDetailHelper';
 import { SUBJECT_CARD_ART } from '../src/utils/imageHelper';
+import { webStyle } from '../src/utils/webStyle';
+import type { AppRoute } from '../src/utils/navigationHelper';
 
 const useNativeDriver = Platform.OS !== 'web';
 
@@ -124,7 +126,7 @@ interface TopicItem {
   count: string;
   totalCount?: number;
   icon: React.ReactNode;
-  route: string;
+  route: AppRoute;
   minAge?: '2-4' | '4-6' | '6-8';
 }
 
@@ -1038,11 +1040,11 @@ export default function SubjectsScreen() {
                     borderBottomColor: toneSpec.fill,
                   },
                   clayShadow(2),
-                  Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+                  webStyle({ cursor: 'pointer' }),
                 ]}
                 onPress={() => {
                   soundEffects.playBubblePop();
-                  router.push(topic.route as any);
+                  router.push(topic.route);
                 }}
                 accessibilityLabel={`${topic.name}, ${stats.done} of ${stats.total} lessons`}
               >
@@ -1296,9 +1298,9 @@ const styles = StyleSheet.create({
   },
   circularActionButtonMastered: {
     backgroundColor: '#10B981',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-    } as any)),
+    })),
   },
   classBadgeBanner: {
     borderRadius: 18,

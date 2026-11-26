@@ -30,7 +30,7 @@ describe('Dynamic Content & Model Service', () => {
     const categories = await apiService.fetchCategories();
     expect(Array.isArray(categories)).toBe(true);
     expect(categories.length).toBeGreaterThan(5);
-    const hasAlphabet = categories.some((c) => c.id === 'en-alphabet' || c.slug === 'en-alphabet');
+    const hasAlphabet = categories.some((c) => ('id' in c ? c.id : c.slug) === 'en-alphabet');
     expect(hasAlphabet).toBe(true);
   });
 

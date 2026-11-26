@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "export:data": "node -r ./scripts/register_assets.cjs scripts/export_static_data.ts"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { safeGetApiBaseUrl } from '../services/apiConfig';
+import { unrefTimer } from './runtime';
 
 /**
  * Fast, reliable internet connectivity check.
@@ -14,9 +15,7 @@ export async function checkInternetAvailable(timeoutMs: number = 3500): Promise<
   const probe = async (url: string): Promise<boolean> => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    if (typeof timer === 'object' && typeof (timer as any).unref === 'function') {
-      (timer as any).unref();
-    }
+    unrefTimer(timer);
     try {
       const res = await fetch(url, { method: 'GET', cache: 'no-store', signal: controller.signal });
       return res.ok || res.status === 204;

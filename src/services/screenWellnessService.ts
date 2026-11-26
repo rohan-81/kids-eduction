@@ -1,6 +1,7 @@
-import { Platform, AppState, AppStateStatus } from 'react-native';
+import { Platform, AppState, AppStateStatus, type NativeEventSubscription } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTodayDateKey } from './storageService';
+import type { TimerHandle } from '../utils/runtime';
 
 export type ScreenTimeLimitId = '15m' | '30m' | '45m' | '60m' | 'unlimited';
 
@@ -27,7 +28,7 @@ type WellnessListener = {
 class ScreenWellnessService {
   private listeners: Set<WellnessListener> = new Set();
   private continuousMinutes: number = 0;
-  private timerInterval: any = null;
+  private timerInterval: TimerHandle | null = null;
   // Default to unlimited so kids/testers aren't randomly locked out unless parents set a limit
   private currentLimit: ScreenTimeLimitId = 'unlimited';
   private eyeCareEnabled: boolean = true;
@@ -36,7 +37,7 @@ class ScreenWellnessService {
   private isEyeCareAlertActive: boolean = false;
   private isLimitAlertActive: boolean = false;
   private isAppActive: boolean = true;
-  private appStateSubscription: any = null;
+  private appStateSubscription: NativeEventSubscription | null = null;
   private initialized: boolean = false;
   /** Date key the in-memory daily counters belong to (rolls over at midnight). */
   private dailyDateKey: string = getTodayDateKey();

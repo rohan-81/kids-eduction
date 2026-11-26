@@ -1,10 +1,10 @@
 import React from 'react';
-import { Animated, Image, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Image, StyleSheet, Text, View, useWindowDimensions, type DimensionValue } from 'react-native';
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { AppLanguage } from '../../types';
 import { SUBJECT_CARD_ART } from '../../utils/imageHelper';
 import { ClayPressCard, ClayCardColors } from './ClayPressCard';
-import { useSafeRouter } from '../../utils/navigationHelper';
+import { useSafeRouter, type AppRoute } from '../../utils/navigationHelper';
 
 interface HomeSubjectCardsGridProps {
   language: AppLanguage;
@@ -30,10 +30,10 @@ const CHALLENGE_TONE: ClayCardColors = { fill: '#F5F3FF', border: '#C4B5FD', lip
 export const HomeSubjectCardsGrid: React.FC<HomeSubjectCardsGridProps> = ({ language }) => {
   const router = useSafeRouter();
   const { width } = useWindowDimensions();
-  const cardWidth: any = width >= 1000 ? '31.8%' : '48%';
+  const cardWidth: DimensionValue = width >= 1000 ? '31.8%' : '48%';
   const artSize = width < 360 ? 70 : width < 768 ? 80 : 84;
 
-  const subjects: { id: keyof typeof SUBJECT_CARD_ART; title: string; route: string }[] = [
+  const subjects: { id: keyof typeof SUBJECT_CARD_ART; title: string; route: AppRoute }[] = [
     { id: 'math', title: tr(language, { gu: 'ગણિત', hi: 'गणित', en: 'Math' }), route: '/subjects?subjectId=math' },
     { id: 'science', title: tr(language, { gu: 'વિજ્ઞાન', hi: 'विज्ञान', en: 'Science' }), route: '/subjects?subjectId=science' },
     { id: 'english', title: tr(language, { gu: 'અંગ્રેજી', hi: 'अंग्रेजी', en: 'English' }), route: '/subjects?subjectId=english' },
@@ -52,7 +52,7 @@ export const HomeSubjectCardsGrid: React.FC<HomeSubjectCardsGridProps> = ({ lang
             <ClayPressCard
               key={item.id}
               colors={tone}
-              onPress={() => router.push(item.route as any)}
+              onPress={() => router.push(item.route)}
               accessibilityLabel={item.title}
               style={{ width: cardWidth }}
               faceStyle={styles.cardFace}

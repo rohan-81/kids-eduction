@@ -25,6 +25,7 @@ import { GoldCoinStack } from '../src/components/common/GoldCoinIcon';
 import * as Art from '../src/components/art3d/Art3D';
 import { getRhyme3DVisual } from '../src/utils/rhymeRenders';
 import { Remote3DImage } from '../src/components/common/Remote3DImage';
+import { webStyle } from '../src/utils/webStyle';
 
 export type { RhymeItem, RhymeCategoryLang, RhymeLine } from '../src/data/rhymesData';
 
@@ -451,7 +452,7 @@ export default function RhymesScreen() {
                     borderColor: isSelected ? spec.fill : kidPalette.softBorder,
                     borderBottomColor: isSelected ? spec.edge : '#E5E7EB',
                   },
-                  Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+                  webStyle({ cursor: 'pointer' }),
                 ]}
               >
                 <View style={[styles.songEmojiBubble, { backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : spec.tint }]}>
@@ -475,7 +476,7 @@ export default function RhymesScreen() {
 
         {/* Coming Soon or Studio Singing Banner */}
         <Pressable
-          style={[styles.comingSoonBanner, clayShadow(2), Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+          style={[styles.comingSoonBanner, clayShadow(2), webStyle({ cursor: 'pointer' })]}
           onPress={hasStudioAudio ? handleTogglePlaySong : handleComingSoon}
           accessibilityRole="button"
           accessibilityLabel="Singing Rhymes Banner"
@@ -642,7 +643,7 @@ export default function RhymesScreen() {
                 style={[
                   styles.lineRow,
                   isCurrent && { backgroundColor: stageSpec.tint, borderColor: stageSpec.tintBorder },
-                  Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+                  webStyle({ cursor: 'pointer' }),
                 ]}
                 accessibilityRole="button"
                 onPress={() => {

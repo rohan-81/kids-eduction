@@ -12,6 +12,7 @@ import {
   ViewStyle,
   StyleProp,
   useWindowDimensions,
+  type ImageSourcePropType
 } from 'react-native';
 import { kidTones, kidPalette, KidTone } from '../../theme/kidTheme';
 import { soundEffects } from '../../services/soundEffects';
@@ -20,9 +21,11 @@ import { FloatingSparkles } from './FloatingSparkles';
 import { ICON_3D_STAR, ICONS_3D, STORY_CHARACTER_IMAGES } from '../../utils/imageHelper';
 import * as Art from '../art3d/Art3D';
 import { Remote3DImage } from '../common/Remote3DImage';
+import { webStyle } from '../../utils/webStyle';
+import type { ImageAsset } from '../../utils/remoteAssets';
 
 /** Emblem emojis callers pass -> real 3D renders (characters) so no system emoji is drawn. */
-const EMBLEM_IMAGES: Record<string, any> = {
+const EMBLEM_IMAGES: Record<string, ImageAsset> = {
   '🦉': STORY_CHARACTER_IMAGES['🦉'],
   '🐻': STORY_CHARACTER_IMAGES['🐻'],
   '👶': STORY_CHARACTER_IMAGES['🐰'],
@@ -65,7 +68,7 @@ export interface KidModalProps {
   /** Emoji shown in the popping top emblem (🏆 ⭐ 🛡️ 🎁 🦉 ...). */
   emblem?: string;
   /** High-resolution 3D asset or PNG image overriding raw emoji. */
-  emblemImage?: any;
+  emblemImage?: ImageSourcePropType;
   /** React element (e.g. vector icon) overriding raw emoji. */
   emblemIcon?: React.ReactNode;
   tone?: KidTone;
@@ -170,7 +173,7 @@ export const KidModal: React.FC<KidModalProps> = ({
                 styles.card,
                 { paddingTop: hasEmblem ? EMBLEM / 2 + 18 : 28, borderBottomColor: spec.tintBorder },
                 Platform.OS === 'web'
-                  ? ({ boxShadow: '0 20px 45px rgba(0, 0, 0, 0.22), 0 4px 0 rgba(0,0,0,0.04)' } as any)
+                  ? webStyle({ boxShadow: '0 20px 45px rgba(0, 0, 0, 0.22), 0 4px 0 rgba(0,0,0,0.04)' })
                   : styles.cardNativeShadow,
                 cardStyle,
               ]}
@@ -215,7 +218,7 @@ export const KidModal: React.FC<KidModalProps> = ({
                 accessibilityRole="button"
                 accessibilityLabel="Close"
                 hitSlop={8}
-                style={[styles.closeBadge, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+                style={[styles.closeBadge, webStyle({ cursor: 'pointer' })]}
               >
                 <Glyph name="close" size={18} color={kidPalette.inkSoft} strokeWidth={3.4} />
               </Pressable>

@@ -17,6 +17,8 @@ import {
   getMediaBaseUrl,
 } from '../utils/remoteAssets';
 import { contentPackService } from './contentPackService';
+import { unrefTimer } from '../utils/runtime';
+import { loadFileSystemLegacy } from './nativeModules';
 // Importing the registries populates the remote asset lists.
 import '../utils/animalRenders';
 import '../utils/natureRenders';
@@ -98,18 +100,8 @@ export async function prefetchAnimalAudio(): Promise<boolean> {
     if ((await AsyncStorage.getItem(ANIMAL_AUDIO_DONE_KEY)) === marker) return true;
   } catch {}
 
-  let FileSystem: any = null;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    FileSystem = require('expo-file-system/legacy');
-  } catch {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      FileSystem = require('expo-file-system');
-    } catch {
-      return false;
-    }
-  }
+  const FileSystem = loadFileSystemLegacy();
+  if (!FileSystem) return false;
   const baseDir = FileSystem?.documentDirectory || FileSystem?.cacheDirectory;
   if (!baseDir || typeof FileSystem?.downloadAsync !== 'function') return false;
 
@@ -155,7 +147,5 @@ export function schedulePrefetchCharacterAssets(delayMs: number = START_DELAY_MS
       .then(() => prefetchAnimalAudio())
       .catch(() => {});
   }, delayMs);
-  if (typeof timer === 'object' && typeof (timer as any).unref === 'function') {
-    (timer as any).unref();
-  }
+  unrefTimer(timer);
 }

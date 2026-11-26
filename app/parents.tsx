@@ -47,6 +47,8 @@ import { ParentGate, KidModal, Glyph, useKidDialog } from '../src/components/fun
 import { ClayButton } from '../src/components/clay';
 import { kidTones, kidPalette, kidBackdrops } from '../src/theme/kidTheme';
 import * as Art from '../src/components/art3d/Art3D';
+import { webStyle } from '../src/utils/webStyle';
+import type { ScreenTimeLimitId } from '../src/services/screenWellnessService';
 
 const AVATAR_OPTIONS = ['avatar_3d_boy', '🦁', '🐰', '🐼', '🦊', '🐯', '🐥', '🦄', '🐬'];
 
@@ -56,7 +58,7 @@ const SCREEN_TIME_PRESETS = [
   { id: '45m', mins: 45, gu: '૪૫ મિનિટ', hi: '४५ मिनट', en: '45 Mins' },
   { id: '60m', mins: 60, gu: '૧ કલાક', hi: '१ घंटा', en: '1 Hour' },
   { id: 'unlimited', mins: 0, gu: 'અમર્યાદિત', hi: 'असीमित', en: 'Unlimited' },
-];
+] satisfies ReadonlyArray<{ id: ScreenTimeLimitId; [key: string]: unknown }>;
 
 const formatGameTitle = (slug: string, lang: string): string => {
   const map: Record<string, { gu: string; hi: string; en: string }> = {
@@ -493,15 +495,15 @@ export default function ParentsScreen() {
         key={item.category.id}
         style={[
           styles.premiumSubjectCard,
-          Platform.OS === 'web' && ({
+          webStyle({
             boxShadow: '0 8px 24px rgba(128, 98, 245, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03)',
             cursor: 'pointer',
-          } as any),
+          }),
         ]}
         activeOpacity={0.88}
         onPress={() => {
           soundEffects.playBubblePop();
-          router.push(('/lessons?categoryId=' + item.category.id) as any);
+          router.push(`/lessons?categoryId=${item.category.id}`);
         }}
         accessibilityRole="button"
         accessibilityLabel={`${item.title}, ${item.completed} of ${item.total} lessons`}
@@ -969,7 +971,7 @@ export default function ParentsScreen() {
                       style={[
                         styles.profileItem,
                         isActive && styles.activeProfileItem,
-                        Platform.OS === 'web' && ({ cursor: 'pointer' } as any),
+                        webStyle({ cursor: 'pointer' }),
                       ]}
                       onPress={() => handleSelectProfile(p)}
                       activeOpacity={0.8}
@@ -1217,7 +1219,7 @@ export default function ParentsScreen() {
                       onPress={() => {
                         soundEffects.playBubblePop();
                         setSelectedScreenTime(preset.id);
-                        screenWellnessService.setScreenTimeLimit(preset.id as any);
+                        screenWellnessService.setScreenTimeLimit(preset.id);
                         notify({
                           emblem: '⏳',
                           tone: 'mint',
@@ -1767,7 +1769,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
     color: kidPalette.ink,
-    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as any) : {}),
+    ...webStyle({ outlineStyle: 'none' }),
   },
   funPillRow: {
     flexDirection: 'row',
@@ -1835,7 +1837,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     ...(Platform.OS === 'web'
-      ? ({ boxShadow: '0 20px 45px rgba(0, 0, 0, 0.22)' } as any)
+      ? webStyle({ boxShadow: '0 20px 45px rgba(0, 0, 0, 0.22)' })
       : { shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.22, shadowRadius: 22, elevation: 12 }),
   },
   gateEmblem: {
@@ -1862,9 +1864,9 @@ const styles = StyleSheet.create({
     width: '100%',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)',
-    } as any)),
+    })),
   },
   gateShieldCircle: {
     width: 80,
@@ -1903,9 +1905,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FDE047',
     marginBottom: spacing.md,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(245, 158, 11, 0.15)',
-    } as any)),
+    })),
   },
   mathText: {
     fontSize: 32,
@@ -1953,10 +1955,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   keypadBtnText: {
     fontSize: 19,
@@ -1966,9 +1968,9 @@ const styles = StyleSheet.create({
   keypadOkBtn: {
     backgroundColor: '#6366F1',
     borderColor: '#4F46E5',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
-    } as any)),
+    })),
   },
   keypadClearBtn: {
     backgroundColor: '#FEE2E2',
@@ -1997,9 +1999,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     borderWidth: 1.5,
     borderColor: '#EDE9FE',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 10px 25px -5px rgba(99, 102, 241, 0.07), 0 8px 10px -6px rgba(99, 102, 241, 0.03)',
-    } as any)),
+    })),
   },
   authHeaderRow: {
     flexDirection: 'row',
@@ -2015,9 +2017,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: '#DDD6FE',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 8px rgba(124, 58, 237, 0.1)',
-    } as any)),
+    })),
   },
   authInfoCol: {
     flex: 1,
@@ -2069,9 +2071,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEE2E2',
     borderWidth: 1.5,
     borderColor: '#FECACA',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   authLogoutBtnText: {
     fontSize: 12.5,
@@ -2093,10 +2095,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   authPrimaryBtnText: {
     color: '#FFFFFF',
@@ -2112,9 +2114,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   authSecondaryBtnText: {
     color: '#4F46E5',
@@ -2132,9 +2134,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.25)',
     position: 'relative',
     overflow: 'hidden',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 18px 36px -8px rgba(128, 98, 245, 0.35), 0 8px 16px -4px rgba(128, 98, 245, 0.2)',
-    } as any)),
+    })),
   },
   heroTopRow: {
     flexDirection: 'row',
@@ -2171,10 +2173,10 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 14,
     borderWidth: 1.5,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-    } as any)),
+    })),
   },
   hdPillInactive: {
     backgroundColor: '#FEF08A',
@@ -2206,9 +2208,9 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
     borderWidth: 3.5,
     borderColor: '#FFFFFF',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-    } as any)),
+    })),
   },
   heroAvatarEmoji: {
     fontSize: 46,
@@ -2224,9 +2226,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#FACC15',
     zIndex: 10,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-    } as any)),
+    })),
   },
   heroInfoWrap: {
     flex: 1,
@@ -2351,10 +2353,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   heroActionBtnText: {
     color: '#8062F5',
@@ -2380,9 +2382,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.02)',
-    } as any)),
+    })),
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -2411,9 +2413,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1.5,
     borderColor: '#C7D2FE',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   addProfileBtnText: {
     fontSize: 12.5,
@@ -2440,9 +2442,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   profileDeleteText: {
     color: '#DC2626',
@@ -2458,16 +2460,16 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     backgroundColor: '#F8FAFC',
     minWidth: 108,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   activeProfileItem: {
     borderColor: '#6366F1',
     backgroundColor: '#EEF2FF',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(99, 102, 241, 0.15)',
-    } as any)),
+    })),
   },
   profileAvatarBox: {
     width: 56,
@@ -2527,9 +2529,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     borderWidth: 1.5,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 8px 20px -4px rgba(0, 0, 0, 0.04)',
-    } as any)),
+    })),
   },
   statIconCircle: {
     width: 54,
@@ -2541,9 +2543,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1.5,
     borderColor: 'rgba(0, 0, 0, 0.06)',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.06)',
-    } as any)),
+    })),
   },
   statEmoji: {
     fontSize: 28,
@@ -2607,10 +2609,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#F1EDFF',
     marginBottom: 4,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 8px 24px rgba(128, 98, 245, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   embossedBadgeBox: {
     width: 62,
@@ -2620,9 +2622,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#EAE6F8',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.03)',
-    } as any)),
+    })),
   },
   cardContentCol: {
     flex: 1,
@@ -2683,9 +2685,9 @@ const styles = StyleSheet.create({
   },
   circularActionButtonMastered: {
     backgroundColor: '#10B981',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
-    } as any)),
+    })),
   },
   subjectCard: {
     backgroundColor: '#FFFFFF',
@@ -2693,10 +2695,10 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   subjectTopRow: {
     flexDirection: 'row',
@@ -2739,10 +2741,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   badgeMastered: {
     backgroundColor: '#DCFCE7',
@@ -2857,10 +2859,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#4F46E5',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   playGamesBtnText: {
     color: '#FFFFFF',
@@ -2895,17 +2897,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   presetBtnActive: {
     backgroundColor: '#4F46E5',
     borderColor: '#4338CA',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(79, 70, 229, 0.3)',
-    } as any)),
+    })),
   },
   presetBtnText: {
     fontSize: 13.5,
@@ -2926,9 +2928,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     gap: 14,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   eyeCareLeft: {
     flexDirection: 'row',
@@ -2966,9 +2968,9 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-    } as any)),
+    })),
   },
   toggleKnobActive: {
     alignSelf: 'flex-end',
@@ -2987,10 +2989,10 @@ const styles = StyleSheet.create({
     gap: 16,
     borderWidth: 1.5,
     borderColor: '#059669',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 12px 28px -6px rgba(4, 120, 87, 0.35)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   worksheetsBannerLeft: {
     flexDirection: 'row',
@@ -3024,9 +3026,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 16,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-    } as any)),
+    })),
   },
   worksheetsBannerArrowText: {
     fontSize: 13,
@@ -3092,10 +3094,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 11,
     borderRadius: 14,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   resetBtnText: {
     color: '#FFFFFF',
@@ -3119,9 +3121,9 @@ const styles = StyleSheet.create({
     maxWidth: 440,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
-    } as any)),
+    })),
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -3166,16 +3168,16 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   ageBtnActive: {
     backgroundColor: '#EEF2FF',
     borderColor: '#6366F1',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 8px rgba(99, 102, 241, 0.2)',
-    } as any)),
+    })),
   },
   ageBtnText: {
     fontSize: 12.5,
@@ -3200,16 +3202,16 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   avatarBtnActive: {
     borderColor: '#6366F1',
     backgroundColor: '#EEF2FF',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 2px 8px rgba(99, 102, 241, 0.2)',
-    } as any)),
+    })),
   },
   avatarEmoji: {
     fontSize: 26,
@@ -3227,9 +3229,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   modalCancelText: {
     fontSize: 13.5,
@@ -3242,10 +3244,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     backgroundColor: '#6366F1',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   modalSaveText: {
     fontSize: 13.5,
@@ -3262,9 +3264,9 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     borderWidth: 2,
     borderColor: '#FDE047',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    } as any)),
+    })),
   },
   reportRibbon: {
     backgroundColor: '#4338CA',
@@ -3365,9 +3367,9 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderRadius: 16,
     alignItems: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   reportCloseBtnText: {
     color: '#FFFFFF',
@@ -3376,9 +3378,9 @@ const styles = StyleSheet.create({
   },
   heroAgeSubTouch: {
     alignSelf: 'flex-start',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   guestLimitationBanner: {
     flexDirection: 'row',
@@ -3432,9 +3434,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   guestLimitBtnText: {
     fontSize: 12,
@@ -3481,9 +3483,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   guestModalPrimaryBtnText: {
     color: '#FFFFFF',
@@ -3496,9 +3498,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       cursor: 'pointer',
-    } as any)),
+    })),
   },
   guestModalSecondaryBtnText: {
     color: '#475569',

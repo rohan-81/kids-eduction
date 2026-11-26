@@ -14,6 +14,9 @@ import { useApp } from '../../context/AppContext';
 import { CoinLabel } from './GoldCoinIcon';
 import Svg, { Path } from 'react-native-svg';
 import { Glyph } from '../fun/KidIcons';
+import { webStyle } from '../../utils/webStyle';
+import type { TimerHandle } from '../../utils/runtime';
+import { loadExpoAudioRecording, type AudioRecorder } from '../../services/nativeModules';
 
 const MicSvgIcon: React.FC<{ size?: number; color?: string }> = ({ size = 24, color = '#8062F5' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -49,12 +52,12 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
   const wave2Anim = useRef(new Animated.Value(0.7)).current;
   const wave3Anim = useRef(new Animated.Value(0.4)).current;
 
-  const recognitionRef = useRef<any>(null);
-  const recorderRef = useRef<any>(null);
-  const mediaStreamRef = useRef<any>(null);
-  const audioContextRef = useRef<any>(null);
-  const meterIntervalRef = useRef<any>(null);
-  const timerRef = useRef<any>(null);
+  const recognitionRef = useRef<KidsSpeechRecognition | null>(null);
+  const recorderRef = useRef<AudioRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const meterIntervalRef = useRef<TimerHandle | null>(null);
+  const timerRef = useRef<TimerHandle | null>(null);
   const isListeningRef = useRef<boolean>(false);
   const isResolvedRef = useRef<boolean>(false);
   const voiceDetectedRef = useRef<boolean>(false);
@@ -82,14 +85,15 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
     // Clean up Web MediaStream
     if (mediaStreamRef.current) {
       try {
-        mediaStreamRef.current.getTracks().forEach((track: any) => track.stop());
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       } catch {}
       mediaStreamRef.current = null;
     }
 
     if (audioContextRef.current) {
       try {
-        audioContextRef.current.close();
+        // close() rejects (InvalidStateError) when already closed; try/catch cannot see that.
+        audioContextRef.current.close().catch(() => {});
       } catch {}
       audioContextRef.current = null;
     }
@@ -97,7 +101,7 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
     // Clean up Native Recorder
     if (recorderRef.current) {
       try {
-        recorderRef.current.stop();
+        Promise.resolve(recorderRef.current.stop()).catch(() => {});
       } catch {}
       recorderRef.current = null;
     }
@@ -157,7 +161,7 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
     // 1. Web Speech Recognition or Web Audio Metering
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        window.SpeechRecognition || window.webkitSpeechRecognition;
 
       if (SpeechRecognition) {
         try {
@@ -170,7 +174,7 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
             language === 'gu' ? 'gu-IN' : language === 'hi' ? 'hi-IN' : 'en-US';
           recognition.lang = langCode;
 
-          recognition.onresult = (event: any) => {
+          recognition.onresult = (event: KidsSpeechRecognitionEvent) => {
             const transcript = event.results?.[0]?.[0]?.transcript || '';
             if (!isResolvedRef.current && isListeningRef.current) {
               if (transcript.trim().length > 0) {
@@ -183,7 +187,7 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
             }
           };
 
-          recognition.onerror = (e: any) => {
+          recognition.onerror = (e: KidsSpeechRecognitionErrorEvent) => {
             if (!isResolvedRef.current && isListeningRef.current) {
               if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
                 triggerRetry('permission');
@@ -221,7 +225,7 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           mediaStreamRef.current = stream;
-          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           if (AudioContextClass) {
             const audioCtx = new AudioContextClass();
             audioContextRef.current = audioCtx;
@@ -259,7 +263,7 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
 
             return;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
           triggerRetry('permission');
           return;
         }
@@ -268,8 +272,7 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
 
     // 2. Mobile (Native Expo Go / React Native)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const ExpoAudio = require('expo-audio');
+      const ExpoAudio = loadExpoAudioRecording();
       if (ExpoAudio?.requestRecordingPermissionsAsync) {
         const perm = await ExpoAudio.requestRecordingPermissionsAsync();
         if (!perm || perm.status !== 'granted') {
@@ -408,9 +411,9 @@ export const KidsMicrophonePractice: React.FC<KidsMicrophonePracticeProps> = ({
         status === 'success' && styles.successContainer,
         status === 'listening' && styles.listeningContainer,
         status === 'retry' && styles.retryContainer,
-        Platform.OS === 'web' && ({
+        webStyle({
           boxShadow: '0 4px 18px rgba(128, 98, 245, 0.08)',
-        } as any),
+        }),
       ]}
     >
       {/* Top Banner Tag */}

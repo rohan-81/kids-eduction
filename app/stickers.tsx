@@ -25,6 +25,8 @@ import { HOME_CARD_ART, STICKER_IMAGE_MAP, getStickerImage } from '../src/utils/
 import * as Art from '../src/components/art3d/Art3D';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
 import { Remote3DImage } from '../src/components/common/Remote3DImage';
+import { webStyle } from '../src/utils/webStyle';
+import type { TimerHandle } from '../src/utils/runtime';
 
 const SEEN_KEY = '@kidszone_seen_unlocked_stickers';
 const useNative = Platform.OS !== 'web';
@@ -92,7 +94,7 @@ const StickerCard: React.FC<StickerCardProps> = ({ sticker, name, unlocked, sele
       onPressOut={() => Animated.spring(press, { toValue: 0, friction: 4, tension: 160, useNativeDriver: useNative }).start()}
       accessibilityRole="button"
       accessibilityLabel={`${name}${unlocked ? '' : ' (locked)'}`}
-      style={[{ width, height: width + CLAY_DEPTH + 26 }, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+      style={[{ width, height: width + CLAY_DEPTH + 26 }, webStyle({ cursor: 'pointer' })]}
     >
       <Animated.View style={{ flex: 1, opacity: enter, transform: [{ scale }] }}>
         <View style={[styles.cardLip, { top: CLAY_DEPTH, backgroundColor: lipColor }]} />
@@ -160,7 +162,7 @@ export default function StickerAlbumScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
   const previewScale = useRef(new Animated.Value(1)).current;
-  const confettiTimerRef = useRef<any>(null);
+  const confettiTimerRef = useRef<TimerHandle | null>(null);
 
   useEffect(() => {
     return () => {

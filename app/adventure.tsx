@@ -23,7 +23,7 @@ import { BottomNav } from '../src/components/BottomNav';
 import { FANTASY_ADVENTURE_HEADER } from '../src/utils/imageHelper';
 import { ADVENTURE_LEVELS, AdventureLevel } from '../src/data/adventureLevels';
 import { apiService } from '../src/services/apiService';
-import { AgeGroup, AppLanguage } from '../src/types';
+import { AgeGroup, AppLanguage, type UserProgress } from '../src/types';
 import { is3DAvatar, normalizeAvatarEmoji, AVATAR_3D_BOY } from '../src/utils/avatarHelper';
 import { formatChildName } from '../src/utils/nameTransliterator';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
@@ -32,6 +32,9 @@ import * as Art from '../src/components/art3d/Art3D';
 import { Glyph } from '../src/components/fun/KidIcons';
 import { Remote3DImage } from '../src/components/common/Remote3DImage';
 import { characterAsset, resolveOfflineMediaSource } from '../src/utils/remoteAssets';
+
+/** Practice reward for replaying a level that is already cleared. */
+const REPLAY_REWARD = { coins: 5, stars: 1 };
 
 const WORLD_GATES_CONFIG: Record<
   number,
@@ -205,7 +208,7 @@ interface LevelNodeItemProps {
   ageGroup?: AgeGroup;
   language: AppLanguage;
   isMobile: boolean;
-  progress: any;
+  progress: UserProgress;
   onLevelPress: (lvl: AdventureLevel) => void;
 }
 
@@ -511,6 +514,7 @@ export default function AdventureMapScreen() {
   const { progress, updateProgress, language, speak, stopSpeaking, ageGroup, setAgeGroup, isAuthenticated, isGuest } = useApp();
 
   const currentLevelUnlocked = progress.adventureLevel || 1;
+  const [awardedReward, setAwardedReward] = useState<{ coins: number; stars: number } | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<AdventureLevel | null>(null);
   const [shuffledOptions, setShuffledOptions] = useState<AdventureLevel['question']['options']>([]);
   const [showQuizModal, setShowQuizModal] = useState(false);
@@ -788,9 +792,18 @@ export default function AdventureMapScreen() {
       soundEffects.playTadaaa();
       setQuizSuccess(true);
 
-      const bonusCoins = selectedLevel?.isLandmark ? (selectedLevel.level === 50 ? 500 : 100) : 20;
       const finishedLevel = selectedLevel?.level || 0;
       const nextLevel = Math.max(currentLevelUnlocked, finishedLevel + 1);
+      // Completed levels stay replayable for practice, but only the first clear pays the level
+      // reward; replaying level 50 used to pay 500 coins every time.
+      const isFirstClear = finishedLevel >= currentLevelUnlocked;
+      const bonusCoins = !isFirstClear
+        ? REPLAY_REWARD.coins
+        : selectedLevel?.isLandmark
+        ? (selectedLevel.level === 50 ? 500 : 100)
+        : 20;
+      const bonusStars = isFirstClear ? 3 : REPLAY_REWARD.stars;
+      setAwardedReward({ coins: bonusCoins, stars: bonusStars });
 
       // Gentle 180ms delay allows the sparkling chime to start cleanly without drowning out speech
       setTimeout(() => {
@@ -805,7 +818,7 @@ export default function AdventureMapScreen() {
 
       await updateProgress({
         adventureLevel: nextLevel,
-        stars: (progress.stars || 0) + 3,
+        stars: (progress.stars || 0) + bonusStars,
         coins: (progress.coins || 0) + bonusCoins,
       });
 
@@ -1476,7 +1489,7 @@ export default function AdventureMapScreen() {
                       {language === 'gu' ? 'ખૂબ સરસ! સાચો જવાબ!' : language === 'hi' ? 'बहुत बढ़िया! सही उत्तर!' : 'Awesome! Correct Answer!'}
                     </Text>
                     <CoinLabel align="center" size={20} textStyle={styles.feedbackSuccessCoins}>
-                      +{formatNumberDigits(selectedLevel.isLandmark ? (selectedLevel.level === 50 ? 500 : 100) : 20, language)} {language === 'gu' ? 'સિક્કા' : language === 'hi' ? 'सिक्के' : 'Coins'} & +{formatNumberDigits(3, language)} ⭐
+                      +{formatNumberDigits(awardedReward?.coins ?? 0, language)} {language === 'gu' ? 'સિક્કા' : language === 'hi' ? 'सिक्के' : 'Coins'} & +{formatNumberDigits(awardedReward?.stars ?? 0, language)} ⭐
                     </CoinLabel>
                     <TouchableOpacity
                       style={styles.nextLevelBtn}
@@ -1630,7 +1643,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   heroPosterOverlay: {
-    ...(StyleSheet.absoluteFill as any),
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(15, 23, 42, 0.38)',
     padding: 14,
     justifyContent: 'space-between',

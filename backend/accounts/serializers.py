@@ -1,5 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
@@ -49,6 +51,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         if User.objects.filter(username__iexact=cleaned).exists():
             raise serializers.ValidationError('This username is already taken. Please choose another.')
         return cleaned
+
+    def validate(self, attrs):
+        # Run Django's AUTH_PASSWORD_VALIDATORS (common / numeric / similarity / length).
+        candidate = User(username=attrs.get('username', ''), email=attrs.get('email', '') or '')
+        try:
+            validate_password(attrs.get('password', ''), user=candidate)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({'password': list(exc.messages)})
+        return attrs
 
     def validate_email(self, value):
         if value:

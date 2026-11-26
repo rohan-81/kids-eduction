@@ -31,6 +31,7 @@ import { formatNumberDigits } from '../src/utils/languageData';
 import { apiService } from '../src/services/apiService';
 import * as Art from '../src/components/art3d/Art3D';
 import { Remote3DImage } from '../src/components/common/Remote3DImage';
+import type { ImageAsset } from '../src/utils/remoteAssets';
 
 const ButterflyIcon = ({ size = 22 }: { size?: number }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -62,7 +63,7 @@ const MushroomIcon = ({ size = 22 }: { size?: number }) => (
   </Svg>
 );
 
-const remotePropIcon = (source: any, emoji: string) => (
+const remotePropIcon = (source: ImageAsset, emoji: string) => (
   <Remote3DImage source={source} style={{ width: 22, height: 22 }} fallback={<Text style={{ fontSize: 16 }}>{emoji}</Text>} />
 );
 
@@ -320,15 +321,15 @@ export default function TapToFillColoringScreen() {
     apiService.fetchColoringTemplates().then((fetched) => {
       if (!cancelled && fetched && fetched.length > 0) {
         const templateMap = new Map<string, TemplateDef>(TEMPLATES.map((t) => [t.id, t]));
-        fetched.forEach((f: any) => {
-          const id = f.slug || f.id;
+        fetched.forEach((f) => {
+          const id = f.id;
           const existing = templateMap.get(id);
           if (existing) {
             templateMap.set(id, {
               ...existing,
-              nameGu: f.name_gu || f.nameGu || existing.nameGu,
-              nameHi: f.name_hi || f.nameHi || existing.nameHi,
-              nameEn: f.name_en || f.nameEn || existing.nameEn,
+              nameGu: f.nameGu || existing.nameGu,
+              nameHi: f.nameHi || existing.nameHi,
+              nameEn: f.nameEn || existing.nameEn,
             });
           }
         });
@@ -367,9 +368,19 @@ export default function TapToFillColoringScreen() {
   const [showCelebration, setShowCelebration] = useState<boolean>(false);
   const [showRemainingToast, setShowRemainingToast] = useState<boolean>(false);
   const isFinishingRef = useRef<boolean>(false);
+  // Pending auto-finish after the last region is filled; cancelled by Clear, a template switch
+  // or leaving the screen (it used to award stars for a canvas the child had just cleared).
+  const autoFinishTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelAutoFinish = () => {
+    if (autoFinishTimerRef.current) {
+      clearTimeout(autoFinishTimerRef.current);
+      autoFinishTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     return () => {
+      cancelAutoFinish();
       audioService.stop();
       soundEffects.stopAnimalSound();
     };
@@ -408,7 +419,9 @@ export default function TapToFillColoringScreen() {
     // Strictly check if 100% of shapes are colored!
     const coloredCount = activeTemplate.parts.filter((p) => nextFills[p] && nextFills[p] !== '#FFFFFF').length;
     if (coloredCount === activeTemplate.parts.length && !showCelebration && !isFinishingRef.current) {
-      setTimeout(() => {
+      cancelAutoFinish();
+      autoFinishTimerRef.current = setTimeout(() => {
+        autoFinishTimerRef.current = null;
         handleFinish(nextFills);
       }, 500);
     }
@@ -416,6 +429,7 @@ export default function TapToFillColoringScreen() {
 
   const handleClear = () => {
     soundEffects.playBubblePop();
+    cancelAutoFinish();
     isFinishingRef.current = false;
     setFills({});
     setHistory([]);
@@ -432,6 +446,7 @@ export default function TapToFillColoringScreen() {
 
   const handleUndo = () => {
     if (history.length === 0) return;
+    cancelAutoFinish(); // undoing the last fill means the picture is no longer complete
     soundEffects.playBubblePop();
     const lastAction = history[history.length - 1];
     setHistory((prev) => prev.slice(0, prev.length - 1));
@@ -443,6 +458,7 @@ export default function TapToFillColoringScreen() {
 
   const handleSelectTemplate = (tpl: TemplateDef) => {
     soundEffects.playBubblePop();
+    cancelAutoFinish();
     isFinishingRef.current = false;
     setActiveTemplate(tpl);
     setFills({});
@@ -530,7 +546,8 @@ export default function TapToFillColoringScreen() {
   };
 
   const isWeb = Platform.OS === 'web';
-  const getPartEvents = (partId: string): any => {
+  /** Web: DOM click on the SVG path (RN-web does not dispatch onPress for SVG); native: onPress. */
+  const getPartEvents = (partId: string): { onPress?: () => void; onClick?: () => void; style?: { cursor: 'pointer' } } => {
     const handler = () => handlePartTap(partId);
     if (isWeb) {
       return {

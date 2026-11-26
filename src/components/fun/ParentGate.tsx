@@ -7,6 +7,7 @@ import {
   checkGateAnswer,
   GateChallenge,
   getGateLockRemainingMs,
+  loadGateLockout,
   registerGateFailure,
   registerGateSuccess,
 } from '../../utils/parentGate';
@@ -15,6 +16,7 @@ import { AppLanguage } from '../../types';
 import { Glyph } from './KidIcons';
 import { KidModal } from './KidModal';
 import { ClayButton } from '../clay/ClayButton';
+import { webStyle } from '../../utils/webStyle';
 
 const useNative = Platform.OS !== 'web';
 type Tri = { gu: string; hi: string; en: string };
@@ -39,7 +41,7 @@ const Key: React.FC<{ label?: string; glyph?: 'backspace' | 'check'; tone: KidTo
       onPressOut={() => Animated.spring(press, { toValue: 0, friction: 4, tension: 180, useNativeDriver: useNative }).start()}
       accessibilityRole="button"
       accessibilityLabel={a11y}
-      style={[styles.keyWrap, Platform.OS === 'web' && ({ cursor: 'pointer', userSelect: 'none' } as any)]}
+      style={[styles.keyWrap, webStyle({ cursor: 'pointer', userSelect: 'none' })]}
     >
       <View style={[styles.keyLip, { backgroundColor: spec.edge }]} />
       <Animated.View
@@ -75,6 +77,17 @@ export const ParentGate: React.FC<ParentGateProps> = ({ language, onSuccess, onC
   const [lockSeconds, setLockSeconds] = useState(() => Math.ceil(getGateLockRemainingMs() / 1000));
   const shake = useRef(new Animated.Value(0)).current;
   const isLocked = lockSeconds > 0;
+
+  // Restore a lockout persisted before the app was closed (audit P3).
+  useEffect(() => {
+    let alive = true;
+    loadGateLockout().then((ms) => {
+      if (alive && ms > 0) setLockSeconds(Math.ceil(ms / 1000));
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // Count down the 30s lockout (also resumes correctly if the gate is reopened mid-lockout)
   useEffect(() => {
@@ -221,7 +234,7 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 36,
     fontWeight: '700',
-    fontFamily: (Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined) as any,
+    fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
     color: '#FFFFFF',
     letterSpacing: 1,
   },
@@ -242,7 +255,7 @@ const styles = StyleSheet.create({
   displayText: {
     fontSize: 28,
     fontWeight: '700',
-    fontFamily: (Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined) as any,
+    fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
     color: kidPalette.ink,
     letterSpacing: 3,
   },
@@ -288,7 +301,7 @@ const styles = StyleSheet.create({
   keyText: {
     fontSize: 26,
     fontWeight: '700',
-    fontFamily: (Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined) as any,
+    fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
   },
   cancel: {
     alignSelf: 'center',

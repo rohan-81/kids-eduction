@@ -9,13 +9,14 @@ import { Header } from '../src/components/Header';
 import { BottomNav } from '../src/components/BottomNav';
 import { soundEffects } from '../src/services/soundEffects';
 import { HOME_CARD_ART, SUBJECT_CARD_ART, REWARD_ART } from '../src/utils/imageHelper';
-import { ClayBadgeToken, TokenTone } from '../src/components/SubjectBadgeIcons';
+import { ClayBadgeToken, TokenTone, type BadgeArt } from '../src/components/SubjectBadgeIcons';
 import * as Art from '../src/components/art3d/Art3D';
 import { Glyph } from '../src/components/fun';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import type { AppRoute } from '../src/utils/navigationHelper';
 
 /** 3D clay token art for every menu row: crisp vector art or real 3D renders (no emojis). */
-const MENU_ART: Record<string, { art: any; tone: TokenTone }> = {
+const MENU_ART: Record<string, { art: BadgeArt; tone: TokenTone }> = {
   games: { art: Art.GamepadArt, tone: 'peach' },
   classes: { art: Art.BackpackArt, tone: 'sky' },
   subjects: { art: SUBJECT_CARD_ART.english, tone: 'mint' },
@@ -42,7 +43,7 @@ interface MenuItem {
   descHi: string;
   bgColor: string;
   badge?: string;
-  route: string;
+  route: AppRoute;
 }
 
 const MENU_ITEMS: MenuItem[] = [
@@ -248,7 +249,7 @@ export default function MenuScreen() {
                 style={[styles.menuRow, shadows.soft]}
                 onPress={() => {
                   soundEffects.playBubblePop();
-                  router.push(item.route as any);
+                  router.push(item.route);
                 }}
                 activeOpacity={0.8}
               >

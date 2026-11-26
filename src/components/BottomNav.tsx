@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated, useWindowDimensions, Platform } from 'react-native';
-import { useSafeRouter } from '../utils/navigationHelper';
+import { useSafeRouter, type AppRoute } from '../utils/navigationHelper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect, Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { soundEffects } from '../services/soundEffects';
 import { audioService } from '../services/audioService';
 import { useApp } from '../context/AppContext';
 import { kidTones, kidPalette, kidSizes, clayShadow, KidTone } from '../theme/kidTheme';
+import { webStyle } from '../utils/webStyle';
 
 export type BottomNavTab =
   | 'home'
@@ -62,7 +63,7 @@ const TabButton: React.FC<TabButtonProps> = ({ label, tone, active, compact, ren
 
   return (
     <Pressable
-      style={[styles.tabBtn, Platform.OS === 'web' && ({ cursor: 'pointer' } as any)]}
+      style={[styles.tabBtn, webStyle({ cursor: 'pointer' })]}
       onPress={onPress}
       onPressIn={() => Animated.timing(squash, { toValue: 0.86, duration: 70, useNativeDriver: useNative }).start()}
       onPressOut={() => Animated.spring(squash, { toValue: 1, friction: 3, tension: 180, useNativeDriver: useNative }).start()}
@@ -222,7 +223,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'home' }) => {
         </Svg>
       ),
     },
-  ];
+  ] satisfies ReadonlyArray<{ href: AppRoute; [key: string]: unknown }>;
 
   return (
     <View
@@ -272,7 +273,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'home' }) => {
                 soundEffects.stopBgm();
                 soundEffects.playBubblePop();
                 if (activeTab === item.id) return;
-                router.replace(item.href as any);
+                router.replace(item.href);
               }}
             />
           );

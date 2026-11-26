@@ -23,6 +23,7 @@ import { ClayBadgeToken, TokenTone } from '../SubjectBadgeIcons';
 import * as Art from '../art3d/Art3D';
 import { Glyph, GlobeIcon } from '../fun';
 import { useApp } from '../../context/AppContext';
+import type { AppRoute } from '../../utils/navigationHelper';
 
 interface HomeHeaderProps {
   language: AppLanguage;
@@ -50,7 +51,7 @@ interface NotificationItem {
   actionGu: string;
   actionHi: string;
   actionEn: string;
-  route: string;
+  route: AppRoute;
   timeGu: string;
   timeHi: string;
   timeEn: string;
@@ -169,7 +170,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
       prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
     );
     setNotificationOpen(false);
-    router.push(item.route as any);
+    router.push(item.route);
   };
 
   const activeStandardLabel =

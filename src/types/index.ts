@@ -87,6 +87,11 @@ export interface LessonItem {
   subType?: 'animal' | 'bird' | 'vyanjan' | 'swar' | string;
   soundKey?: string;
   audioUrl?: string;
+  /** Backend-only extras (LessonSerializer.tracing_path / words / rhyme_text / lesson_data). */
+  tracingPath?: unknown;
+  words?: unknown;
+  rhyme?: string;
+  lessonData?: import('./api').BackendLessonData;
 }
 
 export type GameType =
@@ -120,11 +125,16 @@ export interface GameQuestion {
   displayVisual?: string;
   displayVisualColor?: string;
   displayImage?: string;
-  displayImageSource?: any;
+  displayImageSource?: import('react-native').ImageSourcePropType;
   countTarget?: number;
   options: GameOption[];
   correctOptionId: string;
   hint?: string;
+  /** Present on questions served by the backend. */
+  ageGroup?: string;
+  explanation?: string;
+  image?: string;
+  audio?: string;
 }
 
 export interface UserPreferences {
@@ -167,6 +177,11 @@ export interface UserProgress {
   completedLessons: string[];
   stars: number;
   coins: number;
+  /**
+   * Lifetime coins spent on this device's purchases. Sent on every sync so the server can deduct
+   * spending exactly once (a plain max(server, local) merge refunded every purchase).
+   */
+  coinsSpentTotal?: number;
   seeds: number;
   water: number;
   adventureLevel: number;
@@ -207,6 +222,8 @@ export interface ChildProfile {
   age_group: AgeGroup;
   created_at?: string;
   avatar?: string;
+  /** True while the profile only exists locally and is queued in the profile outbox. */
+  pendingSync?: boolean;
 }
 
 export interface AuthUser {

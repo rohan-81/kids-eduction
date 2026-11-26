@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { errorMessage } from '../utils/runtime';
 
 /**
  * Dynamically resolves the API base URL.
@@ -70,13 +71,15 @@ export function getApiBaseUrl(): string {
 
   // 3. On Mobile device / Expo Go:
   // Auto-detect the development PC's IP address from Expo bundler connection URI
+  // SDK < 46 classic manifests exposed `debuggerHost`; newer typings dropped the field.
+  const legacyManifest = (Constants as { manifest?: { debuggerHost?: string } | null }).manifest;
   const rawHostUri: string =
     Constants.expoConfig?.hostUri ||
-    (Constants as any).manifest2?.extra?.expoClient?.hostUri ||
-    (Constants as any).manifest2?.extra?.expoGo?.debuggerHost ||
-    (Constants as any).manifest?.debuggerHost ||
+    Constants.manifest2?.extra?.expoClient?.hostUri ||
+    Constants.manifest2?.extra?.expoGo?.debuggerHost ||
+    legacyManifest?.debuggerHost ||
     (Constants.linkingUri ? Constants.linkingUri.replace(/^exp:\/\//, '').split('/')[0] : null) ||
-    ((Constants as any).experienceUrl ? (Constants as any).experienceUrl.replace(/^exp:\/\//, '').split('/')[0] : null) ||
+    (Constants.experienceUrl ? Constants.experienceUrl.replace(/^exp:\/\//, '').split('/')[0] : null) ||
     '';
 
   if (rawHostUri) {
@@ -108,8 +111,8 @@ let lastConfigError: string | null = null;
 export function safeGetApiBaseUrl(): string {
   try {
     return getApiBaseUrl();
-  } catch (e: any) {
-    const message = String(e?.message || e);
+  } catch (e: unknown) {
+    const message = errorMessage(e, String(e));
     if (message !== lastConfigError) {
       lastConfigError = message;
       if (typeof console !== 'undefined' && console.error) {

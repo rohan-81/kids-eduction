@@ -22,6 +22,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { pointsToSmoothSvgPath } from '../src/utils/shapeTracingEngine';
 import * as Art from '../src/components/art3d/Art3D';
 import { Glyph, EraserIcon, UndoIcon, TrashIcon, PencilIcon, TargetIcon } from '../src/components/fun';
+import { webDomNode, type WebClientPoint } from '../src/utils/webStyle';
 
 /** Crisp 3D vector art for each tracing shape pill (the `emoji` field is kept as data only). */
 const SHAPE_ART: Record<string, React.FC<{ size?: number }>> = {
@@ -549,6 +550,21 @@ export default function CreativeDrawingScreen() {
   const [coveredCount, setCoveredCount] = useState<number>(0);
   const [eraserPreview, setEraserPreview] = useState<{ x: number; y: number } | null>(null);
   const undoHistoryRef = useRef<StrokePath[][]>([]);
+  // Stars already paid for the current canvas. "Done" -> "Keep Drawing" -> "Done" used to pay
+  // the full reward every time (and the blank canvas paid even with nothing drawn); now only an
+  // improvement on the best rating so far is credited. Reset whenever the canvas is reset.
+  const rewardedStarsRef = useRef(0);
+  const resetCanvasSession = () => {
+    rewardedStarsRef.current = 0;
+    undoHistoryRef.current = []; // undo must not bring back the previous shape's strokes
+  };
+  const creditStars = (stars: number) => {
+    const delta = Math.max(0, stars - rewardedStarsRef.current);
+    if (delta === 0) return;
+    rewardedStarsRef.current = stars;
+    updateProgress({ stars: (progress.stars || 0) + delta });
+    addCoins(delta * 2);
+  };
 
   const activeShape = TRACE_SHAPES.find((s) => s.id === selectedShape) || TRACE_SHAPES[0];
 
@@ -583,7 +599,7 @@ export default function CreativeDrawingScreen() {
   const ratingResultRef = useRef<RatingResult | null>(ratingResult);
   ratingResultRef.current = ratingResult;
 
-  const canvasRef = useRef<any>(null);
+  const canvasRef = useRef<React.ComponentRef<typeof View>>(null);
   const touchStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasLayoutRef = useRef<{ width: number; height: number }>({
     width: 320,
@@ -609,16 +625,16 @@ export default function CreativeDrawingScreen() {
 
     // 1. Web browser client bounds calculation
     if (Platform.OS === 'web' && canvasRef.current) {
-      const node = canvasRef.current as any;
+      const node = webDomNode(canvasRef.current);
       if (typeof node?.getBoundingClientRect === 'function') {
         const rect = node.getBoundingClientRect();
         const clientX =
-          (evt.nativeEvent as any).clientX ??
-          (evt.nativeEvent as any).touches?.[0]?.clientX ??
+          (evt.nativeEvent as typeof evt.nativeEvent & WebClientPoint).clientX ??
+          (evt.nativeEvent as typeof evt.nativeEvent & WebClientPoint).touches?.[0]?.clientX ??
           evt.nativeEvent.pageX;
         const clientY =
-          (evt.nativeEvent as any).clientY ??
-          (evt.nativeEvent as any).touches?.[0]?.clientY ??
+          (evt.nativeEvent as typeof evt.nativeEvent & WebClientPoint).clientY ??
+          (evt.nativeEvent as typeof evt.nativeEvent & WebClientPoint).touches?.[0]?.clientY ??
           evt.nativeEvent.pageY;
 
         if (clientX !== undefined && clientY !== undefined) {
@@ -798,6 +814,18 @@ export default function CreativeDrawingScreen() {
    */
   const handleEvaluateAndRate = () => {
     if (selectedShape === 'blank') {
+      if (strokes.length === 0) {
+        soundEffects.playBubblePop();
+        speak(
+          activeLang === 'gu'
+            ? 'પહેલા કંઈક સુંદર દોરો!'
+            : activeLang === 'hi'
+            ? 'पहले कुछ सुंदर बनाओ!'
+            : 'Draw something first!',
+          activeLang
+        );
+        return;
+      }
       soundEffects.playTadaaa();
       speak(
         activeLang === 'gu'
@@ -826,8 +854,7 @@ export default function CreativeDrawingScreen() {
             : 'Your drawing is complete!',
         earnedStars: 3,
       });
-      updateProgress({ stars: (progress.stars || 0) + 3 });
-      addCoins(6);
+      creditStars(3);
       return;
     }
 
@@ -960,10 +987,7 @@ export default function CreativeDrawingScreen() {
       earnedStars: stars,
     });
 
-    if (stars > 0) {
-      updateProgress({ stars: (progress.stars || 0) + stars });
-      addCoins(stars * 2);
-    }
+    if (stars > 0) creditStars(stars);
   };
 
   /**
@@ -1290,6 +1314,7 @@ export default function CreativeDrawingScreen() {
   const handleSelectShape = (shape: TraceShapeDef) => {
     soundEffects.playBubblePop();
     setSelectedShape(shape.id);
+    resetCanvasSession();
     setStrokes([]);
     currentPtsRef.current = [];
     currentDRef.current = '';
@@ -1323,6 +1348,7 @@ export default function CreativeDrawingScreen() {
 
   const handleClear = () => {
     soundEffects.playBubblePop();
+    resetCanvasSession();
     setStrokes([]);
     currentPtsRef.current = [];
     currentDRef.current = '';
@@ -1361,6 +1387,7 @@ export default function CreativeDrawingScreen() {
 
   const handleTraceAgain = () => {
     soundEffects.playBubblePop();
+    resetCanvasSession();
     setRatingResult(null);
     setStrokes([]);
     currentPtsRef.current = [];
@@ -1380,6 +1407,7 @@ export default function CreativeDrawingScreen() {
 
   const handleNextShape = () => {
     soundEffects.playBubblePop();
+    resetCanvasSession();
     setRatingResult(null);
     setStrokes([]);
     currentPtsRef.current = [];

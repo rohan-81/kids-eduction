@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthUser, RegisterPayload, LoginPayload, AuthResult } from '../types';
 
 import { safeGetApiBaseUrl } from './apiConfig';
+import { unrefTimer, isAbortError } from '../utils/runtime';
 const TOKEN_KEY = '@kidszone_auth_token';
 const USER_KEY = '@kidszone_auth_user';
 
@@ -100,8 +101,8 @@ class AuthService {
       }
 
       return { success: false, error: errorMsg };
-    } catch (err: any) {
-      if (err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (isAbortError(err)) {
         return { success: false, error: 'Connection timed out. Please check your server or internet.' };
       }
       return {
@@ -156,8 +157,8 @@ class AuthService {
       }
 
       return { success: false, error: errorMsg };
-    } catch (err: any) {
-      if (err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (isAbortError(err)) {
         return { success: false, error: 'Connection timed out. Please check your server or internet.' };
       }
       return {
@@ -185,9 +186,7 @@ class AuthService {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 1000);
-        if (typeof timeoutId === 'object' && typeof (timeoutId as any).unref === 'function') {
-          (timeoutId as any).unref();
-        }
+        unrefTimer(timeoutId);
         fetch(`${safeGetApiBaseUrl()}/auth/logout/`, {
           method: 'POST',
           headers: {

@@ -22,6 +22,7 @@ import { formatNumberDigits } from '../src/utils/languageData';
 import { GoldCoinIcon, GoldCoinStack, CoinLabel } from '../src/components/common/GoldCoinIcon';
 import * as Art from '../src/components/art3d/Art3D';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import type { AppRoute } from '../src/utils/navigationHelper';
 
 /** Mission / reward emoji ids -> 3D vector art (no raw emoji on screen). */
 const MISSION_ART: Record<string, React.FC<{ size?: number }>> = {
@@ -45,7 +46,7 @@ interface MissionItem {
   target: number;
   current: number;
   rewardCoins: number;
-  route: string;
+  route: AppRoute;
 }
 
 export default function MissionsScreen() {
@@ -276,7 +277,7 @@ export default function MissionsScreen() {
                 ) : (
                   <TouchableOpacity
                     style={styles.goBtn}
-                    onPress={() => router.push(m.route as any)}
+                    onPress={() => router.push(m.route)}
                     activeOpacity={0.8}
                   >
                     <Text style={styles.goBtnText}>

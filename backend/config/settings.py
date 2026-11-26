@@ -5,6 +5,9 @@ Production-ready configuration with PostgreSQL, Token Auth, CORS, and Cloud Sync
 
 from pathlib import Path
 import os
+import sys
+
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,12 +19,19 @@ except ImportError:
     pass
 
 # Security
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-kidszone-dev-key-change-in-production-2026'
-)
-
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ['true', '1', 'yes']
+TESTING = len(sys.argv) > 1 and sys.argv[1] == 'test'
+
+# Never fall back to a key that is visible in the repository outside local DEBUG / test runs:
+# anyone holding it can forge sessions and password-reset tokens (audit P0-4).
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '').strip()
+if not SECRET_KEY:
+    if DEBUG or TESTING:
+        SECRET_KEY = 'django-insecure-local-dev-only-key'
+    else:
+        raise ImproperlyConfigured(
+            'DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is off (production).'
+        )
 
 allowed_hosts_env = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
 if allowed_hosts_env:
@@ -118,7 +128,9 @@ if database_url:
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 6}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -159,7 +171,24 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 25,
+    # Rate limiting (audit P1-8). 'login'/'register' are applied via ScopedRateThrottle on the
+    # auth views; 'tts' protects the Google TTS proxy from being used as an open relay.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        # The test suite shares one in-memory cache, so it runs with generous limits;
+        # accounts.tests exercises the real login limit explicitly.
+        'anon': os.environ.get('DJANGO_THROTTLE_ANON', '300/min'),
+        'user': os.environ.get('DJANGO_THROTTLE_USER', '600/min'),
+        'login': os.environ.get('DJANGO_THROTTLE_LOGIN', '10/min'),
+        'register': os.environ.get('DJANGO_THROTTLE_REGISTER', '5/min'),
+        'tts': os.environ.get('DJANGO_THROTTLE_TTS', '60/min'),
+    },
 }
+if TESTING:
+    REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {k: '100000/min' for k in REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']}
 
 # CORS Configuration
 cors_origins_env = os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS', '')

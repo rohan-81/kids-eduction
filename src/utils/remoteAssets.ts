@@ -17,6 +17,9 @@ import { safeGetApiBaseUrl } from '../services/apiConfig';
 export const CHARACTER_ASSET_VERSION = 'v1';
 export const APP_ASSET_VERSION = 'v1';
 
+/** A bundled `require()`d image (module id) or a remote, disk-cached `{ uri }` render. */
+export type ImageAsset = number | RemoteImageSource;
+
 export interface RemoteImageSource {
   /** Versioned URL. expo-image caches by URL, which is also what Image.prefetch() fills. */
   uri: string;

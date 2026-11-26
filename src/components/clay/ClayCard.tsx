@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Animated, Pressable, View, Platform, StyleProp, ViewStyle } from 'react-native';
 import { claySurface, KidTone } from '../../theme/kidTheme';
 import { soundEffects } from '../../services/soundEffects';
+import { webStyle } from '../../utils/webStyle';
 
 export interface ClayCardProps {
   children: React.ReactNode;
@@ -50,7 +51,7 @@ export const ClayCard: React.FC<ClayCardProps> = ({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={Platform.OS === 'web' ? ({ cursor: 'pointer' } as any) : undefined}
+      style={webStyle({ cursor: 'pointer' })}
     >
       <Animated.View style={[surface, { transform: [{ scale }] }]}>{children}</Animated.View>
     </Pressable>

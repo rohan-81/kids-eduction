@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
 
   // GAME OVER MODAL
   modalOverlay: {
-    ...(StyleSheet.absoluteFill as any),
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.85)',
     justifyContent: 'center',
     alignItems: 'center',

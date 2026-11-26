@@ -81,7 +81,7 @@ export const calculateUpdatedStreak = (
   return { streakDays: 1, lastStreakDate: today, changed: true };
 };
 
-let saveQueue: Promise<any> = Promise.resolve();
+let saveQueue: Promise<unknown> = Promise.resolve();
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   language: 'gu',
@@ -173,6 +173,27 @@ export const storageService = {
     }
   },
 
+  /**
+   * Moves a profile's saved progress to a new id (used when an offline-created profile receives
+   * its server id). Never overwrites progress already stored under the new id.
+   */
+  async renameProfileProgress(oldId: string | number, newId: string | number): Promise<void> {
+    try {
+      const oldKey = getProgressKeyForUser(currentUserId, oldId);
+      const newKey = getProgressKeyForUser(currentUserId, newId);
+      if (oldKey !== newKey) {
+        const [oldVal, newVal] = await Promise.all([AsyncStorage.getItem(oldKey), AsyncStorage.getItem(newKey)]);
+        if (oldVal && !newVal) await AsyncStorage.setItem(newKey, oldVal);
+        if (oldVal) await AsyncStorage.removeItem(oldKey);
+      }
+      if (currentProfileId !== null && String(currentProfileId) === String(oldId)) {
+        currentProfileId = newId;
+      }
+    } catch (e) {
+      console.warn('Failed to move profile progress:', e);
+    }
+  },
+
   getProgressKey(): string {
     return getProgressKeyForUser(currentUserId, currentProfileId);
   },
@@ -199,6 +220,7 @@ export const storageService = {
         completedLessons: [],
         stars: 0,
         coins: 50,
+        coinsSpentTotal: 0,
         seeds: 5,
         water: 10,
         adventureLevel: 1,
@@ -288,52 +310,67 @@ export const storageService = {
   },
 
   async saveProgress(progress: Partial<UserProgress>): Promise<UserProgress> {
+    return (await this.mutateProgress(() => ({ patch: progress, result: null }))).progress;
+  },
+
+  /**
+   * Atomic read-modify-write of the active profile's progress. `fn` runs inside the save queue
+   * with the latest stored progress, so concurrent updates (rapid taps, coins from a game and a
+   * mission at once) cannot read the same value and overwrite each other. Return `patch: null`
+   * to write nothing.
+   */
+  async mutateProgress<R>(
+    fn: (current: UserProgress) => { patch: Partial<UserProgress> | null; result: R }
+  ): Promise<{ progress: UserProgress; result: R }> {
     const task = saveQueue.then(async () => {
+      const current = await this.getProgress();
+      const { patch, result } = fn(current);
+      if (!patch) return { progress: current, result };
+      const updated = { ...current, ...patch, lastActive: new Date().toISOString() };
       try {
-        const key = this.getProgressKey();
-        const current = await this.getProgress();
-        const updated = {
-          ...current,
-          ...progress,
-          lastActive: new Date().toISOString(),
-        };
-        await AsyncStorage.setItem(key, JSON.stringify(updated));
-        return updated;
+        await AsyncStorage.setItem(this.getProgressKey(), JSON.stringify(updated));
       } catch (e) {
         console.warn('Failed to save progress to storage:', e);
-        return { ...DEFAULT_PROGRESS, ...progress };
       }
+      return { progress: updated, result };
     });
     saveQueue = task.catch(() => {});
     return task;
   },
 
+  async addCoins(amount: number): Promise<UserProgress> {
+    return (await this.mutateProgress((current) => ({
+      patch: { coins: (current.coins || 0) + amount },
+      result: null,
+    }))).progress;
+  },
+
   async markLessonCompleted(lessonId: string): Promise<{ isFirstTime: boolean; newStars: number }> {
     try {
-      const current = await this.getProgress();
-      if (!current.completedLessons.includes(lessonId)) {
+      const { result } = await this.mutateProgress((current) => {
+        if (current.completedLessons.includes(lessonId)) {
+          return { patch: null, result: { isFirstTime: false, newStars: current.stars } };
+        }
         const completedLessons = [...current.completedLessons, lessonId];
         const stars = current.stars + 1;
-        const coins = (current.coins || 0) + 10;
-        const seeds = (current.seeds || 0) + 1;
-        const water = (current.water || 0) + 2;
         const earnedBadges = [...current.earnedBadges];
-
-        // Unlock badges
-        if (completedLessons.length >= 1 && !earnedBadges.includes('badge-first-step')) {
-          earnedBadges.push('badge-first-step');
-        }
-        if (completedLessons.length >= 5 && !earnedBadges.includes('badge-scholar')) {
-          earnedBadges.push('badge-scholar');
-        }
-        if (completedLessons.length >= 10 && !earnedBadges.includes('badge-master')) {
-          earnedBadges.push('badge-master');
-        }
-
-        await this.saveProgress({ completedLessons, stars, coins, seeds, water, earnedBadges });
-        return { isFirstTime: true, newStars: stars };
-      }
-      return { isFirstTime: false, newStars: current.stars };
+        if (completedLessons.length >= 1 && !earnedBadges.includes('badge-first-step')) earnedBadges.push('badge-first-step');
+        if (completedLessons.length >= 5 && !earnedBadges.includes('badge-scholar')) earnedBadges.push('badge-scholar');
+        if (completedLessons.length >= 10 && !earnedBadges.includes('badge-master')) earnedBadges.push('badge-master');
+        return {
+          patch: {
+            completedLessons,
+            stars,
+            coins: (current.coins || 0) + 10,
+            seeds: (current.seeds || 0) + 1,
+            water: (current.water || 0) + 2,
+            earnedBadges,
+          },
+          // A double tap on "complete" now rewards (and celebrates) exactly once.
+          result: { isFirstTime: true, newStars: stars },
+        };
+      });
+      return result;
     } catch (e) {
       console.warn('Error marking lesson complete:', e);
       return { isFirstTime: false, newStars: 0 };
@@ -342,20 +379,22 @@ export const storageService = {
 
   async recordGameScore(gameType: string, score: number): Promise<void> {
     try {
-      const current = await this.getProgress();
-      const existing = current.gameStats[gameType] || { highScore: 0, timesPlayed: 0 };
-      const updatedStats = {
-        ...current.gameStats,
-        [gameType]: {
-          highScore: Math.max(existing.highScore, score),
-          timesPlayed: existing.timesPlayed + 1,
-        },
-      };
-      // Award star & coins if score > 0
-      const stars = current.stars + (score > 0 ? 1 : 0);
-      const coins = (current.coins || 0) + 5;
-      const water = (current.water || 0) + 1;
-      await this.saveProgress({ gameStats: updatedStats, stars, coins, water });
+      await this.mutateProgress((current) => {
+        const existing = current.gameStats[gameType] || { highScore: 0, timesPlayed: 0 };
+        return {
+          patch: {
+            gameStats: {
+              ...current.gameStats,
+              [gameType]: { highScore: Math.max(existing.highScore, score), timesPlayed: existing.timesPlayed + 1 },
+            },
+            // Award star & coins if score > 0
+            stars: current.stars + (score > 0 ? 1 : 0),
+            coins: (current.coins || 0) + 5,
+            water: (current.water || 0) + 1,
+          },
+          result: null,
+        };
+      });
     } catch (e) {
       console.warn('Error recording game score:', e);
     }
@@ -363,11 +402,10 @@ export const storageService = {
 
   async recordWrongAnswer(wrong: { id: string; prompt: string; correctOption: string; hint?: string; language?: AppLanguage }): Promise<void> {
     try {
-      const current = await this.getProgress();
-      const existing = current.wrongAnswers || [];
-      if (!existing.some((w) => w.id === wrong.id)) {
-        await this.saveProgress({ wrongAnswers: [...existing, wrong] });
-      }
+      await this.mutateProgress((current) => {
+        const existing = current.wrongAnswers || [];
+        return { patch: existing.some((w) => w.id === wrong.id) ? null : { wrongAnswers: [...existing, wrong] }, result: null };
+      });
     } catch (e) {
       console.warn('Error recording wrong answer:', e);
     }
@@ -375,9 +413,11 @@ export const storageService = {
 
   async clearWrongAnswer(id: string): Promise<void> {
     try {
-      const current = await this.getProgress();
-      const filtered = (current.wrongAnswers || []).filter((w) => w.id !== id);
-      await this.saveProgress({ wrongAnswers: filtered });
+      await this.mutateProgress((current) => {
+        const existing = current.wrongAnswers || [];
+        const filtered = existing.filter((w) => w.id !== id);
+        return { patch: filtered.length === existing.length ? null : { wrongAnswers: filtered }, result: null };
+      });
     } catch (e) {
       console.warn('Error clearing wrong answer:', e);
     }
@@ -385,12 +425,21 @@ export const storageService = {
 
   async spendCoins(amount: number): Promise<boolean> {
     try {
-      const current = await this.getProgress();
-      if ((current.coins || 0) >= amount) {
-        await this.saveProgress({ coins: (current.coins || 0) - amount });
-        return true;
-      }
-      return false;
+      if (!Number.isFinite(amount) || amount < 0) return false;
+      if (amount === 0) return true; // free items
+      // Check and deduct in one queued step: two rapid purchases can no longer both pass the check.
+      const { result } = await this.mutateProgress((current) =>
+        (current.coins || 0) >= amount
+          ? {
+              patch: {
+                coins: (current.coins || 0) - amount,
+                coinsSpentTotal: (current.coinsSpentTotal || 0) + amount,
+              },
+              result: true,
+            }
+          : { patch: null, result: false }
+      );
+      return result;
     } catch (e) {
       console.warn('Error spending coins:', e);
       return false;

@@ -16,6 +16,7 @@ import { formatMathExpression } from '../../utils/languageData';
 import { DailyMysteryModal } from './DailyMysteryModal';
 import { Glyph } from '../fun';
 import { StarArt } from '../art3d/Art3D';
+import { webStyle } from '../../utils/webStyle';
 
 interface DailyMysteryBoxProps {
   language: AppLanguage;
@@ -92,10 +93,10 @@ export const DailyMysteryBox: React.FC<DailyMysteryBoxProps> = ({ language }) =>
       <TouchableOpacity
         style={[
           styles.cardContainer,
-          Platform.OS === 'web' && ({
+          webStyle({
             boxShadow: '0 8px 24px rgba(128, 98, 245, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02)',
             cursor: 'pointer',
-          } as any),
+          }),
         ]}
         onPress={() => {
           soundEffects.playBubblePop();
@@ -216,9 +217,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EDE9FE',
     marginRight: 14,
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 2px 5px rgba(0, 0, 0, 0.03)',
-    } as any)),
+    })),
   },
   textColumn: {
     flex: 1,
@@ -264,9 +265,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    ...(Platform.OS === 'web' && ({
+    ...(webStyle({
       boxShadow: '0 4px 12px rgba(128, 98, 245, 0.35)',
-    } as any)),
+    })),
   },
   openPillText: {
     color: '#FFFFFF',
