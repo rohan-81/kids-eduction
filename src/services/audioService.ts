@@ -964,7 +964,13 @@ export const audioService = {
     }
     try {
       if (Platform.OS !== 'web') {
-        const voices = await Speech.getAvailableVoicesAsync();
+        const timeoutPromise = new Promise<Speech.Voice[]>((resolve) =>
+          setTimeout(() => resolve(cachedNativeVoices), 550)
+        );
+        const voices = await Promise.race([
+          Speech.getAvailableVoicesAsync().catch(() => []),
+          timeoutPromise,
+        ]);
         if (voices && voices.length > 0) {
           cachedNativeVoices = voices;
           isNativeVoicesLoaded = true;

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { Platform, AppState, AppStateStatus, BackHandler, ToastAndroid, View, StyleSheet } from 'react-native';
 import { Stack, usePathname } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -33,8 +33,8 @@ function GlobalAudioRouteWatcher() {
   const pathname = usePathname();
   const prevPathRef = useRef(pathname);
 
-  // 1. Immediately silence audio on route transition
-  useEffect(() => {
+  // 1. Immediately silence previous screen audio BEFORE newly mounted child useEffects trigger speech
+  useLayoutEffect(() => {
     if (prevPathRef.current !== pathname) {
       prevPathRef.current = pathname;
       audioService.stop();
@@ -122,8 +122,9 @@ function GlobalAudioRouteWatcher() {
 }
 
 export default function RootLayout() {
-  // Initialize permanent offline media pack, wake Render backend, and prefetch if needed
+  // Initialize permanent offline media pack, pre-warm native TTS voices, wake Render backend, and prefetch if needed
   useEffect(() => {
+    audioService.loadNativeVoices().catch(() => {});
     contentPackService.init().then((installed) => {
       apiService.warmUpBackend();
       if (!installed) {

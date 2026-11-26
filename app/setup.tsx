@@ -24,22 +24,54 @@ export default function SetupScreen() {
   const { language, setLanguage, isAuthenticated } = useApp();
 
   const [status, setStatus] = useState<'checking' | 'offline' | 'downloading' | 'error'>('checking');
-  const [progress, setProgress] = useState<DownloadPackProgress>({ percent: 0, stage: 'downloading' });
+  const [progress, setProgress] = useState<DownloadPackProgress>({ percent: 1, stage: 'downloading' });
+  const [displayPercent, setDisplayPercent] = useState<number>(1);
+  const targetPercentRef = useRef<number>(1);
+  const stageRef = useRef<DownloadPackProgress['stage']>('downloading');
   const [errorMsg, setErrorMsg] = useState<string>('');
-  const progressAnim = useRef(new Animated.Value(0)).current;
+  const progressAnim = useRef(new Animated.Value(1)).current;
   const startedRef = useRef(false);
+
+  // Smooth continuous visual ticker so percentage & bar never stall or jump from 2% -> 72%
+  useEffect(() => {
+    if (status !== 'downloading') return;
+    let tickCount = 0;
+    const timer = setInterval(() => {
+      tickCount += 1;
+      setDisplayPercent((prev) => {
+        const target = targetPercentRef.current;
+        if (prev < target) {
+          const step = target - prev > 12 ? 2 : 1;
+          return Math.min(target, prev + step);
+        }
+        // Gentle creep while waiting on cold start or stream chunks
+        if (stageRef.current === 'downloading' && prev < 62 && tickCount % 8 === 0) {
+          return prev + 1;
+        }
+        if (stageRef.current === 'syncing' && prev < 99 && tickCount % 5 === 0) {
+          return prev + 1;
+        }
+        return prev;
+      });
+    }, 55);
+    return () => clearInterval(timer);
+  }, [status]);
 
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: progress.percent,
-      duration: 250,
+      toValue: displayPercent,
+      duration: 100,
       useNativeDriver: false,
     }).start();
-  }, [progress.percent, progressAnim]);
+  }, [displayPercent, progressAnim]);
 
   const startSetup = async () => {
     setStatus('checking');
     setErrorMsg('');
+    targetPercentRef.current = 1;
+    stageRef.current = 'downloading';
+    setDisplayPercent(1);
+    setProgress({ percent: 1, stage: 'downloading' });
 
     const online = await checkInternetAvailable(4500);
     if (!online) {
@@ -49,10 +81,14 @@ export default function SetupScreen() {
 
     setStatus('downloading');
     const result = await contentPackService.downloadAndInstallPack((p) => {
+      targetPercentRef.current = Math.max(targetPercentRef.current, p.percent);
+      stageRef.current = p.stage;
       setProgress(p);
     });
 
     if (result.success) {
+      targetPercentRef.current = 100;
+      setDisplayPercent(100);
       soundEffects.playTadaaa();
       setTimeout(() => {
         router.replace(isAuthenticated ? '/home' : '/login');
@@ -166,7 +202,7 @@ export default function SetupScreen() {
               <View style={styles.progressTrack}>
                 <Animated.View style={[styles.progressFill, { width: barWidth }]} />
               </View>
-              <Text style={styles.percentText}>{progress.percent}%</Text>
+              <Text style={styles.percentText}>{displayPercent}%</Text>
               <Text style={styles.hintText}>
                 {language === 'gu'
                   ? 'આ એક જ વાર ડાઉનલોડ થશે — પછી ઇન્ટરનેટ વગર પણ બધું ચાલશે!'

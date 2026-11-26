@@ -43,6 +43,8 @@ export interface DownloadPackProgress {
   stage: 'downloading' | 'extracting' | 'syncing' | 'done';
 }
 
+const FALLBACK_PACK_BYTES = 16_110_000;
+
 export const contentPackService = {
   async init(): Promise<boolean> {
     if (initialized) return getLocalPackBaseUri() !== null;
@@ -104,16 +106,22 @@ export const contentPackService = {
       await FileSystemLegacy.makeDirectoryAsync(packDir, { intermediates: true }).catch(() => {});
 
       // 1. Download single ZIP archive with progress tracking
+      let lastReportedPct = 2;
       if (typeof FileSystemLegacy.createDownloadResumable === 'function') {
         const task = FileSystemLegacy.createDownloadResumable(
           zipUrl,
           tempZipUri,
           {},
           (dp: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => {
-            if (dp.totalBytesExpectedToWrite > 0) {
-              const rawRatio = dp.totalBytesWritten / dp.totalBytesExpectedToWrite;
-              const pct = Math.min(70, Math.max(5, Math.round(rawRatio * 70)));
-              onProgress?.({ percent: pct, stage: 'downloading' });
+            const expected =
+              dp.totalBytesExpectedToWrite > 0 ? dp.totalBytesExpectedToWrite : FALLBACK_PACK_BYTES;
+            if (expected > 0 && dp.totalBytesWritten > 0) {
+              const rawRatio = Math.min(1, dp.totalBytesWritten / expected);
+              const pct = Math.min(70, Math.max(2, Math.round(2 + rawRatio * 68)));
+              if (pct > lastReportedPct) {
+                lastReportedPct = pct;
+                onProgress?.({ percent: pct, stage: 'downloading' });
+              }
             }
           }
         );
@@ -129,7 +137,8 @@ export const contentPackService = {
       }
 
       // 2. Read ZIP bytes and extract cleanly into permanent app document storage
-      onProgress?.({ percent: 72, stage: 'extracting' });
+      onProgress?.({ percent: 71, stage: 'extracting' });
+      await new Promise((r) => setTimeout(r, 0));
       let zipBytes: Uint8Array;
       if (FileClass) {
         zipBytes = await new FileClass(tempZipUri).bytes();
@@ -147,6 +156,7 @@ export const contentPackService = {
       const entries = unzipSync(zipBytes);
       const fileKeys = Object.keys(entries).filter((k) => !k.endsWith('/'));
       const createdDirs = new Set<string>();
+      let lastExtractPct = 72;
 
       for (let i = 0; i < fileKeys.length; i++) {
         const relPath = fileKeys[i];
@@ -179,9 +189,12 @@ export const contentPackService = {
           });
         }
 
-        if (i % 25 === 0 || i === fileKeys.length - 1) {
-          const pct = 72 + Math.round(((i + 1) / fileKeys.length) * 20);
+        const pct = 72 + Math.round(((i + 1) / fileKeys.length) * 20);
+        if (pct > lastExtractPct || i === fileKeys.length - 1) {
+          lastExtractPct = pct;
           onProgress?.({ percent: Math.min(92, pct), stage: 'extracting' });
+          // Yield periodically so RN progress bar paints smoothly
+          await new Promise((r) => setTimeout(r, 0));
         }
       }
 
@@ -189,17 +202,27 @@ export const contentPackService = {
       await FileSystemLegacy.deleteAsync(tempZipUri, { idempotent: true }).catch(() => {});
 
       // 3. Sync API JSON catalogs into AsyncStorage so lessons, stories, rhymes, badges work offline
-      onProgress?.({ percent: 94, stage: 'syncing' });
-      await Promise.allSettled([
-        apiService.fetchCategories(),
-        apiService.fetchLessons(),
-        apiService.fetchStories(),
-        apiService.fetchBadges(),
-        apiService.fetchRhymes(),
-        apiService.fetchStickers(),
-        apiService.fetchAdventureLevels(),
-        apiService.fetchColoringTemplates(),
-      ]);
+      onProgress?.({ percent: 93, stage: 'syncing' });
+      const syncTasks = [
+        () => apiService.fetchCategories(),
+        () => apiService.fetchLessons(),
+        () => apiService.fetchStories(),
+        () => apiService.fetchBadges(),
+        () => apiService.fetchRhymes(),
+        () => apiService.fetchStickers(),
+        () => apiService.fetchAdventureLevels(),
+        () => apiService.fetchColoringTemplates(),
+      ];
+      let doneSync = 0;
+      await Promise.allSettled(
+        syncTasks.map((fn) =>
+          fn().finally(() => {
+            doneSync += 1;
+            const syncPct = 93 + Math.round((doneSync / syncTasks.length) * 6);
+            onProgress?.({ percent: Math.min(99, syncPct), stage: 'syncing' });
+          })
+        )
+      );
 
       setLocalPackBaseUri(packDir);
       await Promise.all([
