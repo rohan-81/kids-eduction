@@ -238,28 +238,7 @@ export const LessonActionSection: React.FC<LessonActionSectionProps> = ({
         )}
       </View>
 
-      {/* 2. PHONICS SOUND PILL (Letters / Alphabet / Varnamala) */}
-      {phonicsPrompt && (
-        <View style={styles.phonicsContainer}>
-          <TouchableOpacity
-            style={[styles.phonicsBtn, shadows.soft]}
-            onPress={onPlayPhonics}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={phonicsLabel}
-          >
-            <MegaphoneArt size={26} />
-            <View style={styles.phonemeBadge}>
-              <Text style={styles.phonemeText}>
-                {phonicsPrompt.phoneme.replace(/[\/\[\]]/g, '')}
-              </Text>
-            </View>
-            <Text style={styles.phonicsText}>{phonicsLabel}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* 3. SPEECH FEEDBACK BUBBLE */}
+      {/* 2. SPEECH FEEDBACK BUBBLE */}
       {speechFeedback && speechFeedback.status !== 'idle' && speechFeedback.msg ? (
         <View style={[styles.speechBubble, shadows.soft]}>
           <Text style={styles.speechBubbleText}>{speechFeedback.msg}</Text>
@@ -317,15 +296,15 @@ const styles = StyleSheet.create({
   actionContainer: {
     width: '100%',
     alignItems: 'center',
-    marginTop: spacing.sm,
+    marginTop: 4,
   },
   audioRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 32,
-    marginVertical: spacing.sm,
+    gap: 24,
+    marginVertical: 4,
     width: '100%',
   },
   audioRowNarrow: {
@@ -334,11 +313,11 @@ const styles = StyleSheet.create({
   audioItemCol: {
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 72,
+    minWidth: 68,
   },
   circleBtn: {
-    width: 64,
-    height: 64,
+    width: 56,
+    height: 56,
     borderRadius: radii.full,
     borderWidth: 2,
     alignItems: 'center',
@@ -395,12 +374,12 @@ const styles = StyleSheet.create({
   },
   phonemeText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#7E22CE',
   },
   phonicsText: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#6B21A8',
     flexShrink: 1,
   },
@@ -417,12 +396,12 @@ const styles = StyleSheet.create({
   },
   speechBubbleText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#15803D',
     textAlign: 'center',
   },
   traceContainer: {
-    marginTop: spacing.md,
+    marginTop: 8,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
@@ -430,7 +409,7 @@ const styles = StyleSheet.create({
   traceBtn: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: radii.full,
     borderWidth: 1.5,
     borderColor: '#0284C7',
@@ -441,7 +420,7 @@ const styles = StyleSheet.create({
   },
   traceBtnText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0284C7',
     textAlign: 'center',
   },
@@ -450,12 +429,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: spacing.lg,
+    marginTop: 10,
     gap: 12,
   },
   navRowNarrow: {
     gap: 8,
-    marginTop: spacing.md,
+    marginTop: 8,
   },
   navArrowBtn: {
     flex: 1,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -263,7 +263,15 @@ export default function DuelGameScreen() {
     }, [])
   );
 
-  const question = DUEL_QUESTIONS[currentRound] || DUEL_QUESTIONS[0];
+  const baseQuestion = DUEL_QUESTIONS[currentRound] || DUEL_QUESTIONS[0];
+  const question = useMemo(() => {
+    const opts = [...baseQuestion.options];
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    return { ...baseQuestion, options: opts };
+  }, [baseQuestion]);
 
   const promptText =
     language === 'gu'
@@ -706,7 +714,7 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     color: '#475569',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 12.5,
   },
   roundPill: {
@@ -719,7 +727,7 @@ const styles = StyleSheet.create({
   },
   roundPillText: {
     color: '#4F46E5',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 13,
   },
   modeToggleBtn: {
@@ -737,7 +745,7 @@ const styles = StyleSheet.create({
   modeToggleText: {
     color: '#475569',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   modeToggleActiveText: {
     color: '#4F46E5',
@@ -827,17 +835,17 @@ const styles = StyleSheet.create({
   },
   playerName: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   playerScoreText: {
     fontSize: 12.5,
     color: '#D97706',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   feedbackEmoji: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#15803D',
   },
 
@@ -892,7 +900,7 @@ const styles = StyleSheet.create({
   },
   optionBtnText: {
     color: '#1E293B',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 14.5,
     textAlign: 'center',
   },
@@ -931,14 +939,14 @@ const styles = StyleSheet.create({
   },
   arenaTitleBadge: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#D97706',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   centerPrompt: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     textAlign: 'center',
     lineHeight: 22,
@@ -976,7 +984,7 @@ const styles = StyleSheet.create({
   },
   winnerTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     textAlign: 'center',
     marginTop: 4,
@@ -1005,18 +1013,18 @@ const styles = StyleSheet.create({
   },
   scoreVal: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   scoreSub: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     marginTop: 2,
   },
   vsText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#94A3B8',
   },
   modalBtnRow: {
@@ -1037,7 +1045,7 @@ const styles = StyleSheet.create({
   rematchBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   homeBtn: {
     flex: 1,
@@ -1051,7 +1059,7 @@ const styles = StyleSheet.create({
   homeBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   guestDuelNote: {
     marginTop: 14,
@@ -1080,6 +1088,6 @@ const styles = StyleSheet.create({
   guestDuelSignUpBtnText: {
     color: '#FFFFFF',
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

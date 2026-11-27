@@ -1439,7 +1439,7 @@ const styles = StyleSheet.create({
   },
   heroBadgePillText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#854D0E',
   },
   worldPill: {
@@ -1450,12 +1450,12 @@ const styles = StyleSheet.create({
   },
   worldPillText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   heroTitle: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowOffset: { width: 1, height: 1 },
@@ -1492,7 +1492,7 @@ const styles = StyleSheet.create({
   heroPlayNextBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   heroCertBtn: {
     backgroundColor: '#3B82F6',
@@ -1508,7 +1508,7 @@ const styles = StyleSheet.create({
   heroCertBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
   },
 
   /* 2. 3D CANDY HUD */
@@ -1546,13 +1546,13 @@ const styles = StyleSheet.create({
   },
   hudLabel: {
     fontSize: 10.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     textTransform: 'uppercase',
   },
   hudVal: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   hudMaxVal: {
     fontSize: 12,
@@ -1573,12 +1573,12 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
   progressPercentText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#2563EB',
   },
   progressBarTrack: {
@@ -1684,7 +1684,7 @@ const styles = StyleSheet.create({
   },
   classGateBadgeText: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#2563EB',
   },
   worldGateTopBar: {
@@ -1701,7 +1701,7 @@ const styles = StyleSheet.create({
   },
   worldPillTagText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   rewardPillTag: {
     backgroundColor: '#FEF3C7',
@@ -1713,7 +1713,7 @@ const styles = StyleSheet.create({
   },
   rewardPillTagText: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   worldGateMainRow: {
@@ -1738,7 +1738,7 @@ const styles = StyleSheet.create({
   },
   worldGateTitle: {
     fontSize: 15.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
   },
   worldGateSub: {
@@ -1759,12 +1759,12 @@ const styles = StyleSheet.create({
   },
   worldGateLevelRange: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   worldGateStatusBadge: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     paddingHorizontal: 8,
     paddingVertical: 2.5,
     borderRadius: radii.full,
@@ -1865,7 +1865,7 @@ const styles = StyleSheet.create({
   },
   stepDotCheck: {
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     marginTop: -1,
   },
@@ -1900,7 +1900,7 @@ const styles = StyleSheet.create({
   playerSpeechText: {
     color: '#FFFFFF',
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
   playerSpeechTail: {
@@ -1965,7 +1965,7 @@ const styles = StyleSheet.create({
   },
   playerNameText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#78350F',
   },
 
@@ -1988,7 +1988,7 @@ const styles = StyleSheet.create({
   },
   landmarkBadgeText: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#92400E',
   },
 
@@ -2056,7 +2056,7 @@ const styles = StyleSheet.create({
   },
   nodeNum: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     marginTop: 1,
   },
@@ -2082,7 +2082,7 @@ const styles = StyleSheet.create({
   },
   nodeTitleText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
     textAlign: 'center',
   },
@@ -2118,7 +2118,7 @@ const styles = StyleSheet.create({
   modalRibbonText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   modalPromptCard: {
     flexDirection: 'row',
@@ -2135,7 +2135,7 @@ const styles = StyleSheet.create({
   modalPromptText: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     lineHeight: 22,
     paddingRight: 8,
@@ -2192,12 +2192,12 @@ const styles = StyleSheet.create({
   },
   optLetterText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#2563EB',
   },
   optBtnText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     flex: 1,
   },
@@ -2211,12 +2211,12 @@ const styles = StyleSheet.create({
   },
   feedbackSuccessTitle: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#15803D',
   },
   feedbackSuccessCoins: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#166534',
     marginTop: 2,
   },
@@ -2230,7 +2230,7 @@ const styles = StyleSheet.create({
   },
   feedbackErrorTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#DC2626',
   },
   nextLevelBtn: {
@@ -2247,7 +2247,7 @@ const styles = StyleSheet.create({
   },
   nextLevelBtnText: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
@@ -2258,7 +2258,7 @@ const styles = StyleSheet.create({
   },
   closeBtnText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
 
@@ -2286,7 +2286,7 @@ const styles = StyleSheet.create({
   },
   upgradeModalTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     marginBottom: 8,
@@ -2311,7 +2311,7 @@ const styles = StyleSheet.create({
   },
   upgradeBenefitsTitle: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0F172A',
     marginBottom: 2,
     textTransform: 'uppercase',
@@ -2343,7 +2343,7 @@ const styles = StyleSheet.create({
   },
   upgradeConfirmBtnText: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   upgradeLaterBtn: {
@@ -2385,7 +2385,7 @@ const styles = StyleSheet.create({
   },
   authLockTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
     textAlign: 'center',
     marginBottom: 8,
@@ -2409,7 +2409,7 @@ const styles = StyleSheet.create({
   authLockLoginBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   authLockRegisterBtn: {
     backgroundColor: '#F5EEFE',
@@ -2424,6 +2424,6 @@ const styles = StyleSheet.create({
   authLockRegisterBtnText: {
     color: '#7C3AED',
     fontSize: 14.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

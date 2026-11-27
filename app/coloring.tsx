@@ -1767,7 +1767,7 @@ const styles = StyleSheet.create({
   },
   clearHeaderBtnText: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 
@@ -1813,7 +1813,7 @@ const styles = StyleSheet.create({
   },
   templatePillText: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
   templatePillTextActive: {
@@ -1842,7 +1842,7 @@ const styles = StyleSheet.create({
   },
   progressStatusText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   progressStatusTextPending: {
     color: '#1E40AF',
@@ -1865,7 +1865,7 @@ const styles = StyleSheet.create({
   },
   warningBannerText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B91C1C',
     textAlign: 'center',
   },
@@ -1901,7 +1901,7 @@ const styles = StyleSheet.create({
   },
   activeColorLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   activeColorDot: {
@@ -1918,7 +1918,7 @@ const styles = StyleSheet.create({
   },
   eraserActiveText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#DC2626',
   },
 
@@ -1951,7 +1951,7 @@ const styles = StyleSheet.create({
   },
   actionSquareText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
   actionSquareTextActive: {
@@ -2046,7 +2046,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
   },
@@ -2068,7 +2068,7 @@ const styles = StyleSheet.create({
   },
   modalStarText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#A16207',
   },
   modalBtnRow: {
@@ -2092,7 +2092,7 @@ const styles = StyleSheet.create({
   },
   modalRetryText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   modalHomeBtn: {
@@ -2109,7 +2109,7 @@ const styles = StyleSheet.create({
   },
   modalHomeText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 4,
     letterSpacing: -0.2,
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
   },
   metricVal: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 2,
     letterSpacing: -0.3,
@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 3,
     letterSpacing: -0.2,
@@ -962,7 +962,7 @@ const styles = StyleSheet.create({
   },
   targetGoalPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#92400E',
   },
   todayPill: {
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   },
   todayPillText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0284C7',
   },
   chartWrapper: {
@@ -1087,13 +1087,13 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
     marginBottom: 3,
   },
   dayLabelToday: {
     color: '#0284C7',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   timePill: {
     paddingHorizontal: 5,
@@ -1116,11 +1116,11 @@ const styles = StyleSheet.create({
   },
   dayMinsToday: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   dayMinsGoal: {
     color: '#92400E',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   dayMinsFuture: {
     color: '#94A3B8',
@@ -1162,12 +1162,12 @@ const styles = StyleSheet.create({
   },
   weeklyFooterValue: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   weeklyGoalBadge: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0284C7',
   },
   subjectList: {
@@ -1209,7 +1209,7 @@ const styles = StyleSheet.create({
   },
   subjectTitleText: {
     fontSize: 16.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 2,
     letterSpacing: -0.2,
@@ -1238,7 +1238,7 @@ const styles = StyleSheet.create({
   progressCount: {
     marginLeft: 10,
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   circularActionButton: {
@@ -1285,7 +1285,7 @@ const styles = StyleSheet.create({
   },
   parentGateTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 3,
   },
@@ -1296,7 +1296,7 @@ const styles = StyleSheet.create({
   parentGateArrow: {
     fontSize: 16,
     color: '#2563EB',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   authLockContainer: {
     flex: 1,
@@ -1330,7 +1330,7 @@ const styles = StyleSheet.create({
   },
   authLockTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     marginBottom: 8,
@@ -1359,7 +1359,7 @@ const styles = StyleSheet.create({
   authLockLoginBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   authLockRegisterBtn: {
     backgroundColor: '#F5EEFE',
@@ -1379,7 +1379,7 @@ const styles = StyleSheet.create({
   authLockRegisterBtnText: {
     color: '#7C3AED',
     fontSize: 14.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   guestProgressBanner: {
     flexDirection: 'row',
@@ -1397,7 +1397,7 @@ const styles = StyleSheet.create({
   },
   guestProgressTitle: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
     marginBottom: 2,
   },
@@ -1421,6 +1421,6 @@ const styles = StyleSheet.create({
   guestProgressBtnText: {
     color: '#FFFFFF',
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

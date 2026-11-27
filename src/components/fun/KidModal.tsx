@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 25,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     textAlign: 'center',
     lineHeight: 32,

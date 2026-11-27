@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
   },
   classChipLabel: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0F172A',
   },
   difficultyBadge: {
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
   },
   difficultyBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   completionStatusText: {
@@ -770,7 +770,7 @@ const styles = StyleSheet.create({
   },
   headerBannerTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E3A8A',
   },
   headerBannerSub: {
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
   },
   printBtnText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   sheetSelectorRow: {
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
   },
   sheetTabTextActive: {
     color: '#8B5CF6',
-    fontWeight: '900',
+    fontWeight: '700',
   },
 
   /* White A4 Paper Simulation */
@@ -847,13 +847,13 @@ const styles = StyleSheet.create({
   },
   paperBrand: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     textTransform: 'uppercase',
   },
   paperTitle: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     marginTop: 2,
     flexWrap: 'wrap',
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
   },
   letterSolid: {
     fontSize: 28,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   traceLines: {
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   },
   ghadiyaModeBtnTextActive: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   worksheetInstructionBox: {
     backgroundColor: '#F8FAFC',
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
   },
   worksheetInstructionText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
 
@@ -1021,7 +1021,7 @@ const styles = StyleSheet.create({
   },
   ghadiyaColHeader: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     borderBottomWidth: 1.5,
     borderBottomColor: '#0F172A',
@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
   },
   ghadiyaFormulaText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     textAlign: 'right',
   },
@@ -1060,7 +1060,7 @@ const styles = StyleSheet.create({
   },
   ghadiyaAnswerFilledText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   ghadiyaLineText: {
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
   },
   coloringLabel: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   coloringDottedChar: {
@@ -1121,7 +1121,7 @@ const styles = StyleSheet.create({
   },
   footerStar: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#D97706',
   },
   footerSignature: {

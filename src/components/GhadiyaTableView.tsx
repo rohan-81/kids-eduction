@@ -312,7 +312,7 @@ export const GhadiyaTableView: React.FC<GhadiyaTableViewProps> = ({
                       <Text
                         style={[
                           styles.indexCircleText,
-                          isActive && { color: '#FFFFFF', fontWeight: 'bold' },
+                          isActive && { color: '#FFFFFF', fontWeight: '600' },
                         ]}
                       >
                         {formatNumberDigits(rNum, language)}
@@ -357,7 +357,7 @@ export const GhadiyaTableView: React.FC<GhadiyaTableViewProps> = ({
                       <Text
                         style={[
                           styles.reciteText,
-                          isActive && { color: '#B45309', fontWeight: '800' },
+                          isActive && { color: '#B45309', fontWeight: '600' },
                         ]}
                         numberOfLines={1}
                       >
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   },
   tabsHeading: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     marginBottom: spacing.xs,
     paddingHorizontal: 2,
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
   },
   tabPillTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   tipCard: {
     flexDirection: 'row',
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   tableNumBadgeText: {
     color: '#FFFFFF',
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   tableTitleRow: {
     flexDirection: 'row',
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
   },
   tableTitle: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   tableSubBadge: {
     paddingHorizontal: 4,
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   },
   colHeadText: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     textTransform: 'uppercase',
   },
@@ -776,12 +776,12 @@ const styles = StyleSheet.create({
   },
   equationNumText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: colors.textPrimary,
   },
   equationOperator: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#94A3B8',
     marginHorizontal: 1,
   },
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
   },
   equationResultText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   reciteBubble: {
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
   },
   tableFooterText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
 });

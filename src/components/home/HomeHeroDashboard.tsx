@@ -218,12 +218,12 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     marginTop: 2,
   },
   statLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkMuted,
   },
   resumeCard: {
@@ -240,12 +240,12 @@ const styles = StyleSheet.create({
   },
   resumeKicker: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidTones.sky.text,
   },
   resumeTitle: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     marginTop: 2,
     flexShrink: 1,

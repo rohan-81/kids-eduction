@@ -539,12 +539,12 @@ const styles = StyleSheet.create({
   },
   superStarPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   heroTitleText: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
     marginBottom: 2,
   },
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   statLabelText: {
     fontSize: 12,
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
   },
   unlockedCountPill: {
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
   },
   unlockedCountText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#4338CA',
   },
 
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
   },
   badgeNameText: {
     fontSize: 15.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
   },
   badgeDescText: {
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   },
   medalPillLabel: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   coinsBonusPill: {
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
   },
   coinsBonusText: {
     fontSize: 10.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#059669',
   },
 
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
   },
   lockPillLabel: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   pctLabel: {
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
   },
   featureCardTitle: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   featureCardSub: {
     fontSize: 12,
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   },
   actionBtnLabel: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 13,
   },
 

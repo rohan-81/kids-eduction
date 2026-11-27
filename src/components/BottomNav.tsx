@@ -92,7 +92,7 @@ const TabButton: React.FC<TabButtonProps> = ({ label, tone, active, compact, ren
           <Animated.View style={{ transform: [{ scale: iconScale }] }}>{renderIcon(active, spec.edge)}</Animated.View>
         </View>
         <Text
-          style={[styles.tabLabel, compact && styles.tabLabelCompact, active && { color: spec.text, fontWeight: '900' }]}
+          style={[styles.tabLabel, compact && styles.tabLabelCompact, active && { color: spec.text, fontWeight: '700' }]}
           numberOfLines={1}
         >
           {label}
@@ -230,21 +230,22 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'home' }) => {
       pointerEvents="box-none"
       style={[styles.navOuterWrapper, { paddingBottom: Math.max(insets.bottom, Platform.OS === 'ios' ? 14 : 10) }]}
     >
-      {/* Seamless ultra-smooth fade shield prevents scrolled cards from leaking without any harsh cut lines */}
+      {/* Seamless fade shield softly fades scrolling content above the bar and hides anything below it */}
       <View
         pointerEvents="none"
         style={[
           styles.navShield,
-          { height: 110 + Math.max(insets.bottom, Platform.OS === 'ios' ? 14 : 10) },
+          { height: 118 + Math.max(insets.bottom, Platform.OS === 'ios' ? 14 : 10) },
         ]}
       >
         <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
           <Defs>
             <SvgLinearGradient id="bottomNavFadeGrad" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
-              <Stop offset="65%" stopColor="#FFFBEB" stopOpacity="0.08" />
-              <Stop offset="88%" stopColor="#FEF9C3" stopOpacity="0.22" />
-              <Stop offset="100%" stopColor="#FDE68A" stopOpacity="0.32" />
+              <Stop offset="0%" stopColor="#FFFBEB" stopOpacity="0" />
+              <Stop offset="32%" stopColor="#FEF9C3" stopOpacity="0.55" />
+              <Stop offset="58%" stopColor="#FEF3C7" stopOpacity="0.92" />
+              <Stop offset="76%" stopColor="#FEF3C7" stopOpacity="1" />
+              <Stop offset="100%" stopColor="#FDE68A" stopOpacity="1" />
             </SvgLinearGradient>
           </Defs>
           <Rect x="0" y="0" width="100%" height="100%" fill="url(#bottomNavFadeGrad)" />
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: MUTED,
     marginTop: 1,
   },

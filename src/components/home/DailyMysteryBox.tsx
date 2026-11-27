@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E1B4B',
     letterSpacing: -0.2,
   },
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   },
   claimedBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#15803D',
   },
   subtitleText: {
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   openPillText: {
     color: '#FFFFFF',
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   claimedCircle: {
     width: 42,

@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   },
   missingQuestionCard: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   detailContainer: {
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   questionTagText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1D4ED8',
   },
   questionPromptText: {
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
   arrowIcon: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#94A3B8',
   },
   targetSlotDetail: {
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   },
   targetSlotText: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   targetSlotTextCorrect: {
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   feedbackText: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     textAlign: 'center',
   },
   feedbackTextCorrect: {
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   optionsHeader: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkMuted,
     marginBottom: 10,
   },

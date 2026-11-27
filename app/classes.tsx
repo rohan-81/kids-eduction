@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   },
   headerHeading: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E1B4B',
     letterSpacing: -0.4,
     textAlign: 'center',
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
     letterSpacing: -0.2,
   },
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   },
   cardTitleSelected: {
     color: '#6D28D9',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   cardTitleUnselected: {
     color: '#1E293B',

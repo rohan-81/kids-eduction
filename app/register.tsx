@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#242065',
     textAlign: 'center',
     letterSpacing: -0.5,
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
   },
   childSectionTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#581C87',
     marginBottom: 2,
   },
@@ -917,7 +917,7 @@ const styles = StyleSheet.create({
   },
   switchAuthLink: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#6D28D9',
     textDecorationLine: 'underline',
   },
@@ -961,7 +961,7 @@ const styles = StyleSheet.create({
   },
   logoutBannerBtnText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 

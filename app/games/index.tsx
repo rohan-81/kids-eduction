@@ -679,7 +679,7 @@ export default function GamesHubScreen() {
                 key={game.id}
                 accessibilityLabel={title}
                 style={{
-                  width: cols === 1 ? '100%' : cols === 2 ? '48.5%' : '31.8%',
+                  width: cols === 1 ? '100%' : cols === 2 ? '48%' : '31.8%',
                   card: [
                     styles.gameCard,
                     {
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
   },
   classBadgeText: {
     fontSize: 14.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   classLevelPill: {
     paddingHorizontal: 9,
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
   },
   classLevelPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   classBadgeSubtitle: {
@@ -926,7 +926,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 19,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 4,
   },
@@ -983,7 +983,7 @@ const styles = StyleSheet.create({
   },
   mistakeTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#166534',
   },
   mistakeCountBadge: {
@@ -994,7 +994,7 @@ const styles = StyleSheet.create({
   },
   mistakeCountBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   mistakeSubtitle: {
@@ -1046,7 +1046,7 @@ const styles = StyleSheet.create({
   },
   clearMistakeText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#15803D',
   },
   grid: {
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 17.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 4,
     lineHeight: 22,
@@ -1157,7 +1157,7 @@ const styles = StyleSheet.create({
   },
   playBtnText: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   guestNoticeCard: {
@@ -1199,7 +1199,7 @@ const styles = StyleSheet.create({
   },
   guestNoticeBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#92400E',
     letterSpacing: 0.2,
   },
@@ -1218,6 +1218,6 @@ const styles = StyleSheet.create({
   guestNoticeActionText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     marginBottom: 4,
   },

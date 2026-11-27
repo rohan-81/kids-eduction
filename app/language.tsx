@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   nativeTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   englishTitle: {
@@ -173,6 +173,6 @@ const styles = StyleSheet.create({
   radioCheck: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

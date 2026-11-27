@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
   },
   tabBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   tabBtnTextActive: {
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   sectionSub: {
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
   },
   seasonTitleGu: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   seasonMonths: {
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
   },
   dressNameText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     flexShrink: 1,
   },
@@ -794,7 +794,7 @@ const styles = StyleSheet.create({
   },
   listenPillText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#4F46E5',
     includeFontPadding: false,
   },
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
   },
   dayGu: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   dayEn: {
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   },
   monthNumText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#6C5CE7',
   },
   monthTextCol: {
@@ -860,7 +860,7 @@ const styles = StyleSheet.create({
   },
   monthGuText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   monthEnText: {
@@ -895,7 +895,7 @@ const styles = StyleSheet.create({
   },
   habitTitle: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   habitTitleDone: {
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
   },
   checkMarkText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
   },
   controlLabel: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   labelRow: {
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0F172A',
   },
   resetNameBtn: {
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
   },
   resetNameText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#8B5CF6',
   },
   chipsScroll: {
@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
   },
   catChipTextActive: {
     color: '#1D4ED8',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   printActionBtn: {
     backgroundColor: '#10B981',
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   printActionBtnText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 15,
   },
 
@@ -772,7 +772,7 @@ const styles = StyleSheet.create({
   },
   academyMainTitle: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     letterSpacing: 2,
     textTransform: 'uppercase',
@@ -800,7 +800,7 @@ const styles = StyleSheet.create({
   dividerDiamond: {
     fontSize: 11,
     color: '#D97706',
-    fontWeight: '900',
+    fontWeight: '700',
   },
 
   /* Main Heading Block */
@@ -810,7 +810,7 @@ const styles = StyleSheet.create({
   },
   classicHonorific: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#94A3B8',
     letterSpacing: 2.5,
     textTransform: 'uppercase',
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
   },
   certificateBigHeading: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F', // Classic deep burnt gold
     textAlign: 'center',
     letterSpacing: 1.5,
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
   },
   studentFullName: {
     fontSize: 30,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     textAlign: 'center',
     letterSpacing: 0.5,
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   },
   achievementSubjectText: {
     fontSize: 14.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#92400E',
     textAlign: 'center',
   },
@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
   },
   authDateValue: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 4,
   },
@@ -1030,7 +1030,7 @@ const styles = StyleSheet.create({
   rosetteStars: {
     fontSize: 7.5,
     color: '#B45309',
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 1,
   },
   rosetteIcon: {
@@ -1038,13 +1038,13 @@ const styles = StyleSheet.create({
   },
   rosetteTextTop: {
     fontSize: 6.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
     letterSpacing: 0.5,
   },
   rosetteTextBottom: {
     fontSize: 6.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#92400E',
     letterSpacing: 0.5,
   },

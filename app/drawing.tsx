@@ -2383,7 +2383,7 @@ const styles = StyleSheet.create({
   },
   controlSectionLabel: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
   startHintBadge: {
@@ -2396,7 +2396,7 @@ const styles = StyleSheet.create({
   },
   startHintText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#059669',
   },
 
@@ -2430,12 +2430,12 @@ const styles = StyleSheet.create({
   },
   shapePillText: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   shapePillTextActive: {
     color: '#1D4ED8',
-    fontWeight: '900',
+    fontWeight: '700',
   },
 
   /* Tools & Colors Row */
@@ -2494,7 +2494,7 @@ const styles = StyleSheet.create({
   },
   toolBtnText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   doneBtn: {
@@ -2503,7 +2503,7 @@ const styles = StyleSheet.create({
   },
   doneBtnText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 
@@ -2537,7 +2537,7 @@ const styles = StyleSheet.create({
   },
   canvasGuidePromptText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   liveProgressBadge: {
@@ -2564,7 +2564,7 @@ const styles = StyleSheet.create({
   },
   liveProgressText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
 
@@ -2618,7 +2618,7 @@ const styles = StyleSheet.create({
   },
   ratingTitle: {
     fontSize: 19,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     textAlign: 'center',
     marginBottom: 4,
@@ -2673,7 +2673,7 @@ const styles = StyleSheet.create({
   },
   ratingScorePill: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#059669',
     backgroundColor: '#ECFDF5',
     paddingHorizontal: 12,
@@ -2684,7 +2684,7 @@ const styles = StyleSheet.create({
   },
   ratingRewardText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#D97706',
   },
 
@@ -2713,7 +2713,7 @@ const styles = StyleSheet.create({
   },
   modalPrimaryBtnText: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   modalSecondaryBtn: {
@@ -2723,7 +2723,7 @@ const styles = StyleSheet.create({
   },
   modalSecondaryBtnText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1D4ED8',
   },
   modalTextBtn: {

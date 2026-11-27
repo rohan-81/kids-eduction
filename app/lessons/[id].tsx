@@ -1009,7 +1009,7 @@ const styles = StyleSheet.create({
   },
   celebratePctText: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0077B6',
   },
   celebrateCoins: {
@@ -1025,7 +1025,7 @@ const styles = StyleSheet.create({
   },
   celebrateCoinsText: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#4A2500',
   },
   celebrateActions: {
@@ -1052,7 +1052,7 @@ const styles = StyleSheet.create({
   },
   lookupText: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     textAlign: 'center',
   },
@@ -1069,7 +1069,7 @@ const styles = StyleSheet.create({
   lookupButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   safeArea: {
     flex: 1,
@@ -1085,15 +1085,15 @@ const styles = StyleSheet.create({
   },
   containerNarrow: {
     paddingHorizontal: 10,
-    paddingVertical: 12,
-    paddingBottom: spacing.xxxl + 16,
+    paddingVertical: 6,
+    paddingBottom: 14,
   },
   progressBarBg: {
     width: '100%',
-    height: 8,
+    height: 7,
     backgroundColor: '#E2E8F0',
     borderRadius: radii.full,
-    marginBottom: spacing.md,
+    marginBottom: 8,
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -1120,21 +1120,21 @@ const styles = StyleSheet.create({
   cardNarrow: {
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 16,
-    minHeight: 240,
+    paddingVertical: 10,
+    minHeight: 0,
   },
   cardHeaderTag: {
     backgroundColor: '#FEF3C7',
-    paddingHorizontal: spacing.md + 4,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.md + 2,
+    paddingVertical: 4,
     borderRadius: radii.full,
-    marginBottom: spacing.md,
+    marginBottom: 6,
     borderWidth: 1.5,
     borderColor: '#FDE68A',
   },
   cardHeaderTagText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   imageTouchable: {
@@ -1156,13 +1156,13 @@ const styles = StyleSheet.create({
     marginVertical: spacing.md,
   },
   imageContainer: {
-    width: 280,
-    height: 230,
+    width: 260,
+    height: 175,
     maxWidth: '100%',
     borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: '#F8FAFC',
-    marginVertical: spacing.md,
+    marginVertical: 6,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     alignSelf: 'center',
@@ -1181,31 +1181,31 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   hugeSymbol: {
-    fontSize: 140,
-    fontWeight: '900',
+    fontSize: 106,
+    fontWeight: '700',
     color: '#1E293B',
-    marginVertical: spacing.md,
+    marginVertical: 4,
     textAlign: 'center',
-    lineHeight: 175,
-    paddingVertical: 8,
+    lineHeight: 128,
+    paddingVertical: 2,
     includeFontPadding: true,
   },
   wordBox: {
     ...claySurface('sky', 1),
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    marginBottom: spacing.lg,
+    paddingVertical: 10,
+    marginBottom: 10,
     width: '90%',
   },
   wordBoxNarrow: {
     width: '100%',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   exampleWord: {
     fontSize: 32,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     lineHeight: 46,
@@ -1238,7 +1238,7 @@ const styles = StyleSheet.create({
   },
   sentenceLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#2563EB',
     marginBottom: 2,
   },
@@ -1266,13 +1266,13 @@ const styles = StyleSheet.create({
     width: '90%',
     ...claySurface('sun', 1),
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: spacing.lg,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
   funFactCardNarrow: {
     width: '100%',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   funFactHeaderRow: {
     flexDirection: 'row',
@@ -1284,7 +1284,7 @@ const styles = StyleSheet.create({
   },
   funFactTitle: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
     flexShrink: 1,
   },
@@ -1298,7 +1298,7 @@ const styles = StyleSheet.create({
   },
   funFactBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#92400E',
   },
   funFactBody: {
@@ -1342,12 +1342,12 @@ const styles = StyleSheet.create({
   },
   audioClayText: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   audioClaySub: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.9)',
   },
   detailFrame: {
@@ -1398,7 +1398,7 @@ const styles = StyleSheet.create({
   },
   animalSoundText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   onomatopoeiaBadge: {
@@ -1411,7 +1411,7 @@ const styles = StyleSheet.create({
   },
   onomatopoeiaText: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#854D0E',
   },
   phonicsSoundBtn: {
@@ -1438,12 +1438,12 @@ const styles = StyleSheet.create({
   },
   phonicsPhonemeText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#7E22CE',
   },
   phonicsSoundText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#6B21A8',
   },
   speechPracticeBtn: {
@@ -1466,7 +1466,7 @@ const styles = StyleSheet.create({
   },
   speechPracticeText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0284C7',
   },
   speechPracticeTextActive: {
@@ -1495,7 +1495,7 @@ const styles = StyleSheet.create({
   },
   speechBubbleText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     textAlign: 'center',
   },
   speechBubbleTextListening: {
@@ -1570,7 +1570,7 @@ const styles = StyleSheet.create({
   },
   modalScorePct: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
   modalCoinBadge: {
@@ -1583,12 +1583,12 @@ const styles = StyleSheet.create({
   },
   modalCoinBadgeText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#854D0E',
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     marginBottom: spacing.xs,
@@ -1620,7 +1620,7 @@ const styles = StyleSheet.create({
   },
   modalRetryBtnText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   modalNextBtn: {
@@ -1635,7 +1635,7 @@ const styles = StyleSheet.create({
   },
   modalNextBtnText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

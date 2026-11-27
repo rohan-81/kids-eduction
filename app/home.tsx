@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     letterSpacing: -0.2,
   },

@@ -489,18 +489,18 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
   },
   heroCount: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.lavender.text,
     marginTop: 2,
   },
   heroCountSub: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkMuted,
   },
   heroTip: {
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   },
   showcaseTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
   },
   showcaseStatus: {
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     marginLeft: 6,
     textAlign: 'center',
   },
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
   },
   newBadgeText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   cardEmoji: {
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   },
   cardName: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.inkSoft,
     textAlign: 'center',
   },

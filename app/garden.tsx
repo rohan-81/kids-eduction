@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   statusVal: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   statusLabel: {
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
   },
   plantName: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     marginTop: 4,
   },
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
   waterBtnText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   seedSection: {
     backgroundColor: '#FFFFFF',
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
   },
   seedSectionTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   seedSectionDesc: {
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
   },
   seedCost: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#27AE60',
     marginTop: 2,
   },
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   },
   harvestTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#27AE60',
     textAlign: 'center',
     marginBottom: spacing.xs,
@@ -641,6 +641,6 @@ const styles = StyleSheet.create({
   harvestCloseText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

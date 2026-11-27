@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   meterLabel: {
     textAlign: 'center',
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
   },
   meterStar: {
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   burstText: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sun.onFill,
   },
 });

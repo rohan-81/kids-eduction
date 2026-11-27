@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   text: {
-    fontWeight: '900',
+    fontWeight: '700',
     textAlign: 'center',
     letterSpacing: 0.2,
   },

@@ -1960,7 +1960,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     lineHeight: 28,
     letterSpacing: -0.3,
@@ -2020,7 +2020,7 @@ const styles = StyleSheet.create({
   },
   percentText: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   filterRow: {
@@ -2054,7 +2054,7 @@ const styles = StyleSheet.create({
   },
   filterChipTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   grid: {
     flexDirection: 'row',
@@ -2131,7 +2131,7 @@ const styles = StyleSheet.create({
   },
   symbolText3D: {
     fontSize: 44,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     lineHeight: 56,
@@ -2161,7 +2161,7 @@ const styles = StyleSheet.create({
   },
   cardPrimaryTitle: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     lineHeight: 19,
     paddingVertical: 1,
@@ -2229,7 +2229,7 @@ const styles = StyleSheet.create({
   },
   mathOpBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   emptyContainer: {
     alignItems: 'center',

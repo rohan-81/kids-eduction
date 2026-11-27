@@ -688,7 +688,7 @@ export default function ParentsScreen() {
                 <View style={styles.authLoggedInRow}>
                   <Text style={styles.authWelcomeText}>
                     {language === 'gu' ? 'સ્વાગત છે, ' : language === 'hi' ? 'स्वागत है, ' : 'Welcome, '}
-                    <Text style={{ fontWeight: '800', color: '#1E293B' }}>
+                    <Text style={{ fontWeight: '600', color: '#1E293B' }}>
                       {currentUser?.first_name || currentUser?.username}
                     </Text>
                   </Text>
@@ -865,7 +865,8 @@ export default function ParentsScreen() {
                     accessibilityLabel="Switch Class"
                   >
                     <Text style={styles.heroAgeSub}>
-                      {getAgeGroupLabel(activeProfile.age_group)} <Text style={{ fontSize: 12, color: '#C7D2FE', fontWeight: '800' }}>{language === 'gu' ? 'બદલો' : language === 'hi' ? 'बदलें' : 'Change'}</Text>
+                      {getAgeGroupLabel(activeProfile.age_group)} •{' '}
+                      {language === 'gu' ? 'બદલો' : language === 'hi' ? 'बदलें' : 'Change'}
                     </Text>
                   </TouchableOpacity>
 
@@ -1809,7 +1810,7 @@ const styles = StyleSheet.create({
   },
   funLabel: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     marginTop: 4,
   },
@@ -1821,7 +1822,7 @@ const styles = StyleSheet.create({
     backgroundColor: kidTones.sky.tint,
     paddingHorizontal: 16,
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.ink,
     ...webStyle({ outlineStyle: 'none' }),
   },
@@ -1920,7 +1921,7 @@ const styles = StyleSheet.create({
   },
   gatePillBadgeText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidTones.lavender.text,
   },
   gateCard: {
@@ -1952,7 +1953,7 @@ const styles = StyleSheet.create({
   },
   gateTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 2,
     textAlign: 'center',
@@ -1979,7 +1980,7 @@ const styles = StyleSheet.create({
   },
   mathText: {
     fontSize: 32,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
     letterSpacing: 2,
   },
@@ -1996,7 +1997,7 @@ const styles = StyleSheet.create({
   },
   gateDisplayText: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   errorText: {
@@ -2030,7 +2031,7 @@ const styles = StyleSheet.create({
   },
   keypadBtnText: {
     fontSize: 19,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   keypadOkBtn: {
@@ -2046,7 +2047,7 @@ const styles = StyleSheet.create({
   },
   keypadActionText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   gateCancelBtn: {
     paddingVertical: 10,
@@ -2055,7 +2056,7 @@ const styles = StyleSheet.create({
   },
   gateCancelText: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#6366F1',
   },
 
@@ -2094,7 +2095,7 @@ const styles = StyleSheet.create({
   },
   authTitle: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
     marginBottom: 2,
     letterSpacing: -0.2,
@@ -2115,7 +2116,7 @@ const styles = StyleSheet.create({
   },
   authSyncPillText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#059669',
   },
   authLoggedInRow: {
@@ -2145,7 +2146,7 @@ const styles = StyleSheet.create({
   },
   authLogoutBtnText: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#DC2626',
   },
   authActionRow: {
@@ -2170,7 +2171,7 @@ const styles = StyleSheet.create({
   },
   authPrimaryBtnText: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '600',
     fontSize: 13.5,
   },
   authSecondaryBtn: {
@@ -2188,7 +2189,7 @@ const styles = StyleSheet.create({
   },
   authSecondaryBtnText: {
     color: '#4F46E5',
-    fontWeight: '800',
+    fontWeight: '600',
     fontSize: 13.5,
   },
 
@@ -2256,7 +2257,7 @@ const styles = StyleSheet.create({
   },
   hdPillText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
   hdPillTextInactive: {
@@ -2309,7 +2310,7 @@ const styles = StyleSheet.create({
   },
   heroNickname: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -0.5,
   },
@@ -2324,13 +2325,12 @@ const styles = StyleSheet.create({
   activePillText: {
     color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     letterSpacing: 0.2,
   },
   heroAgeSub: {
-    fontSize: 13,
-    color: '#EDE9FE',
-    marginTop: 2,
+    fontSize: 11.5,
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   heroBadgesRow: {
@@ -2350,7 +2350,7 @@ const styles = StyleSheet.create({
   streakBadgeText: {
     color: '#FFFFFF',
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   levelBadge: {
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
@@ -2363,7 +2363,7 @@ const styles = StyleSheet.create({
   levelBadgeText: {
     color: '#FFFFFF',
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   heroProgressBox: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
@@ -2382,12 +2382,12 @@ const styles = StyleSheet.create({
   heroProgressTitle: {
     fontSize: 13,
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '600',
     letterSpacing: 0.1,
   },
   heroProgressPercent: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FDE047',
     letterSpacing: -0.2,
   },
@@ -2428,7 +2428,7 @@ const styles = StyleSheet.create({
   },
   heroActionBtnText: {
     color: '#8062F5',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 13.5,
   },
   heroActionBtnSecondary: {
@@ -2438,7 +2438,7 @@ const styles = StyleSheet.create({
   },
   heroActionBtnSecondaryText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 13.5,
   },
 
@@ -2464,7 +2464,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 19,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     letterSpacing: -0.2,
   },
@@ -2487,7 +2487,7 @@ const styles = StyleSheet.create({
   },
   addProfileBtnText: {
     fontSize: 12.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#4F46E5',
   },
 
@@ -2517,7 +2517,7 @@ const styles = StyleSheet.create({
   profileDeleteText: {
     color: '#DC2626',
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     lineHeight: 13,
   },
   profileItem: {
@@ -2569,7 +2569,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     maxWidth: 90,
   },
@@ -2620,13 +2620,13 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 28,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
     letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#334155',
     marginTop: 3,
   },
@@ -2649,7 +2649,7 @@ const styles = StyleSheet.create({
   },
   pillarHeaderTitle: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#4338CA',
     letterSpacing: 0.1,
   },
@@ -2701,7 +2701,7 @@ const styles = StyleSheet.create({
   },
   cardItemTitle: {
     fontSize: 16.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E1B4B',
     marginBottom: 2,
     letterSpacing: -0.2,
@@ -2730,7 +2730,7 @@ const styles = StyleSheet.create({
   cardProgressFraction: {
     marginLeft: 10,
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   circularActionButton: {
@@ -2792,7 +2792,7 @@ const styles = StyleSheet.create({
   },
   subjectTitleText: {
     fontSize: 14.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   subjectScoreText: {
@@ -2821,7 +2821,7 @@ const styles = StyleSheet.create({
   badgeMasteredText: {
     color: '#15803D',
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   badgeLearning: {
     backgroundColor: '#FEF3C7',
@@ -2830,7 +2830,7 @@ const styles = StyleSheet.create({
   badgeLearningText: {
     color: '#B45309',
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   badgePending: {
     backgroundColor: '#EEF2FF',
@@ -2839,7 +2839,7 @@ const styles = StyleSheet.create({
   badgePendingText: {
     color: '#4338CA',
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   statusBadgeText: {
     fontSize: 11.5,
@@ -2881,7 +2881,7 @@ const styles = StyleSheet.create({
   },
   gameName: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   gameScoresWrap: {
@@ -2896,7 +2896,7 @@ const styles = StyleSheet.create({
   },
   gameScoreText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   noGameBox: {
@@ -2934,7 +2934,7 @@ const styles = StyleSheet.create({
   },
   playGamesBtnText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 13.5,
   },
 
@@ -2949,7 +2949,7 @@ const styles = StyleSheet.create({
   },
   healthShieldText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#166534',
   },
   presetsGrid: {
@@ -2979,12 +2979,12 @@ const styles = StyleSheet.create({
   },
   presetBtnText: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   presetBtnTextActive: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   eyeCareBox: {
     flexDirection: 'row',
@@ -3011,7 +3011,7 @@ const styles = StyleSheet.create({
   },
   eyeCareTitle: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   eyeCareDesc: {
@@ -3079,7 +3079,7 @@ const styles = StyleSheet.create({
   },
   worksheetsBannerTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -0.2,
   },
@@ -3100,7 +3100,7 @@ const styles = StyleSheet.create({
   },
   worksheetsBannerArrowText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#065F46',
   },
 
@@ -3123,7 +3123,7 @@ const styles = StyleSheet.create({
   },
   tipCardTitle: {
     fontSize: 14.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   tipCardBody: {
@@ -3149,7 +3149,7 @@ const styles = StyleSheet.create({
   },
   dangerZoneTitle: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#991B1B',
   },
   dangerZoneSub: {
@@ -3169,7 +3169,7 @@ const styles = StyleSheet.create({
   },
   resetBtnText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 13,
   },
 
@@ -3201,7 +3201,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 19,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   modalCloseBtn: {
@@ -3209,7 +3209,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
     marginBottom: 6,
     marginTop: 12,
@@ -3249,12 +3249,12 @@ const styles = StyleSheet.create({
   },
   ageBtnText: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   ageBtnTextActive: {
     color: '#4F46E5',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   avatarsRow: {
     flexDirection: 'row',
@@ -3303,7 +3303,7 @@ const styles = StyleSheet.create({
   },
   modalCancelText: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   modalSaveBtn: {
@@ -3319,7 +3319,7 @@ const styles = StyleSheet.create({
   },
   modalSaveText: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
 
@@ -3345,7 +3345,7 @@ const styles = StyleSheet.create({
   },
   reportRibbonText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 14,
     letterSpacing: 0.2,
   },
@@ -3366,13 +3366,13 @@ const styles = StyleSheet.create({
   },
   reportStudentName: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   reportStudentGrade: {
     fontSize: 13,
     color: '#6366F1',
-    fontWeight: '800',
+    fontWeight: '600',
     marginTop: 2,
   },
   reportDateText: {
@@ -3396,14 +3396,14 @@ const styles = StyleSheet.create({
   },
   reportScoreNum: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   reportScoreLabel: {
     fontSize: 10.5,
     color: '#64748B',
     marginTop: 4,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   reportStampBox: {
     flexDirection: 'row',
@@ -3420,7 +3420,7 @@ const styles = StyleSheet.create({
   },
   reportStampTitle: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#854D0E',
   },
   reportStampSub: {
@@ -3441,11 +3441,19 @@ const styles = StyleSheet.create({
   },
   reportCloseBtnText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 13.5,
   },
   heroAgeSubTouch: {
     alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginTop: 6,
+    maxWidth: '100%',
     ...(webStyle({
       cursor: 'pointer',
     })),
@@ -3479,13 +3487,13 @@ const styles = StyleSheet.create({
   },
   guestModePillText: {
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     textTransform: 'uppercase',
   },
   guestLimitTitle: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
     marginBottom: 2,
   },
@@ -3508,7 +3516,7 @@ const styles = StyleSheet.create({
   },
   guestLimitBtnText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   guestModalHeader: {
@@ -3528,7 +3536,7 @@ const styles = StyleSheet.create({
   },
   guestModalTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
     textAlign: 'center',
     marginBottom: 6,
@@ -3558,7 +3566,7 @@ const styles = StyleSheet.create({
   guestModalPrimaryBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   guestModalSecondaryBtn: {
     backgroundColor: '#F1F5F9',
@@ -3599,7 +3607,7 @@ const styles = StyleSheet.create({
   },
   profileBusyText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E3A8A',
     textAlign: 'center',
   },

@@ -726,13 +726,13 @@ const styles = StyleSheet.create({
   },
   comingSoonBadgeText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#854D0E',
     letterSpacing: 0.5,
   },
   comingSoonTitle: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
   },
   comingSoonDesc: {
@@ -778,7 +778,7 @@ const styles = StyleSheet.create({
   },
   songTitle: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     textAlign: 'center',
   },
   stageCard: {
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
   },
   stageTitle: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
     textShadowColor: 'rgba(0,0,0,0.25)',
@@ -845,7 +845,7 @@ const styles = StyleSheet.create({
   },
   stageSubtitle: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.92)',
   },
   karaoke: {
@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
   },
   lineCounter: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.inkMuted,
   },
   fadedLine: {
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
   },
   karaokeLine: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     textAlign: 'center',
     lineHeight: 36,
   },
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
   },
   lyricsHeading: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     marginBottom: 4,
   },
@@ -951,14 +951,14 @@ const styles = StyleSheet.create({
   },
   lineNumText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   lineContent: {
     flex: 1,
   },
   linePrimary: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkSoft,
     lineHeight: 23,
   },
@@ -988,7 +988,7 @@ const styles = StyleSheet.create({
   rewardText: {
     flex: 1,
     fontSize: 15.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sun.onFill,
   },
 });

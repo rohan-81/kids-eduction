@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
   },
   userGreetingText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     letterSpacing: -0.2,
   },
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   },
   classBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#2563EB',
   },
   topProfileBtn: {
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   },
   authPillText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#6D28D9',
   },
   authLoggedInPillBtn: {
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   },
   authLoggedInPillText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#15803D',
   },
   langPillBtn: {
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
   },
   langPillText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   bellBtn: {
@@ -684,7 +684,7 @@ const styles = StyleSheet.create({
   bellBadgeText: {
     color: '#FFFFFF',
     fontSize: 8,
-    fontWeight: '900',
+    fontWeight: '700',
     lineHeight: 10,
   },
   profileRow: {
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   greetingTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B', // Rich deep navy/purple
     letterSpacing: -0.3,
     marginBottom: 3,
@@ -754,7 +754,7 @@ const styles = StyleSheet.create({
   },
   streakCount: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     lineHeight: 20,
   },
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
   },
   classModalTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   classModalSubtitle: {
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
   },
   closeModalBtnText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   classOptionsList: {
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   },
   classOptionTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   classAgeBadge: {
     paddingHorizontal: 7,
@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
   },
   classAgeBadgeText: {
     fontSize: 10.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   classOptionSub: {
@@ -892,7 +892,7 @@ const styles = StyleSheet.create({
   classRadioCheck: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   notifModalBackdrop: {
     flex: 1,
@@ -932,7 +932,7 @@ const styles = StyleSheet.create({
   },
   notifHeaderTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   notifCountPill: {
@@ -943,7 +943,7 @@ const styles = StyleSheet.create({
   },
   notifCountPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#DC2626',
   },
   notifHeaderActions: {
@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
   },
   closeNotifBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   notifScrollList: {
@@ -1039,7 +1039,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   notifItemTitleBold: {
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   notifUnreadDot: {
@@ -1067,7 +1067,7 @@ const styles = StyleSheet.create({
   },
   notifActionText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#F97316',
   },  modalBackdrop: {
     flex: 1,
@@ -1107,7 +1107,7 @@ const styles = StyleSheet.create({
   },
   accountTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 4,
   },
@@ -1139,7 +1139,7 @@ const styles = StyleSheet.create({
   },
   accountLogoutPrimaryText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   accountSwitchSecondaryBtn: {

@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 21,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     textAlign: 'center',
     marginBottom: 6,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
   },
   startBtnText: {
     fontSize: 15.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },

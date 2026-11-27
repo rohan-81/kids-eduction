@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
   },
   profileBadgePillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E40AF',
   },
   editProfileBtn: {
@@ -861,12 +861,12 @@ const styles = StyleSheet.create({
   },
   editProfileBtnText: {
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#92400E',
   },
   childNameTitle: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 2,
   },
@@ -900,12 +900,12 @@ const styles = StyleSheet.create({
     color: '#166534',
   },
   dobPillHighlight: {
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#15803D',
   },
   dobPillPlaceholder: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#16A34A',
   },
   dobEditHint: {
@@ -922,7 +922,7 @@ const styles = StyleSheet.create({
   },
   colorPickerLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
   colorDotsContainer: {
@@ -947,7 +947,7 @@ const styles = StyleSheet.create({
   colorCheckMark: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
   },
 
   /* 2. AVATAR STAGE */
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
   },
   stageHeaderPillText: {
     fontSize: 11.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#6D28D9',
     letterSpacing: 0.3,
   },
@@ -1011,7 +1011,7 @@ const styles = StyleSheet.create({
   },
   speechBubbleText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0369A1',
     textAlign: 'center',
     lineHeight: 19,
@@ -1167,7 +1167,7 @@ const styles = StyleSheet.create({
   },
   stageTitle: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginTop: 2,
     letterSpacing: 0.2,
@@ -1186,7 +1186,7 @@ const styles = StyleSheet.create({
   },
   stageHint: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0369A1',
   },
 
@@ -1232,11 +1232,11 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     marginTop: 1,
   },
@@ -1247,7 +1247,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   tabsRow: {
@@ -1276,7 +1276,7 @@ const styles = StyleSheet.create({
   },
   tabBtnText: {
     fontSize: 12.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#64748B',
   },
   tabBtnTextActive: {
@@ -1313,7 +1313,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 12.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 8,
     textAlign: 'center',
@@ -1330,7 +1330,7 @@ const styles = StyleSheet.create({
   },
   equippedText: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#166534',
   },
   equipBtn: {
@@ -1347,7 +1347,7 @@ const styles = StyleSheet.create({
   },
   equipBtnText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 12,
   },
   buyBtn: {
@@ -1364,7 +1364,7 @@ const styles = StyleSheet.create({
   },
   buyBtnText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
     fontSize: 11,
   },
 
@@ -1392,7 +1392,7 @@ const styles = StyleSheet.create({
   },
   actionCardTitle: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   actionCardSub: {
@@ -1403,7 +1403,7 @@ const styles = StyleSheet.create({
   },
   actionCardArrow: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#A16207',
   },
 
@@ -1445,7 +1445,7 @@ const styles = StyleSheet.create({
   },
   modalHeading: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   modalHeaderTitleCol: {
@@ -1478,7 +1478,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     minHeight: 54,
     fontSize: 16.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     ...webStyle({ outlineStyle: 'none' }),
   },
@@ -1501,7 +1501,7 @@ const styles = StyleSheet.create({
   },
   chipsTitle: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     marginBottom: 8,
   },
@@ -1521,7 +1521,7 @@ const styles = StyleSheet.create({
   },
   nameChipText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1D4ED8',
   },
   modalBtnRow: {
@@ -1544,7 +1544,7 @@ const styles = StyleSheet.create({
   },
   modalCancelBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
   modalSaveBtn: {
@@ -1561,7 +1561,7 @@ const styles = StyleSheet.create({
   },
   modalSaveBtnText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   dobPickerButton: {
@@ -1580,7 +1580,7 @@ const styles = StyleSheet.create({
   },
   dobPickerButtonText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   dobPickerButtonPlaceholder: {
@@ -1589,7 +1589,7 @@ const styles = StyleSheet.create({
   },
   dobPickerAgeBadge: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#8B5CF6',
     marginTop: 2,
   },
@@ -1601,7 +1601,7 @@ const styles = StyleSheet.create({
   },
   dobPickerActionText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

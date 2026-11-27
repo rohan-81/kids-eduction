@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
   },
   progressPillText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   progressPillTextComplete: {
@@ -1019,7 +1019,7 @@ const styles = StyleSheet.create({
   },
   doneText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#4F46E5',
   },
   doneTextReady: {

@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     fontSize: 19,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -0.2,
     marginBottom: 3,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     textAlign: 'center',
     letterSpacing: -0.2,
     lineHeight: 22,

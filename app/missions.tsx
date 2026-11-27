@@ -356,11 +356,11 @@ const styles = StyleSheet.create({
   },
   chestTokenValue: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   chestTokenLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkMuted,
   },
   chestHeroCard: {
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   },
   chestTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#7D6608',
     marginBottom: 4,
   },
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   openChestBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   progressTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   progressCounter: {
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   missionCardTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   missionCardSubtitle: {
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
   doneText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   goBtn: {
     backgroundColor: '#2C3E50',
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#F39C12',
     marginBottom: spacing.xs,
   },
@@ -542,6 +542,6 @@ const styles = StyleSheet.create({
   modalCloseText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

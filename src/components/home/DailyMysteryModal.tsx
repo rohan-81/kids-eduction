@@ -380,12 +380,12 @@ const styles = StyleSheet.create({
   },
   tokenValue: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     marginTop: 2,
   },
   tokenLabel: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkMuted,
   },
   countdownPill: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   },
   countdownText: {
     fontSize: 14.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.lavender.text,
   },
   fullBtn: {

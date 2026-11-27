@@ -24,6 +24,7 @@ export const HomeQuickFourButtons: React.FC<HomeQuickFourButtonsProps> = ({
   const router = useSafeRouter();
   const { width } = useWindowDimensions();
   const isCompact = width < 360;
+  const cardWidth = width < 310 ? '100%' : '48%';
 
   const buttons = [
     {
@@ -83,6 +84,8 @@ export const HomeQuickFourButtons: React.FC<HomeQuickFourButtonsProps> = ({
           key={btn.id}
           style={[
             styles.cardBtn,
+            { width: cardWidth },
+            isCompact && styles.cardBtnCompact,
             webStyle({
               boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
             }),
@@ -95,8 +98,8 @@ export const HomeQuickFourButtons: React.FC<HomeQuickFourButtonsProps> = ({
           accessibilityRole="button"
           accessibilityLabel={btn.title}
         >
-          <View style={styles.iconBox}>
-            <ClayBadgeToken art={btn.art} tone={btn.tone} size={42} />
+          <View style={[styles.iconBox, isCompact && styles.iconBoxCompact]}>
+            <ClayBadgeToken art={btn.art} tone={btn.tone} size={isCompact ? 36 : 42} />
           </View>
           <View style={styles.textBox}>
             <View style={styles.titleRow}>
@@ -123,12 +126,12 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
     justifyContent: 'space-between',
     marginVertical: 12,
   },
   cardBtn: {
-    width: '48.5%',
+    width: '48%',
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     borderWidth: 1.5,
@@ -141,6 +144,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
+  cardBtnCompact: {
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    gap: 6,
+  },
   iconBox: {
     // fits the 42px 3D clay token
     width: 42,
@@ -148,6 +156,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+  },
+  iconBoxCompact: {
+    width: 36,
+    height: 36,
   },
   textBox: {
     flex: 1,
@@ -165,7 +177,7 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     flex: 1,
     flexShrink: 1,
@@ -181,7 +193,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 8.5,
-    fontWeight: '800',
+    fontWeight: '600',
     letterSpacing: 0.2,
   },
   subText: {

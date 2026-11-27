@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
   },
   missionTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#117864',
   },
   missionSubtitle: {
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   },
   sectionHeading: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -427,12 +427,12 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   itemPriceBadge: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#E67E22',
     marginVertical: 4,
   },
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   },
   checkoutTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   cartCountText: {
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   },
   cartItemPrice: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#E67E22',
     marginRight: spacing.md,
   },
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   removeBtnText: {
     color: '#E74C3C',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   totalRow: {
     flexDirection: 'row',
@@ -543,12 +543,12 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#7D6608',
   },
   totalValue: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B7950B',
   },
   cashDrawer: {
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   },
   coinText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#7D6608',
   },
   paidStatusRow: {
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
   },
   paidAmount: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#27AE60',
   },
   clearCoinsBtn: {
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
   payButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#27AE60',
     marginBottom: spacing.xs,
   },
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   },
   rewardText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#F39C12',
     marginBottom: spacing.xl,
   },
@@ -668,6 +668,6 @@ const styles = StyleSheet.create({
   nextShoppingText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

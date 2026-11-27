@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
     backgroundColor: kidTones.sky.tint,
     paddingHorizontal: 16,
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.ink,
     ...webStyle({ outlineStyle: 'none' }),
   },
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
   },
   childNameText: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 6,
   },
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 2,
   },
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   },
   sessionUserNameText: {
     fontSize: 16.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   sessionStatusPill: {
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   },
   sessionStatusText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#15803D',
   },
   sessionEmailText: {
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   parentsCornerBtnText: {
     color: '#1E293B',
     fontSize: 14.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   createAccountBtn: {
     flexDirection: 'row',
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
   createAccountBtnText: {
     color: '#7E22CE',
     fontSize: 14.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   signInPrimaryBtn: {
     backgroundColor: '#0284C7',
@@ -808,11 +808,11 @@ const styles = StyleSheet.create({
   logoutPrimaryBtnText: {
     color: '#FFFFFF',
     fontSize: 14.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   btnChevron: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#94A3B8',
   },
   quickLinksCol: {
@@ -836,7 +836,7 @@ const styles = StyleSheet.create({
   },
   linkTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 2,
   },
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
   linkChevron: {
     fontSize: 18,
     color: '#94A3B8',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
@@ -866,7 +866,7 @@ const styles = StyleSheet.create({
   },
   modalHeader: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 14,
     textAlign: 'center',
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
   modalSaveText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   modalCancelBtn: {
     flex: 1,

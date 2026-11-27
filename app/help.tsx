@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1D4ED8',
     marginBottom: 4,
     textAlign: 'center',
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   faqQuestion: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0F172A',
     flex: 1,
   },

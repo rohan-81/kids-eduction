@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   badgePillText: {
     color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   levelPill: {
     backgroundColor: '#FEF08A',
@@ -173,12 +173,12 @@ const styles = StyleSheet.create({
   levelPillText: {
     color: '#854D0E',
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   bannerTitle: {
     color: '#FFFFFF',
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: -0.3,
     textShadowColor: 'rgba(0, 0, 0, 0.35)',
     textShadowOffset: { width: 0, height: 2 },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     color: '#EA580C',
     fontSize: 12.5,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
 });

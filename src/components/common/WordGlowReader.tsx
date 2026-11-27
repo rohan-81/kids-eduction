@@ -280,11 +280,11 @@ const styles = StyleSheet.create({
   },
   glowingWordText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   tappedWordText: {
     color: '#92400E',
-    fontWeight: '900',
+    fontWeight: '700',
   },
   spokenWordText: {
     color: '#64748B',

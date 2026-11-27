@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   },
   headerTagText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   headerTagTextPurple: {
     color: '#7C3AED',
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   },
   bonusCoinText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   centerCol: {
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   },
   promptTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E1B4B',
     textAlign: 'center',
     marginBottom: 4,
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
   micBtnText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   soundwavesRow: {
     flexDirection: 'row',
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
   spokeConfirmBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   cancelListeningBtn: {
     backgroundColor: '#F1F5F9',
@@ -859,7 +859,7 @@ const styles = StyleSheet.create({
   tryAgainBtnText: {
     color: '#FFFFFF',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   starsRow: {
     flexDirection: 'row',
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
   },
   successPraise: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#065F46',
     marginVertical: 6,
     textAlign: 'center',

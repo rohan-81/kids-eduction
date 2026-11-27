@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   questionText: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '600',
     fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
     color: kidTones.lavender.text,
     letterSpacing: 1,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   },
   displayText: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
     color: kidPalette.ink,
     letterSpacing: 2,
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidTones.coral.text,
   },
   keypad: {
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   keyText: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '600',
     fontFamily: Platform.OS === 'web' ? '"Baloo 2", "Noto Sans Gujarati", "Noto Sans Devanagari", "Shruti", sans-serif' : undefined,
   },
   cancel: {

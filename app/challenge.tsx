@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -158,8 +158,17 @@ export default function ChallengeCertificateScreen() {
   const totalQuestions = questions.length || 5;
   const q = questions[currentQIndex] || questions[0] || TEST_QUESTIONS[0];
 
-  const currentOptions =
+  const rawOptions =
     language === 'hi' ? q.optionsHi : language === 'en' ? q.optionsEn : q.optionsGu;
+  const currentOptions = useMemo(() => {
+    const arr = [...rawOptions];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q.id, language]);
   const currentCorrectAnswer =
     language === 'hi'
       ? q.correctAnswerHi
@@ -683,7 +692,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#4C1D95',
   },
   heroSubtitle: {
@@ -700,7 +709,7 @@ const styles = StyleSheet.create({
   },
   rewardBadgeText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sun.text,
   },
 
@@ -732,7 +741,7 @@ const styles = StyleSheet.create({
   },
   progressStepText: {
     fontSize: 12.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#7C3AED',
   },
   progressStepTextDone: {
@@ -762,7 +771,7 @@ const styles = StyleSheet.create({
   },
   subjectPillText: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   scoreCounterPill: {
     backgroundColor: '#F1F5F9',
@@ -772,7 +781,7 @@ const styles = StyleSheet.create({
   },
   scoreCounterText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#475569',
   },
 
@@ -785,7 +794,7 @@ const styles = StyleSheet.create({
   },
   qPromptText: {
     fontSize: 21,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
     lineHeight: 30,
     flex: 1,
@@ -855,12 +864,12 @@ const styles = StyleSheet.create({
   },
   optLetterText: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   optLabelText: {
     flex: 1,
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   optTextDefault: {
     color: '#1E293B',
@@ -903,7 +912,7 @@ const styles = StyleSheet.create({
   },
   feedbackPillText: {
     fontSize: 14.5,
-    fontWeight: '900',
+    fontWeight: '700',
     textAlign: 'center',
   },
   feedbackTextCorrect: {
@@ -927,7 +936,7 @@ const styles = StyleSheet.create({
   },
   completionHeading: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
     textAlign: 'center',
     marginBottom: 10,
@@ -947,7 +956,7 @@ const styles = StyleSheet.create({
   },
   completionBadgeVal: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   completionBadgeLbl: {
@@ -964,7 +973,7 @@ const styles = StyleSheet.create({
   },
   nameEditLabel: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     marginBottom: 4,
   },
@@ -981,7 +990,7 @@ const styles = StyleSheet.create({
   },
   nameDisplayText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   nameEditIcon: {
@@ -999,7 +1008,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     borderWidth: 1.5,
     borderColor: '#38BDF8',
@@ -1015,7 +1024,7 @@ const styles = StyleSheet.create({
   nameDoneBtnText: {
     fontSize: 18,
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '700',
   },
 
   // Gold Luxury Certificate
@@ -1042,13 +1051,13 @@ const styles = StyleSheet.create({
   },
   certAcademyName: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
     letterSpacing: 0.5,
   },
   certMainTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
     marginVertical: 4,
     textAlign: 'center',
@@ -1067,7 +1076,7 @@ const styles = StyleSheet.create({
   },
   certStudentName: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginVertical: 6,
     textAlign: 'center',
@@ -1102,7 +1111,7 @@ const styles = StyleSheet.create({
   },
   certFooterVal: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#78350F',
   },
   certFooterLbl: {

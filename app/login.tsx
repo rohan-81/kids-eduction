@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     textAlign: 'center',
     letterSpacing: -0.5,
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   },
   switchAuthLink: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidTones.sky.text,
     textDecorationLine: 'underline',
   },
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
   },
   guestButtonText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkSoft,
   },  alreadyLoggedInBanner: {
     flexDirection: 'row',
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   },
   logoutBannerBtnText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 

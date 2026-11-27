@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
   },
   puzzleDetailTagText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1D4ED8',
   },
   trackRow: {
@@ -400,12 +400,12 @@ const styles = StyleSheet.create({
   },
   normalNumText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
   },
   normalNumTextDetail: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   missingPill: {
@@ -433,22 +433,22 @@ const styles = StyleSheet.create({
   },
   missingBlankText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   missingBlankTextDetail: {
     fontSize: 30,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
   },
   missingNumText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#92400E',
   },
   missingNumTextDetail: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#78350F',
   },
   opBadge: {
@@ -461,12 +461,12 @@ const styles = StyleSheet.create({
   },
   opText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#64748B',
   },
   opTextDetail: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#475569',
   },
 });

@@ -170,10 +170,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     minHeight: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
   headerNarrow: {
     paddingHorizontal: 8,
@@ -215,7 +213,7 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   brandTitleNarrow: {
@@ -223,7 +221,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     letterSpacing: -0.2,
     textAlign: 'center',
@@ -273,7 +271,7 @@ const styles = StyleSheet.create({
   },
   starCount: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   starCountNarrow: {

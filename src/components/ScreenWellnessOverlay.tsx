@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   ruleChipText: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.mint.text,
   },
   steps: {
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   stepText: {
     flex: 1,
     fontSize: 15.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.ink,
   },
   limitChip: {
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   },
   limitChipText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sun.text,
   },
   fullBtn: {
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   },
   bedtimeTitle: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     marginBottom: 10,
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
   },
   bedtimeStatText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   bedtimeActions: {

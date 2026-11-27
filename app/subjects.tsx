@@ -1195,7 +1195,7 @@ const styles = StyleSheet.create({
   },
   subjPillText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   subjPillTextActive: {
@@ -1228,7 +1228,7 @@ const styles = StyleSheet.create({
   },
   subjectHeading: {
     fontSize: 34,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     letterSpacing: -0.5,
     marginBottom: 4,
@@ -1271,7 +1271,7 @@ const styles = StyleSheet.create({
   },
   topicName: {
     fontSize: 16.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 2,
     letterSpacing: -0.2,
@@ -1300,7 +1300,7 @@ const styles = StyleSheet.create({
   topicProgressFraction: {
     marginLeft: 10,
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   circularActionButton: {
@@ -1342,7 +1342,7 @@ const styles = StyleSheet.create({
   },
   classBadgeText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   classLevelPill: {
     paddingHorizontal: 10,
@@ -1351,7 +1351,7 @@ const styles = StyleSheet.create({
   },
   classLevelPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   classBadgeSubtitle: {

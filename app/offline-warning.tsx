@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   offlineBadgeText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
   },
   langPill: {
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   langPillText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0284C7',
   },
   card: {
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     marginBottom: 6,
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   },
   pointTitle: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     marginBottom: 2,
   },

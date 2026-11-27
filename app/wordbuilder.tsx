@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   pictureTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   pictureSubtitle: {
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   slotLetter: {
     fontSize: 32,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   scrambleLabel: {
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   },
   letterTileText: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#7D6608',
   },
   controlsRow: {
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   nextBtnText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontSize: 24,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     lineHeight: 30,
   },
@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
   },
   heroName: {
     fontSize: 30,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
   },
@@ -983,7 +983,7 @@ const styles = StyleSheet.create({
   customHeaderTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#334155',
   },
   customHeaderTitleActive: {
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
   customTextInput: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     padding: 0,
     minHeight: 38,
@@ -1048,7 +1048,7 @@ const styles = StyleSheet.create({
   },
   avatarPickerLabel: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   avatarChoices: {
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   },
   avatarChoiceText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#475569',
   },
   avatarChoiceTextActive: {
@@ -1105,7 +1105,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 19,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
   },
   toolRow: {
@@ -1144,7 +1144,7 @@ const styles = StyleSheet.create({
   },
   cardLabel: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     lineHeight: 20,
@@ -1234,7 +1234,7 @@ const styles = StyleSheet.create({
   launchText: {
     flexShrink: 1,
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.4,
   },

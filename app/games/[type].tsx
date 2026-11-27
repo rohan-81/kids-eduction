@@ -127,6 +127,25 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
+/**
+ * Distributes correct answers evenly and randomly across all option slots (0..N-1)
+ * so the answer does not cluster in slot 1 or 2 during a round.
+ */
+function shuffleOptionsBalanced(questions: GameQuestion[]): GameQuestion[] {
+  const slotSchedule = shuffleArray([0, 1, 2, 3]);
+  return questions.map((q, idx) => {
+    if (!q.options || q.options.length <= 1) return q;
+    const corrId = String(q.correctOptionId || '1');
+    const correctOpt = q.options.find((o) => String(o.id) === corrId);
+    if (!correctOpt) return { ...q, options: shuffleArray(q.options) };
+    const wrongOpts = shuffleArray(q.options.filter((o) => String(o.id) !== corrId));
+    const targetSlot = slotSchedule[idx % slotSchedule.length] % q.options.length;
+    const result = [...wrongOpts];
+    result.splice(targetSlot, 0, correctOpt);
+    return { ...q, options: result };
+  });
+}
+
 function initPuzzlePieces(count: number): Array<{ id: number; correctPos: number }> {
   const pieces = Array.from({ length: count }, (_, i) => ({ id: i, correctPos: i }));
   let shuffled = shuffleArray(pieces);
@@ -384,11 +403,8 @@ export default function GameRunnerScreen() {
         // 5. Shuffle questions with Fisher-Yates shuffleArray and take up to 10
         const shuffledQuestions = shuffleArray(adaptedList).slice(0, 10);
 
-        // 6. Shuffle answer options (Fisher-Yates) so correct answer position changes
-        const finalRoundQuestions = shuffledQuestions.map((q) => {
-          if (!q.options || q.options.length <= 1) return q;
-          return { ...q, options: shuffleArray(q.options) };
-        });
+        // 6. Shuffle answer options evenly across all slots so correct answer position varies
+        const finalRoundQuestions = shuffleOptionsBalanced(shuffledQuestions);
 
         setQuestions(finalRoundQuestions);
         setCurrentIndex(0);
@@ -413,10 +429,7 @@ export default function GameRunnerScreen() {
         if (!isMountedRef.current || thisLoadId !== loadIdRef.current) return;
         // Fallback safely to bundled questions on any unhandled error
         const bundled = GAME_QUESTIONS[gameType]?.[language] || GAME_QUESTIONS[gameType]?.en || [];
-        const fallbackQuestions = shuffleArray(bundled).slice(0, 10).map((q) => ({
-          ...q,
-          options: shuffleArray(q.options || []),
-        }));
+        const fallbackQuestions = shuffleOptionsBalanced(shuffleArray(bundled).slice(0, 10));
         setQuestions(fallbackQuestions);
         setCurrentIndex(0);
         setSelectedOptionId(null);
@@ -1065,7 +1078,7 @@ export default function GameRunnerScreen() {
             {(() => {
               const cols = puzzlePieceMode === 4 ? 2 : puzzlePieceMode === 6 ? 3 : 3;
               const rows = puzzlePieceMode === 4 ? 2 : puzzlePieceMode === 6 ? 2 : 3;
-              const boardW = Math.min(width - 48, 330);
+              const boardW = Math.min(width - 52, width < 520 ? 258 : 320);
               const pieceW = Math.floor(boardW / cols);
               const pieceH = Math.floor(boardW / rows);
               const totalW = pieceW * cols;
@@ -1792,7 +1805,7 @@ const styles = StyleSheet.create({
   },
   hudCoinsText: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sun.onFill,
   },
   hudScore: {
@@ -1805,7 +1818,7 @@ const styles = StyleSheet.create({
   },
   hudScoreText: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   correctFlash: {
@@ -1830,7 +1843,7 @@ const styles = StyleSheet.create({
   victoryScoreValue: {
     fontSize: 34,
     lineHeight: 40,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     textAlign: 'center',
   },
@@ -1882,7 +1895,7 @@ const styles = StyleSheet.create({
   },
   victoryTitle: {
     fontSize: 28,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     textAlign: 'center',
   },
@@ -1919,7 +1932,7 @@ const styles = StyleSheet.create({
   },
   victoryCoinsText: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sun.onFill,
   },
   victoryHint: {
@@ -1945,7 +1958,7 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
   questionText: {
@@ -1988,7 +2001,7 @@ const styles = StyleSheet.create({
   },
   balloonSkyBannerText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0369A1',
     letterSpacing: 0.4,
   },
@@ -2091,7 +2104,7 @@ const styles = StyleSheet.create({
   },
   balloonText: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.35)',
@@ -2100,7 +2113,7 @@ const styles = StyleSheet.create({
   },
   balloonTextSmall: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   balloonBadge: {
     position: 'absolute',
@@ -2120,7 +2133,7 @@ const styles = StyleSheet.create({
   },
   balloonBadgeText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   balloonKnot: {
     width: 0,
@@ -2152,7 +2165,7 @@ const styles = StyleSheet.create({
   },
   promptText: {
     fontSize: 21,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -2225,7 +2238,7 @@ const styles = StyleSheet.create({
   },
   sequenceTileText: {
     fontSize: 34,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
   },
@@ -2248,7 +2261,7 @@ const styles = StyleSheet.create({
   },
   sequenceSlotText: {
     fontSize: 34,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#7C3AED',
     textAlign: 'center',
   },
@@ -2328,7 +2341,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     textAlign: 'center',
   },
@@ -2353,7 +2366,7 @@ const styles = StyleSheet.create({
   },
   feedbackText: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     textAlign: 'center',
   },
@@ -2416,7 +2429,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     textAlign: 'center',
   },
@@ -2439,14 +2452,14 @@ const styles = StyleSheet.create({
   },
   puzzleModeSelector: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    gap: 6,
+    marginBottom: 8,
     justifyContent: 'center',
     flexWrap: 'wrap',
   },
   puzzleModePill: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
     borderRadius: radii.full,
     backgroundColor: colors.card,
     borderWidth: 1.5,
@@ -2469,13 +2482,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: spacing.md,
+    marginBottom: 6,
     paddingHorizontal: spacing.xs,
     gap: spacing.sm,
   },
   puzzleTitleText: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     flex: 1,
     marginRight: 8,
@@ -2492,7 +2505,7 @@ const styles = StyleSheet.create({
   },
   puzzlePeekBtnText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E3A8A',
   },
   puzzlePeekCard: {
@@ -2520,7 +2533,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.card,
     overflow: 'hidden',
     position: 'relative',
-    marginVertical: spacing.md,
+    marginVertical: 6,
     borderWidth: 3,
     borderColor: '#DDD6FE',
     alignSelf: 'center',
@@ -2555,7 +2568,7 @@ const styles = StyleSheet.create({
   },
   pieceWatermarkText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   puzzleSuccessCard: {
@@ -2573,7 +2586,7 @@ const styles = StyleSheet.create({
   },
   puzzleSuccessTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#065F46',
     textAlign: 'center',
   },
@@ -2585,20 +2598,20 @@ const styles = StyleSheet.create({
   },
   puzzleActionRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
     width: '100%',
-    marginTop: spacing.md,
+    marginTop: 8,
   },
   puzzleActionBtn: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 11,
     borderRadius: radii.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
   puzzleActionBtnText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
   },
 
@@ -2641,7 +2654,7 @@ const styles = StyleSheet.create({
   },
   findObjectPromptText: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -2682,7 +2695,7 @@ const styles = StyleSheet.create({
   },
   findObjectCardLabel: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: colors.textPrimary,
     textAlign: 'center',
   },

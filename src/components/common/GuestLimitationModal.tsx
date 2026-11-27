@@ -296,12 +296,12 @@ const styles = StyleSheet.create({
   badgePillText: {
     color: '#B45309',
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     letterSpacing: 0.3,
   },
   titleText: {
     fontSize: 21,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
     textAlign: 'center',
     marginBottom: 10,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     letterSpacing: 0.3,
   },
   secondaryBtn: {

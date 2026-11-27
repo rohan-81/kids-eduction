@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
   },
   headerSubtitle: {
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   previewDateText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#5B21B6',
   },
   ageBadge: {
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   ageBadgeText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
   sectionLabel: {
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   },
   quickAgeChipTextActive: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   columnsContainer: {
     flexDirection: 'row',
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   colTitle: {
     textAlign: 'center',
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
     paddingVertical: 5,
     borderBottomWidth: 1,
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   },
   colItemTextSelected: {
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '600',
   },
   footerBtnRow: {
     flexDirection: 'row',
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   confirmBtn: {
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   },
   confirmBtnText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#FFFFFF',
   },
 });

@@ -196,11 +196,42 @@ export function mapBackendGameQuestion(item: BackendGameQuestion, fallbackType: 
   if (!item || !item.question_text) return null;
   const options = Array.isArray(item.options) ? item.options : [];
   if (options.length < (fallbackType === 'picture-puzzle' ? 1 : 2)) return null;
+  const resolvedType = (item.question_type || fallbackType) as GameType;
+  let prompt = item.question_text;
+  let audioText = item.audio_text || item.question_text;
+
+  if (resolvedType === 'picture-matching') {
+    const lang = item.language === 'hi' || item.language === 'en' ? item.language : 'gu';
+    const vis = item.display_visual || '';
+    const isBird = vis === '🦚' || vis === '🦆' || /પક્ષી|bird|पक्षी/.test(prompt);
+    const isFruit = vis === '🥭' || /ફળ|fruit|फल/.test(prompt);
+    const normalizedPrompt =
+      lang === 'hi'
+        ? isBird
+          ? 'यह कौन सा पक्षी है?'
+          : isFruit
+            ? 'यह कौन सा फल है?'
+            : 'यह कौन सा जानवर है?'
+        : lang === 'en'
+          ? isBird
+            ? 'Which bird is this?'
+            : isFruit
+              ? 'Which fruit is this?'
+              : 'Which animal is this?'
+          : isBird
+            ? 'આ કયું પક્ષી છે?'
+            : isFruit
+              ? 'આ કયું ફળ છે?'
+              : 'આ કયું પ્રાણી છે?';
+    prompt = normalizedPrompt;
+    audioText = normalizedPrompt;
+  }
+
   return {
     id: String(item.stable_id || item.id),
-    gameType: (item.question_type || fallbackType) as GameType,
-    prompt: item.question_text,
-    audioText: item.audio_text || item.question_text,
+    gameType: resolvedType,
+    prompt,
+    audioText,
     displayVisual: item.display_visual || undefined,
     countTarget: item.count_target ?? undefined,
     options,
@@ -601,7 +632,11 @@ export const apiService = {
       });
 
     const cached = await readJsonCache<GameQuestion[]>(cacheKey);
-    if (Array.isArray(cached) && cached.length > 0) {
+    const hasStalePicturePrompt =
+      gameType === 'picture-matching' &&
+      Array.isArray(cached) &&
+      cached.some((q) => /ગૌમાતા|દૂધ આપનાર|ચિત્ર જુઓ:|Look at the picture:|चित्र देखें:/.test(q?.prompt || ''));
+    if (Array.isArray(cached) && cached.length > 0 && !hasStalePicturePrompt) {
       void refresh();
       return cached;
     }

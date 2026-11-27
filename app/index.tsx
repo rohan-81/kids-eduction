@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontSize: 42,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E3A8A', // Deep royal navy
     letterSpacing: -0.6,
     textAlign: 'center',

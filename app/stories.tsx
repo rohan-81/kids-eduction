@@ -727,7 +727,7 @@ export default function StoryModeScreen() {
 
   // Catalogue grid: 1 column on phones, 2 on tablets, 3 on wide desktop.
   const shelfCols = screenW >= 1000 ? 3 : screenW >= 640 ? 2 : 1;
-  const coverWidth: DimensionValue = shelfCols === 1 ? '100%' : shelfCols === 2 ? '48.5%' : '31.8%';
+  const coverWidth: DimensionValue = shelfCols === 1 ? '100%' : shelfCols === 2 ? '48%' : '31.8%';
 
   const pillScale = pillAnim.interpolate({ inputRange: [0, 1], outputRange: [0.75, 1] });
   const speakerScale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
@@ -1232,7 +1232,7 @@ const styles = StyleSheet.create({
   },
   shelfHeroTitle: {
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.lavender.text,
   },
   shelfHeroSub: {
@@ -1297,16 +1297,16 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12.5,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   badgeTextNeutral: {
     fontSize: 12.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   bookTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     lineHeight: 26,
     minHeight: 52,
@@ -1329,7 +1329,7 @@ const styles = StyleSheet.create({
   },
   pagesText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkMuted,
   },
   readPill: {
@@ -1348,7 +1348,7 @@ const styles = StyleSheet.create({
   },
   readPillText: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
   },
 
   // ---------- Reader ----------
@@ -1375,7 +1375,7 @@ const styles = StyleSheet.create({
   readerTitle: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0F172A',
   },
   pagePill: {
@@ -1386,7 +1386,7 @@ const styles = StyleSheet.create({
   },
   pagePillText: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   bookOpen: {
     backgroundColor: kidBackdrops.cream,
@@ -1453,7 +1453,7 @@ const styles = StyleSheet.create({
   },
   speakerBtnText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   speakerBtnTextIdle: {
     color: '#6D28D9',
@@ -1481,7 +1481,7 @@ const styles = StyleSheet.create({
   },
   choicePrompt: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#7D6608',
     marginBottom: spacing.md,
     textAlign: 'center',
@@ -1519,7 +1519,7 @@ const styles = StyleSheet.create({
     width: 60,
     textAlign: 'center',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sky.text,
   },
   bubbleSpacing: {
@@ -1541,12 +1541,12 @@ const styles = StyleSheet.create({
   choiceText: {
     flexShrink: 1,
     fontSize: 16.5,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   feedbackText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.ink,
     lineHeight: 24,
   },
@@ -1579,7 +1579,7 @@ const styles = StyleSheet.create({
   },
   finishTitle: {
     fontSize: 28,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     textAlign: 'center',
   },
@@ -1606,7 +1606,7 @@ const styles = StyleSheet.create({
   },
   coinPileText: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidTones.sun.onFill,
   },
   scroll: {
@@ -1664,12 +1664,12 @@ const styles = StyleSheet.create({
   },
   scrollRibbonText: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   scrollText: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#78350F',
     textAlign: 'center',
     lineHeight: 27,
@@ -1697,7 +1697,7 @@ const styles = StyleSheet.create({
   },
   shelfHeading: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
   },
   /* AI Magic Story Banner */
@@ -1730,7 +1730,7 @@ const styles = StyleSheet.create({
   magicAiTagText: {
     color: '#6D28D9',
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
   comingSoonBadge: {
@@ -1747,7 +1747,7 @@ const styles = StyleSheet.create({
   comingSoonBadgeText: {
     color: '#854D0E',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
   magicRewardTag: {
@@ -1764,7 +1764,7 @@ const styles = StyleSheet.create({
   magicRewardTagText: {
     color: '#854D0E',
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   magicBannerMainRow: {
     flexDirection: 'row',
@@ -1800,7 +1800,7 @@ const styles = StyleSheet.create({
   magicBannerTitle: {
     color: '#FFFFFF',
     fontSize: 19,
-    fontWeight: '900',
+    fontWeight: '700',
     marginBottom: 4,
   },
   magicBannerSub: {
@@ -1828,7 +1828,7 @@ const styles = StyleSheet.create({
   magicBannerCtaText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
 
@@ -1850,7 +1850,7 @@ const styles = StyleSheet.create({
   },
   savedMagicHeading: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
   },
   savedCountPill: {
@@ -1875,7 +1875,7 @@ const styles = StyleSheet.create({
   },
   savedClearBtnText: {
     fontSize: 11.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#64748B',
   },
   savedScrollRow: {
@@ -1960,7 +1960,7 @@ const styles = StyleSheet.create({
   },
   savedMagicPillText: {
     fontSize: 10.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#6D28D9',
   },
   savedCompanionCameo: {
@@ -2013,7 +2013,7 @@ const styles = StyleSheet.create({
   },
   savedBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   savedPagesBadge: {
     flexDirection: 'row',
@@ -2022,12 +2022,12 @@ const styles = StyleSheet.create({
   },
   savedPagesText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
     color: kidPalette.inkMuted,
   },
   savedTitle: {
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
     color: kidPalette.ink,
     lineHeight: 21,
   },
@@ -2044,7 +2044,7 @@ const styles = StyleSheet.create({
   },
   savedReadPillText: {
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   feedbackRow: {
     flexDirection: 'row',
@@ -2066,7 +2066,7 @@ const styles = StyleSheet.create({
   },
   feedbackCoinText: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#B45309',
   },
   magicChip: {
@@ -2085,7 +2085,7 @@ const styles = StyleSheet.create({
   },
   magicChipLabel: {
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
     lineHeight: 17,

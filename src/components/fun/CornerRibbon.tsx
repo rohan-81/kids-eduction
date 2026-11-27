@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 11,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.4,
   },
 });

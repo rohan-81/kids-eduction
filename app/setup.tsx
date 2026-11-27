@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   },
   langPillText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#0284C7',
   },
   centerWrap: {
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 12,
     textAlign: 'center',
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   },
   warnTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#B45309',
     textAlign: 'center',
   },
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   percentText: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#0284C7',
   },
   hintText: {

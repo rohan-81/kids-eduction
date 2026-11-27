@@ -212,7 +212,7 @@ export default function SettingsScreen() {
             <View style={styles.sessionMetaBox}>
               <Text style={styles.sessionMetaText}>
                 {language === 'gu' ? 'સેશન સ્થિતિ:' : language === 'hi' ? 'सत्र स्थिति:' : 'Session Status:'}{' '}
-                <Text style={{ fontWeight: '800', color: '#16A34A' }}>
+                <Text style={{ fontWeight: '600', color: '#16A34A' }}>
                   {language === 'gu' ? 'સુરક્ષિત અને સક્રિય' : language === 'hi' ? 'सुरक्षित एवं सक्रिय' : 'Secure & Active'}
                 </Text>
               </Text>
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E1B4B',
     marginBottom: 4,
     letterSpacing: -0.3,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   logoutBtnText: {
     color: '#DC2626',
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   langGrid: {
     flexDirection: 'row',
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
   },
   langNative: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '600',
     marginBottom: 2,
   },
   langEng: {
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E1B4B',
     marginBottom: 2,
   },
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
   },
   limitText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   limitTextActive: {
     color: '#FFFFFF',
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
   resetBtnText: {
     color: '#DC2626',
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   sessionHeaderRow: {
     flexDirection: 'row',
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   },
   sessionBadgeText: {
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   sessionBadgeTextActive: {
     color: '#15803D',
@@ -844,7 +844,7 @@ const styles = StyleSheet.create({
   },
   sessionMetaTextGuest: {
     fontSize: 12.5,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#92400E',
     marginBottom: 2,
   },
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
   },
   voiceCardTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#334155',
     textAlign: 'center',
     marginBottom: 2,
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
   },
   testVoiceBtnText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#7C3AED',
   },
   speedRow: {
@@ -939,6 +939,6 @@ const styles = StyleSheet.create({
   },
   speedBtnTextSelected: {
     color: '#7E22CE',
-    fontWeight: '800',
+    fontWeight: '600',
   },
 });

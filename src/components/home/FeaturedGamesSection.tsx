@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '600',
     color: '#1E293B',
     letterSpacing: -0.2,
   },
@@ -402,11 +402,11 @@ const styles = StyleSheet.create({
   },
   gameBadgeText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '600',
   },
   gameTitle: {
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     color: '#1E293B',
     marginBottom: 3,
     letterSpacing: -0.2,
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   gamePlayBtnText: {
     color: '#FFFFFF',
     fontSize: 13.5,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 0.3,
   },
 });
