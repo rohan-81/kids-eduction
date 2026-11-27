@@ -25,7 +25,7 @@ import { STORIES_DATA } from '../src/data/storiesData';
 import { RHYMES_DATA } from '../src/data/rhymesData';
 import { filterLessonsForClass } from '../src/utils/ageDetailHelper';
 import Svg, { Path } from 'react-native-svg';
-import { formatNumberDigits } from '../src/utils/languageData';
+import { formatNumberDigits, formatDurationMinutes } from '../src/utils/languageData';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
 import * as Art from '../src/components/art3d/Art3D';
 import { Glyph } from '../src/components/fun/KidIcons';
@@ -527,7 +527,7 @@ export default function ProgressScreen() {
               <AppIcon name="brain" size={32} />
             </View>
             <Text style={[styles.metricVal, { color: '#1E293B' }]}>
-              {formatNumberDigits(totalLearningMinutes, language)} {language === 'gu' ? 'મિનિટ' : language === 'hi' ? 'मिनट' : 'm'}
+              {formatDurationMinutes(totalLearningMinutes, language)}
             </Text>
             <Text style={styles.metricLabel}>
               {language === 'gu' ? 'શીખવાનો સમય' : language === 'hi' ? 'सीखने का समय' : 'Learning Time'}
@@ -664,7 +664,7 @@ export default function ProgressScreen() {
                           d.isFuture && styles.dayMinsFuture,
                         ]}
                       >
-                        {d.isFuture ? '–' : `${formatNumberDigits(d.mins, language)}m`}
+                        {d.isFuture ? '–' : formatDurationMinutes(d.mins, language, true)}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -682,7 +682,7 @@ export default function ProgressScreen() {
               <View style={styles.weeklyFooterValueRow}>
                 <Image source={ICON_3D_STAR} style={styles.footerStarIcon} resizeMode="contain" />
                 <Text style={styles.weeklyFooterValue}>
-                  {formatNumberDigits(weeklyTotalMins, language)}m
+                  {formatDurationMinutes(weeklyTotalMins, language, true)}
                 </Text>
               </View>
             </View>

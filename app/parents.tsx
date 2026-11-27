@@ -43,7 +43,7 @@ import { formatChildName } from '../src/utils/nameTransliterator';
 import { ChildProfile, AgeGroup } from '../src/types';
 import { CATEGORIES } from '../src/data/categories';
 import { LESSONS } from '../src/data/lessons';
-import { formatNumberDigits } from '../src/utils/languageData';
+import { formatNumberDigits, formatDurationMinutes } from '../src/utils/languageData';
 import { filterLessonsForClass } from '../src/utils/ageDetailHelper';
 import { ParentGate, KidModal, Glyph, useKidDialog } from '../src/components/fun';
 import { ClayButton } from '../src/components/clay';
@@ -1082,7 +1082,7 @@ export default function ParentsScreen() {
                 <View style={styles.statIconCircle}>
                   <Art.ClockArt size={36} />
                 </View>
-                <Text style={styles.statNumber}>{formatNumberDigits(activeLearningMins, language)} {language === 'gu' ? 'મિનિટ' : language === 'hi' ? 'मिनट' : 'm'}</Text>
+                <Text style={styles.statNumber}>{formatDurationMinutes(activeLearningMins, language)}</Text>
                 <Text style={styles.statLabel}>
                   {language === 'gu' ? 'અભ્યાસ સમય' : language === 'hi' ? 'अध्ययन समय' : 'Learning Time'}
                 </Text>

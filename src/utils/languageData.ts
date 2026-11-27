@@ -24,6 +24,30 @@ export const formatNumberDigits = (num: number | string, lang?: 'gu' | 'hi' | 'e
   return num.toString();
 };
 
+export const formatDurationMinutes = (
+  totalMinutes: number,
+  lang?: 'gu' | 'hi' | 'en',
+  compact = false
+): string => {
+  const safeMins = Math.max(0, Math.round(totalMinutes));
+  if (safeMins < 60) {
+    if (compact) return `${formatNumberDigits(safeMins, lang)}m`;
+    const minUnit = lang === 'gu' ? 'મિનિટ' : lang === 'hi' ? 'मिनट' : 'm';
+    return `${formatNumberDigits(safeMins, lang)} ${minUnit}`;
+  }
+  const hrs = Math.floor(safeMins / 60);
+  const remMins = safeMins % 60;
+  if (compact) {
+    return remMins > 0
+      ? `${formatNumberDigits(hrs, lang)}h ${formatNumberDigits(remMins, lang)}m`
+      : `${formatNumberDigits(hrs, lang)}h`;
+  }
+  const hrUnit = lang === 'gu' ? 'કલાક' : lang === 'hi' ? 'घंटा' : 'h';
+  const minUnit = lang === 'gu' ? 'મિનિટ' : lang === 'hi' ? 'मिनट' : 'm';
+  if (remMins === 0) return `${formatNumberDigits(hrs, lang)} ${hrUnit}`;
+  return `${formatNumberDigits(hrs, lang)} ${hrUnit} ${formatNumberDigits(remMins, lang)} ${minUnit}`;
+};
+
 export const formatMathExpression = (expr: string, lang: 'gu' | 'hi' | 'en'): string => {
   if (!expr) return '';
   const guToEng: Record<string, string> = {
