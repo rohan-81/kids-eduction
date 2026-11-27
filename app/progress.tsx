@@ -144,8 +144,14 @@ export default function ProgressScreen() {
   const langLessons = filterLessonsForClass(rawLangLessons, ageGroup, langCatIds[0]);
   const langDone = langLessons.filter((l) => completedSet.has(l.id)).length;
 
-  const rawMathLessons = LESSONS.filter((l) => l.categoryId === 'numbers');
-  const mathLessons = filterLessonsForClass(rawMathLessons, ageGroup, 'numbers');
+  const rawMathLessons = LESSONS.filter((l) =>
+    ['numbers', 'math', 'ghadiya'].includes(l.categoryId)
+  );
+  const mathLessons = [
+    ...filterLessonsForClass(rawMathLessons.filter((l) => l.categoryId === 'numbers'), ageGroup, 'numbers'),
+    ...filterLessonsForClass(rawMathLessons.filter((l) => l.categoryId === 'math'), ageGroup, 'math'),
+    ...filterLessonsForClass(rawMathLessons.filter((l) => l.categoryId === 'ghadiya'), ageGroup, 'ghadiya'),
+  ];
   const mathDone = mathLessons.filter((l) => completedSet.has(l.id)).length;
 
   const rawEnglishLessons = LESSONS.filter((l) => l.categoryId === 'en-alphabet');
@@ -171,7 +177,7 @@ export default function ProgressScreen() {
   // Rhyme ids come from the bundled catalogue (same `rhyme-${id}` key rhymes.tsx saves), so a
   // renamed or replaced rhyme can never leave a progress slot that is impossible to complete.
   const allStoryRhymeIds = [
-    'story-clever-crow',
+    'story-crow',
     'story-lion-mouse',
     'story-tortoise-hare',
     ...RHYMES_DATA.map((r) => `rhyme-${r.id.replace(/^rhyme-/, '')}`),
@@ -186,7 +192,12 @@ export default function ProgressScreen() {
 
   const storyDone = targetStoryRhymeIds.filter((id) => {
     const clean = id.replace(/^rhyme-/, '');
-    return completedSet.has(id) || completedSet.has(clean) || completedSet.has(`rhyme_${clean}`);
+    return (
+      completedSet.has(id) ||
+      completedSet.has(clean) ||
+      completedSet.has(`rhyme_${clean}`) ||
+      (id === 'story-crow' && completedSet.has('story-clever-crow'))
+    );
   }).length;
   const storyTotal = targetStoryRhymeIds.length;
 
@@ -288,7 +299,7 @@ export default function ProgressScreen() {
       done: artDone,
       total: Math.max(artLessons.length, 1),
       color: '#10B981',
-      route: '/coloring',
+      route: '/lessons?categoryId=colors-shapes',
     },
   ];
 

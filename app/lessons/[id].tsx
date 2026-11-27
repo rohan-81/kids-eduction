@@ -31,7 +31,7 @@ import { renderLesson3DVisual } from '../../src/components/Lesson3DVisuals';
 import { soundEffects } from '../../src/services/soundEffects';
 import { audioService } from '../../src/services/audioService';
 import { apiService, findBundledLesson, mergeLesson } from '../../src/services/apiService';
-import { filterLessonSiblings } from '../../src/utils/lessonNavigation';
+import { filterLessonSiblings, getMathOperationKey } from '../../src/utils/lessonNavigation';
 import { ClayButton, ImageFrame } from '../../src/components/clay';
 import { KidModal, Glyph } from '../../src/components/fun';
 import { ConfettiCelebration } from '../../src/components/common/ConfettiCelebration';
@@ -563,7 +563,19 @@ export default function LessonDetailScreen() {
     }
     if (currentLesson.categoryId === 'math') {
       const formatted = formatMathExpression(currentLesson.exampleWord || currentLesson.symbol, language);
-      return `${language === 'gu' ? 'સરવાળો' : language === 'hi' ? 'जोड़' : 'Addition'} • ${formatted}`;
+      const opKey = getMathOperationKey(currentLesson.id);
+      const opTitles: Record<string, { gu: string; hi: string; en: string }> = {
+        add: { gu: 'સરવાળો', hi: 'जोड़', en: 'Addition' },
+        sub: { gu: 'બાદબાકી', hi: 'घटाव', en: 'Subtraction' },
+        mul: { gu: 'ગુણાકાર', hi: 'गुणा', en: 'Multiplication' },
+        div: { gu: 'ભાગાકાર', hi: 'भाग', en: 'Division' },
+        frac: { gu: 'અપૂર્ણાંક', hi: 'भिन्न', en: 'Fractions' },
+        meas: { gu: 'માપન', hi: 'मापन', en: 'Measurement' },
+        dec: { gu: 'દશાંશ', hi: 'दशमलव', en: 'Decimals' },
+      };
+      const opInfo = (opKey && opTitles[opKey]) || opTitles.add;
+      const opLabel = language === 'gu' ? opInfo.gu : language === 'hi' ? opInfo.hi : opInfo.en;
+      return `${opLabel} • ${formatted}`;
     }
     if (
       currentLesson.categoryId === 'math-missing' ||

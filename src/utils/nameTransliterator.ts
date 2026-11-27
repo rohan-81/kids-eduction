@@ -282,6 +282,7 @@ export const formatChildName = (rawName: string | undefined | null, lang: AppLan
     'null',
     'undefined',
     'little star',
+    'little learner',
     'નાનો તારો',
     'छोटा तारा',
   ]);

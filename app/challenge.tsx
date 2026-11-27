@@ -26,6 +26,7 @@ import { ClayButton } from '../src/components/clay/ClayButton';
 import { ConfettiCelebration } from '../src/components/common/ConfettiCelebration';
 import { kidTones, kidPalette, claySurface, clayShadow, kidRadii } from '../src/theme/kidTheme';
 import { formatNumberDigits } from '../src/utils/languageData';
+import { formatChildName } from '../src/utils/nameTransliterator';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
 import {
   TestQuestion,
@@ -140,12 +141,19 @@ export default function ChallengeCertificateScreen() {
     };
   }, [currentQIndex, testFinished, language, questions]);
 
-  const defaultChildName =
-    [progress.firstName, progress.lastName].filter(Boolean).join(' ') ||
-    progress.childName ||
+  const rawDefaultName = [progress.firstName, progress.lastName].filter(Boolean).join(' ') || progress.childName || '';
+  const localizedChildName =
+    formatChildName(rawDefaultName, language) ||
     (language === 'gu' ? 'બાળમિત્ર' : language === 'hi' ? 'बालमित्र' : 'Little Champion');
 
-  const [childName, setChildName] = useState(defaultChildName);
+  const [childName, setChildName] = useState(localizedChildName);
+  const hasCustomNameRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasCustomNameRef.current) {
+      setChildName(localizedChildName);
+    }
+  }, [localizedChildName]);
 
   const totalQuestions = questions.length || 5;
   const q = questions[currentQIndex] || questions[0] || TEST_QUESTIONS[0];
@@ -509,7 +517,10 @@ export default function ChallengeCertificateScreen() {
                   <TextInput
                     style={styles.nameTextInput}
                     value={childName}
-                    onChangeText={setChildName}
+                    onChangeText={(txt) => {
+                      hasCustomNameRef.current = true;
+                      setChildName(txt);
+                    }}
                     autoFocus
                     placeholder={language === 'gu' ? 'નામ લખો' : language === 'hi' ? 'नाम लिखें' : 'Enter name'}
                   />

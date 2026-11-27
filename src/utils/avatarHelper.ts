@@ -3,6 +3,7 @@
  * Ensures consistent rendering of child avatars whether stored as emojis or slug strings (e.g. 'fox' -> '🦊').
  * Supports ultra-high resolution 3D Pixar-style boy avatar (512x512).
  */
+import type { ImageSourcePropType } from 'react-native';
 import { AVATAR_3D_BOY, AVATAR_3D_GIRL } from './imageHelper';
 
 export { AVATAR_3D_BOY, AVATAR_3D_GIRL };
@@ -97,12 +98,28 @@ export function normalizeAvatarEmoji(avatar?: string | null): string {
   return '🦁';
 }
 
+export function getAvatarImageSource(avatar?: string | null): ImageSourcePropType | null {
+  if (!avatar || typeof avatar !== 'string') return AVATAR_3D_BOY;
+  const lower = avatar.trim().toLowerCase();
+  if (lower === 'avatar_3d_girl' || lower === 'girl' || lower === '3d_girl' || lower === '👧') {
+    return AVATAR_3D_GIRL;
+  }
+  if (is3DAvatar(avatar)) {
+    return AVATAR_3D_BOY;
+  }
+  return null;
+}
+
 /**
  * Converts an emoji or identifier to a backend slug (e.g. '🦊' -> 'fox', 'avatar_3d_boy' -> 'avatar_3d_boy').
  */
 export function emojiToAvatarSlug(emoji?: string | null): string {
   if (!emoji || typeof emoji !== 'string') return 'avatar_3d_boy';
   const trimmed = emoji.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower === 'avatar_3d_girl' || lower === 'girl' || lower === '3d_girl' || lower === '👧') {
+    return 'avatar_3d_girl';
+  }
   if (is3DAvatar(trimmed)) return 'avatar_3d_boy';
   return EMOJI_TO_SLUG[trimmed] || 'lion';
 }

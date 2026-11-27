@@ -24,7 +24,7 @@ import { Header } from '../src/components/Header';
 import { BottomNav } from '../src/components/BottomNav';
 import { soundEffects } from '../src/services/soundEffects';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
-import { AVATAR_3D_BOY } from '../src/utils/imageHelper';
+import { getAvatarImageSource, normalizeAvatarEmoji } from '../src/utils/avatarHelper';
 import { AppIcon } from '../src/components/AppIcon';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { formatChildName } from '../src/utils/nameTransliterator';
@@ -117,7 +117,18 @@ export default function ProfileScreen() {
         {/* Child Profile Card */}
         <View style={[styles.profileCard, shadows.card]}>
           <View style={styles.avatarWrap}>
-            <Image source={AVATAR_3D_BOY} style={styles.avatarImg} resizeMode="cover" />
+            {(() => {
+              const avatarChar = progress.currentAvatar?.character || 'avatar_3d_boy';
+              const avatarSource = getAvatarImageSource(avatarChar);
+              if (avatarSource) {
+                return <Image source={avatarSource} style={styles.avatarImg} resizeMode="cover" />;
+              }
+              return (
+                <View style={[styles.avatarImg, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF' }]}>
+                  <Text style={{ fontSize: 44 }}>{normalizeAvatarEmoji(avatarChar)}</Text>
+                </View>
+              );
+            })()}
             <TouchableOpacity
               style={styles.avatarEditBadge}
               onPress={() => {

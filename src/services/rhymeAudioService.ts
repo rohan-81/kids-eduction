@@ -260,9 +260,11 @@ class RhymeAudioService {
       // Check permanently unpacked pack or local cache first for instant offline playback
       const cachePath = getRhymeCachePath(rhyme.id);
       const localRhymeUri = await resolveExistingRhymeLocalUri(rhyme.id);
+      if (this.playRequestId !== requestId) return 'superseded';
       if (localRhymeUri) {
+        let cachedPlayer: AudioPlayer | null = null;
         try {
-          const cachedPlayer = createAudioPlayerFn({ uri: localRhymeUri });
+          cachedPlayer = createAudioPlayerFn({ uri: localRhymeUri });
           if (cachedPlayer) {
             this.currentNativePlayer = cachedPlayer;
             try { cachedPlayer.volume = 1.0; } catch {}
@@ -283,7 +285,11 @@ class RhymeAudioService {
             }
             cachedPlayer.play();
             if (this.playRequestId !== requestId) {
+              try { this.currentNativeSubscription?.remove(); } catch {}
+              this.currentNativeSubscription = null;
               try { cachedPlayer.pause(); } catch {}
+              try { cachedPlayer.remove(); } catch {}
+              if (this.currentNativePlayer === cachedPlayer) this.currentNativePlayer = null;
               return 'superseded';
             }
             this.isPlayingState = true;
@@ -291,7 +297,15 @@ class RhymeAudioService {
             this.emitStatus();
             return 'started';
           }
-        } catch {}
+        } catch {
+          try { this.currentNativeSubscription?.remove(); } catch {}
+          this.currentNativeSubscription = null;
+          if (cachedPlayer) {
+            try { cachedPlayer.pause(); } catch {}
+            try { cachedPlayer.remove(); } catch {}
+            if (this.currentNativePlayer === cachedPlayer) this.currentNativePlayer = null;
+          }
+        }
       }
 
       for (const url of candidateUrls) {
@@ -299,11 +313,10 @@ class RhymeAudioService {
 
         // Remote URL availability pre-check (detect 404/offline fast before loading on native)
         if (url.startsWith('http://') || url.startsWith('https://')) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 4000);
           try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
             const probe = await fetch(url, { method: 'HEAD', signal: controller.signal });
-            clearTimeout(timeoutId);
             if (!probe.ok && probe.status !== 405) {
               // 404 (missing) or 5xx (backend trouble): skip to next candidate URL (e.g. CDN fallback)
               if (probe.status >= 500) sawNetworkError = true;
@@ -313,13 +326,16 @@ class RhymeAudioService {
             // Network failure or timeout: try next candidate URL
             sawNetworkError = true;
             continue;
+          } finally {
+            clearTimeout(timeoutId);
           }
         }
 
         if (this.playRequestId !== requestId) return 'superseded';
 
+        let player: AudioPlayer | null = null;
         try {
-          const player = createAudioPlayerFn({ uri: url });
+          player = createAudioPlayerFn({ uri: url });
           if (!player) {
             sawNetworkError = true;
             continue;
@@ -352,7 +368,11 @@ class RhymeAudioService {
 
           player.play();
           if (this.playRequestId !== requestId) {
+            try { this.currentNativeSubscription?.remove(); } catch {}
+            this.currentNativeSubscription = null;
             try { player.pause(); } catch {}
+            try { player.remove(); } catch {}
+            if (this.currentNativePlayer === player) this.currentNativePlayer = null;
             return 'superseded';
           }
           this.isPlayingState = true;
@@ -368,12 +388,15 @@ class RhymeAudioService {
           }
           return 'started';
         } catch {
+          try { this.currentNativeSubscription?.remove(); } catch {}
+          this.currentNativeSubscription = null;
+          if (player) {
+            try { player.pause(); } catch {}
+            try { player.remove(); } catch {}
+          }
+          if (this.currentNativePlayer === player) this.currentNativePlayer = null;
           if (this.playRequestId !== requestId) return 'superseded';
           sawNetworkError = true;
-          if (this.currentNativePlayer) {
-            try { this.currentNativePlayer.pause(); } catch {}
-            this.currentNativePlayer = null;
-          }
           continue;
         }
       }

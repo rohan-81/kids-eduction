@@ -10,6 +10,7 @@ import { BottomNav } from '../src/components/BottomNav';
 import { soundEffects } from '../src/services/soundEffects';
 import { AppIcon } from '../src/components/AppIcon';
 import { formatNumberDigits } from '../src/utils/languageData';
+import { formatChildName } from '../src/utils/nameTransliterator';
 import { AppLanguage } from '../src/types';
 import { BADGE_DEFINITIONS, BadgeItemDef } from '../src/data/badgesData';
 import { apiService } from '../src/services/apiService';
@@ -39,7 +40,8 @@ export default function RewardsScreen() {
     };
   }, [language]);
 
-  const childGreeting = progress.childName || (language === 'gu' ? 'નાના દોસ્ત' : language === 'hi' ? 'छोटे दोस्त' : 'Young Star');
+  const formattedName = formatChildName(progress.childName, language);
+  const childGreeting = formattedName || (language === 'gu' ? 'નાના દોસ્ત' : language === 'hi' ? 'छोटे दोस्त' : 'Young Star');
 
   const completedCount = progress.completedLessons?.length || 0;
   const gamesCount = Object.keys(progress.gameStats || {}).length;

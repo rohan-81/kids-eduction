@@ -41,7 +41,7 @@ interface AppContextValue {
   isGuest: boolean;
   activeProfileId: number | string;
   switchProfile: (profileId: number | string, newAgeGroup?: AgeGroup, nickname?: string) => Promise<UserProgress>;
-  continueAsGuest: (childName?: string, ageGroup?: AgeGroup, avatar?: string) => Promise<void>;
+  continueAsGuest: (childName?: string, ageGroup?: AgeGroup, avatar?: string, markNameCompleted?: boolean) => Promise<void>;
   t: (key: string, vars?: Record<string, string | number>) => string;
   setLanguage: (lang: AppLanguage) => Promise<void>;
   setAgeGroup: (group: AgeGroup) => Promise<void>;
@@ -81,6 +81,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [session, setSession] = useState<SessionData | null>(null);
   const [isGuest, setIsGuest] = useState<boolean>(false);
   const [activeProfileId, setActiveProfileId] = useState<number | string>(1);
+  const profileEpochRef = React.useRef<number>(0);
   const [voiceGender, setVoiceGenderState] = useState<'male' | 'female' | 'child'>(audioService.getVoiceGender());
   const [voiceRate, setVoiceRateState] = useState<number>(audioService.getVoiceRate());
   const [voicePitch, setVoicePitchState] = useState<number>(audioService.getVoicePitch());
@@ -140,6 +141,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         setActiveProfileId(resolvedActiveId);
         storageService.setProfile(resolvedActiveId);
+        if (String(resolvedActiveId) !== String(storedActiveId)) {
+          const numericId =
+            typeof resolvedActiveId === 'number'
+              ? resolvedActiveId
+              : parseInt(String(resolvedActiveId), 10) || 1;
+          backendService.setActiveProfileId(numericId).catch(() => {});
+        }
 
         // 2. Load preferences & progress for this active child profile
         const [savedPrefs, savedProg] = await Promise.all([
@@ -212,10 +220,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // Trigger background cloud synchronization with Django backend
         if (activeSession && activeSession.token && activeSession.user) {
+          const syncEpoch = profileEpochRef.current;
           backendService.syncAllProgressWithCloud(activeProg, false, Number(resolvedActiveId)).then(async (serverState) => {
-            const update = mergeServerProgress(activeProg, serverState);
+            if (syncEpoch !== profileEpochRef.current) return;
+            const latestLocal = await storageService.getProgress();
+            if (syncEpoch !== profileEpochRef.current) return;
+            const update = mergeServerProgress(latestLocal, serverState);
             if (update) {
-              setProgress(await storageService.saveProgress(update));
+              const saved = await storageService.saveProgress(update);
+              if (syncEpoch === profileEpochRef.current) setProgress(saved);
             }
           }).catch(() => {});
         }
@@ -229,7 +242,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const continueAsGuest = async (
     childName?: string,
     ageGroupOption?: AgeGroup,
-    avatarChoice?: string
+    avatarChoice?: string,
+    markNameCompleted?: boolean
   ) => {
     setIsGuest(true);
     const chosenName = (childName && childName.trim().length > 0) ? childName.trim() : 'Little Star';
@@ -244,7 +258,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     storageService.setPrimaryProfileId(guestProfile.id);
 
     // 2. Persist guest preferences & progress cleanly
-    const hasName = chosenName !== 'Little Star' && chosenName !== 'Little' && chosenName !== 'aa' && chosenName !== 'bb';
+    const hasName =
+      Boolean(markNameCompleted) ||
+      (chosenName !== 'Little Star' && chosenName !== 'Little' && chosenName !== 'aa' && chosenName !== 'bb');
     const [updatedPrefs, updatedProg] = await Promise.all([
       storageService.savePreferences({
         hasCompletedOnboarding: true,
@@ -315,7 +331,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {}
 
     const updatedProg = await storageService.saveProgress({
-      childName: childName?.trim() || '',
+      ...(childName !== undefined ? { childName: childName.trim() } : {}),
       hasCompletedFirstTimeName: true,
       ...(dob ? { dob } : {}),
     });
@@ -433,8 +449,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       wrongAnswers: [],
       lastActive: new Date().toISOString(),
     };
-    await storageService.overwriteProgress(cleanProgress);
-    await storageService.resetUserProgress(cleanProgress.childName);
+    profileEpochRef.current += 1;
+    await storageService.resetUserProgress(cleanProgress.childName, {
+      firstName: cleanProgress.firstName,
+      lastName: cleanProgress.lastName,
+      dob: cleanProgress.dob,
+      hasCompletedFirstTimeName: cleanProgress.hasCompletedFirstTimeName,
+    });
     setProgress(cleanProgress);
     if (authToken && !isGuest) {
       // backendService persists a pending-reset flag and re-sends `is_reset: true` on every
@@ -493,11 +514,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       setProgress(userProg);
 
+      profileEpochRef.current += 1;
+      const syncEpoch = profileEpochRef.current;
       const targetChildId = result.user.child_profiles?.[0]?.id;
       backendService.syncAllProgressWithCloud(userProg, false, targetChildId).then(async (serverState) => {
-        const update = mergeServerProgress(userProg, serverState);
+        if (syncEpoch !== profileEpochRef.current) return;
+        const latestLocal = await storageService.getProgress();
+        if (syncEpoch !== profileEpochRef.current) return;
+        const update = mergeServerProgress(latestLocal, serverState);
         if (update) {
-          setProgress(await storageService.saveProgress(update));
+          const saved = await storageService.saveProgress(update);
+          if (syncEpoch === profileEpochRef.current) setProgress(saved);
         }
       }).catch(() => {});
     }
@@ -591,6 +618,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     newAgeGroup?: AgeGroup,
     nickname?: string
   ): Promise<UserProgress> => {
+    profileEpochRef.current += 1;
+    const syncEpoch = profileEpochRef.current;
     setActiveProfileId(profileId);
     storageService.setProfile(profileId);
     await backendService.setActiveProfileId(
@@ -611,20 +640,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setProgress(profProgress);
     backendService.syncAllProgressWithCloud(profProgress, false, Number(profileId)).then(async (serverState) => {
-      const update = mergeServerProgress(profProgress, serverState);
+      if (syncEpoch !== profileEpochRef.current) return;
+      const latestLocal = await storageService.getProgress();
+      if (syncEpoch !== profileEpochRef.current) return;
+      const update = mergeServerProgress(latestLocal, serverState);
       if (update) {
-        setProgress(await storageService.saveProgress(update));
+        const saved = await storageService.saveProgress(update);
+        if (syncEpoch === profileEpochRef.current) setProgress(saved);
       }
     }).catch(() => {});
     return profProgress;
   };
 
   const logoutUser = async (): Promise<void> => {
+    profileEpochRef.current += 1;
     await sessionService.endSession();
     await backendService.clearLocalProfiles();
     await backendService.clearGuestProfiles();
     storageService.setUser(null);
     storageService.setProfile(null);
+    storageService.setPrimaryProfileId(null);
     setActiveProfileId(1);
     setCurrentUser(null);
     setAuthToken(null);

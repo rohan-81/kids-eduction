@@ -17,7 +17,7 @@ import { spacing, radii, shadows } from '../../theme/spacing';
 import { soundEffects } from '../../services/soundEffects';
 import { AgeGroup, AppLanguage } from '../../types';
 import { formatNumberDigits } from '../../utils/languageData';
-import { AVATAR_3D_BOY } from '../../utils/imageHelper';
+import { getAvatarImageSource, normalizeAvatarEmoji } from '../../utils/avatarHelper';
 import { AppIcon } from '../AppIcon';
 import { ClayBadgeToken, TokenTone } from '../SubjectBadgeIcons';
 import * as Art from '../art3d/Art3D';
@@ -153,7 +153,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   onSelectStandard,
 }) => {
   const router = useRouter();
-  const { isAuthenticated, currentUser, logoutUser } = useApp();
+  const { isAuthenticated, currentUser, logoutUser, progress } = useApp();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
 
@@ -207,11 +207,14 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             accessibilityLabel="Profile"
             accessibilityRole="button"
           >
-            <Image
-              source={AVATAR_3D_BOY}
-              style={styles.topProfileAvatar}
-              resizeMode="cover"
-            />
+            {(() => {
+              const avatarChar = progress.currentAvatar?.character || 'avatar_3d_boy';
+              const avatarSource = getAvatarImageSource(avatarChar);
+              if (avatarSource) {
+                return <Image source={avatarSource} style={styles.topProfileAvatar} resizeMode="cover" />;
+              }
+              return <Text style={{ fontSize: 22 }}>{normalizeAvatarEmoji(avatarChar)}</Text>;
+            })()}
           </TouchableOpacity>
 
           <View style={styles.userNameBlock}>

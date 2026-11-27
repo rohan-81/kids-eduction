@@ -143,7 +143,10 @@ export default function ParentsScreen() {
       if (currentChildName) {
         let matched = false;
         list = list.map((p) => {
-          if (p.nickname === 'Little Star' || p.nickname === 'નાનો તારો' || p.nickname === 'छोटा तारा') {
+          if (
+            String(p.id) === String(activeId) &&
+            (p.nickname === 'Little Star' || p.nickname === 'નાનો તારો' || p.nickname === 'छोटा तारा')
+          ) {
             matched = true;
             return { ...p, nickname: currentChildName };
           }
@@ -157,16 +160,11 @@ export default function ParentsScreen() {
         storageService.setPrimaryProfileId(list[0].id);
       }
       setActiveProfileId(activeId);
-      let activeObj = list.find((p) => p.id === activeId);
-      if (activeObj) {
-        if (ageGroup && activeObj.age_group !== ageGroup) {
-          activeObj.age_group = ageGroup;
-          list = list.map((p) => (p.id === activeObj!.id ? { ...p, age_group: ageGroup } : p));
-          backendService.updateProfileAgeGroup(activeObj.id, ageGroup).catch(() => {});
-        }
-        if (switchProfile) {
-          await switchProfile(activeObj.id, activeObj.age_group, activeObj.nickname);
-        }
+      const activeObj = list.find((p) => p.id === activeId);
+      if (activeObj && ageGroup && activeObj.age_group !== ageGroup) {
+        activeObj.age_group = ageGroup;
+        list = list.map((p) => (p.id === activeObj.id ? { ...p, age_group: ageGroup } : p));
+        backendService.updateProfileAgeGroup(activeObj.id, ageGroup).catch(() => {});
       }
       setProfiles(list);
     } catch {

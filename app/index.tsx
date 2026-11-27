@@ -40,7 +40,7 @@ export default function SplashScreen() {
   }, []);
 
   const navigateToOnboarding = async () => {
-    if (hasNavigated.current) return;
+    if (isLoading || hasNavigated.current) return;
     hasNavigated.current = true;
 
     const boot = await (bootCheckRef.current || Promise.resolve({ packInstalled: true, online: true }));

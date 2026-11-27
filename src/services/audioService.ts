@@ -1731,10 +1731,17 @@ export const audioService = {
         };
 
         audio.onerror = () => {
+          if (requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          if (activeWebAudio === audio) activeWebAudio = null;
           this.speakWebSynthesis(text, lang, requestId, onDone);
         };
 
-        audio.play().catch(() => {
+        audio.play().catch((err) => {
+          const errName = (err as { name?: string } | null)?.name;
+          if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) {
+            return;
+          }
+          if (activeWebAudio === audio) activeWebAudio = null;
           this.speakWebSynthesis(text, lang, requestId, onDone);
         });
         return;
@@ -1848,12 +1855,20 @@ export const audioService = {
           }
         };
 
-        audio.onerror = () => {
+        let chunkErrored = false;
+        let usingProxy = Boolean(proxyUrl);
+        const handleChunkFallbackOrAdvance = () => {
+          if (chunkErrored || requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          chunkErrored = true;
           if (trackInterval) clearInterval(trackInterval);
           // If proxy failed, try direct Google TTS
-          if (proxyUrl && audio.src === proxyUrl && directUrl) {
+          if (usingProxy && directUrl) {
+            usingProxy = false;
+            chunkErrored = false;
             audio.src = directUrl;
-            audio.play().catch(() => {
+            audio.play().catch((err) => {
+              const errName = (err as { name?: string } | null)?.name;
+              if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
               cumulativeWords += chunkWordCount;
               cumulativeChars += chunkChars;
               currentChunkIdx++;
@@ -1867,22 +1882,18 @@ export const audioService = {
           playNextChunk();
         };
 
+        audio.onerror = handleChunkFallbackOrAdvance;
+
         const playPromise = audio.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch((err) => {
             const errName = (err as { name?: string } | null)?.name;
             // Intentional stop/pause during rapid navigation rejects play() with AbortError; ignore cleanly.
-            if (errName === 'AbortError' || activeWebAudio !== audio) {
-              finishOnce();
+            if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) {
               return;
             }
             console.warn('Web audio play failed, trying direct fallback:', err);
-            if (proxyUrl && audio.src === proxyUrl && directUrl) {
-              audio.src = directUrl;
-              audio.play().catch(() => finishOnce());
-            } else {
-              finishOnce();
-            }
+            handleChunkFallbackOrAdvance();
           });
         }
       };
@@ -2491,23 +2502,13 @@ export const audioService = {
 
         audio.onended = onSentenceFinish;
 
-        audio.onerror = () => {
+        let sentenceHandledError = false;
+        let usingSentenceProxy = Boolean(proxyUrl);
+        const fallbackSentenceToWebSpeech = () => {
+          if (sentenceHandledError || requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          sentenceHandledError = true;
           if (trackInterval) clearInterval(trackInterval);
-          // Try direct URL if proxy failed
-          if (proxyUrl && audio && audio.src === proxyUrl && directUrl) {
-            audio.src = directUrl;
-            audio.play().catch(() => {
-              this.speakWebSynthesis(s.cleanText, effectiveLang, requestId, () => {
-                sentenceIdx++;
-                setTimeout(playSentence, 220);
-              }, {
-                startWordIndex: s.startWordIndex,
-                totalGlobalWords: globalWordSpans.length,
-                startChar: s.startChar,
-              });
-            });
-            return;
-          }
+          if (activeWebAudio === audio) activeWebAudio = null;
           this.speakWebSynthesis(s.cleanText, effectiveLang, requestId, () => {
             sentenceIdx++;
             setTimeout(playSentence, 220);
@@ -2518,16 +2519,30 @@ export const audioService = {
           });
         };
 
+        audio.onerror = () => {
+          if (requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          if (trackInterval) clearInterval(trackInterval);
+          // Try direct URL if proxy failed
+          if (usingSentenceProxy && audio && directUrl) {
+            usingSentenceProxy = false;
+            audio.src = directUrl;
+            audio.play().catch((err) => {
+              const errName = (err as { name?: string } | null)?.name;
+              if (errName === 'AbortError') return;
+              fallbackSentenceToWebSpeech();
+            });
+            return;
+          }
+          fallbackSentenceToWebSpeech();
+        };
+
         audio.play().catch((err) => {
+          const errName = (err as { name?: string } | null)?.name;
+          if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) {
+            return;
+          }
           if (IS_DEV) console.log('[AudioService] audio.play() caught:', err);
-          this.speakWebSynthesis(s.cleanText, effectiveLang, requestId, () => {
-            sentenceIdx++;
-            setTimeout(playSentence, 220);
-          }, {
-            startWordIndex: s.startWordIndex,
-            totalGlobalWords: globalWordSpans.length,
-            startChar: s.startChar,
-          });
+          fallbackSentenceToWebSpeech();
         });
 
         return;

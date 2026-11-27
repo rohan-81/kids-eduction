@@ -233,8 +233,16 @@ export default function SubjectsScreen() {
 
     if (catId === 'colors-shapes') {
       const allCS = LESSONS.filter((l) => l.categoryId === 'colors-shapes');
+      const colorIds = [
+        'cs-red', 'cs-blue', 'cs-yellow', 'cs-green', 'cs-orange',
+        'cs-purple', 'cs-pink', 'cs-brown', 'cs-white', 'cs-black',
+      ];
       if (topic.id === 'patterns' || subCatId === 'patterns') {
         relevantLessons = allCS.filter((l) => l.id.startsWith('cs-pattern'));
+      } else if (subCatId === 'geometry' || subCatId === 'shapes' || topic.id === 'shapes-sequences') {
+        relevantLessons = allCS.filter((l) => !colorIds.includes(l.id) && !l.id.startsWith('cs-pattern'));
+      } else if (subCatId === 'colors' || topic.id === 'colors') {
+        relevantLessons = allCS.filter((l) => colorIds.includes(l.id));
       } else {
         relevantLessons = allCS.filter((l) => !l.id.startsWith('cs-pattern'));
       }
@@ -266,10 +274,22 @@ export default function SubjectsScreen() {
 
     const resolvedCatId = catId || 'math';
     const filtered = filterLessonsForClass(relevantLessons, ageGroup, resolvedCatId);
-    const total = filtered.length > 0 ? filtered.length : (topic.totalCount || relevantLessons.length || 1);
-    const done = filtered.length > 0
+    let total = filtered.length > 0 ? filtered.length : (topic.totalCount || relevantLessons.length || 1);
+    let done = filtered.length > 0
       ? filtered.filter((l) => completedSet.has(l.id)).length
       : Array.from(completedSet).filter((id) => id.includes(topic.id)).length;
+
+    if (!catId && filtered.length === 0) {
+      const gameMatch = topic.route.match(/^\/games\/([^/?]+)/) || topic.route.match(/[?&]type=([^&]+)/);
+      const gameKey = gameMatch ? gameMatch[1] : topic.route === '/challenge' ? 'challenge' : null;
+      const gStats = gameKey ? progress.gameStats?.[gameKey] : undefined;
+      if (topic.totalCount === undefined) {
+        total = topic.route === '/challenge' ? 25 : 10;
+      }
+      if (gStats && gStats.timesPlayed > 0) {
+        done = Math.min(total, Math.max(1, gStats.highScore || 1));
+      }
+    }
     const percent = Math.min(100, Math.round((done / total) * 100));
     return { done, total, percent };
   };
@@ -331,13 +351,13 @@ export default function SubjectsScreen() {
     },
     {
       id: 'addition',
-      name: language === 'gu' ? 'સરવાળા અને બાદબાકી' : language === 'hi' ? 'जोड़ और घटाव' : 'Add & Subtract',
+      name: language === 'gu' ? 'સરવાળા' : language === 'hi' ? 'जोड़' : 'Addition',
       subtitle:
         language === 'gu'
-          ? 'સરળ સરવાળા અને બાદબાકી શીખો'
+          ? 'સરળ સરવાળા શીખો'
           : language === 'hi'
-            ? 'सरल जोड़ और घटाव सीखें'
-            : 'Learn basic addition and subtraction',
+            ? 'सरल जोड़ सीखें'
+            : 'Learn basic addition',
       count: formatTopicCount(6),
       totalCount: 6,
       icon: <TopicAdditionBadge size={56} />,
@@ -931,8 +951,13 @@ export default function SubjectsScreen() {
           {/* Bell Icon on Right */}
           <TouchableOpacity
             style={styles.bellButton}
-            onPress={() => soundEffects.playBubblePop()}
+            onPress={() => {
+              soundEffects.playBubblePop();
+              router.push('/progress');
+            }}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Progress and Activity"
           >
             <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
               <Path

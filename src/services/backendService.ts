@@ -248,10 +248,26 @@ class BackendService {
           if (outcome === 'retry') return;
 
           await this.withOutbox(async (current) => {
-            let next = current.filter((o) => JSON.stringify(o) !== JSON.stringify(op));
+            let extraPatchForCreate: Record<string, unknown> | null = null;
+            let next = current.filter((o) => {
+              if (op.kind === 'create' && o.kind === 'create' && o.localId === op.localId) {
+                const sentBody = op.body as Record<string, unknown>;
+                const curBody = o.body as Record<string, unknown>;
+                const diff: Record<string, unknown> = {};
+                for (const [k, v] of Object.entries(curBody)) {
+                  if (sentBody[k] !== v) diff[k] = v;
+                }
+                if (Object.keys(diff).length > 0) extraPatchForCreate = diff;
+                return false;
+              }
+              return JSON.stringify(o) !== JSON.stringify(op);
+            });
             if (op.kind === 'create' && outcome === 'ok' && serverProfile?.id) {
               const serverId = Number(serverProfile.id);
               next = next.map((o) => (o.kind !== 'create' && o.id === op.localId ? { ...o, id: serverId } : o));
+              if (extraPatchForCreate) {
+                next = [...next, { kind: 'patch', id: serverId, body: extraPatchForCreate as Partial<ChildProfile> }];
+              }
             }
             return { ops: next, result: undefined };
           });

@@ -269,6 +269,10 @@ export default function GameRunnerScreen() {
     if (advanceTimerRef.current) {
       clearTimeout(advanceTimerRef.current);
     }
+    isAnsweredRef.current = false;
+    setSelectedOptionId(null);
+    setIsAnswered(false);
+    setFeedback(null);
     setLives(maxLives);
     setOutOfLives(false);
     setCoinsEarned(0);
@@ -375,6 +379,13 @@ export default function GameRunnerScreen() {
           options: shuffleArray(q.options || []),
         }));
         setQuestions(fallbackQuestions);
+        setCurrentIndex(0);
+        setSelectedOptionId(null);
+        setIsAnswered(false);
+        isAnsweredRef.current = false;
+        setScore(0);
+        setFeedback(null);
+        setIsGameOver(false);
       });
 
     // Initialize Memory Match cards adapted to age group with fresh random emoji pool and sequence
@@ -1169,7 +1180,11 @@ export default function GameRunnerScreen() {
                       shadows.soft,
                     ]}
                   >
-                    {option.visual && <VisualArt value={option.visual} size={54} textStyle={styles.findObjectCardEmoji} />}
+                    {option.visual ? (
+                      <VisualArt value={option.visual} size={54} textStyle={styles.findObjectCardEmoji} />
+                    ) : (
+                      <EmojiArt emoji={splitEmojiLabel(option.label || '').emoji} size={52} />
+                    )}
                     <Text style={styles.findObjectCardLabel}>{splitEmojiLabel(option.label).label}</Text>
                   </TouchableOpacity>
                 );

@@ -656,11 +656,11 @@ export default function StoryModeScreen() {
     soundEffects.playTadaaa();
     // Like rhymes and word builder: the completion bonus is paid on the first read only.
     if (!progress.completedLessons?.includes(selectedStory.id)) {
-      addCoins(20);
+      // markLessonCompleted awards +10 coins & +1 star; add +10 more coins for 20 total.
+      addCoins(10);
     }
     try {
       completeLesson(selectedStory.id);
-      completeLesson('story-' + selectedStory.id);
     } catch { }
     setIsStoryFinished(true);
     flipIn();
@@ -892,7 +892,7 @@ export default function StoryModeScreen() {
                   story={s}
                   index={i}
                   lang={activeLang}
-                  isRead={completed.has('story-' + s.id)}
+                  isRead={completed.has(s.id) || completed.has('story-' + s.id)}
                   width={coverWidth}
                   onOpen={() => startStory(s)}
                 />

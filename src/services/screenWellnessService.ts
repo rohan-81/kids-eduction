@@ -65,6 +65,7 @@ class ScreenWellnessService {
   private snoozeUntilMinute: number = 0;
   private isEyeCareAlertActive: boolean = false;
   private isLimitAlertActive: boolean = false;
+  private isLimitDismissedToBedtime: boolean = false;
   private isAppActive: boolean = true;
   private appStateSubscription: NativeEventSubscription | null = null;
   private initialized: boolean = false;
@@ -241,8 +242,9 @@ class ScreenWellnessService {
     this.dailyMinutesUsed = 0;
     this.continuousMinutes = 0;
     this.snoozeUntilMinute = 0;
-    const wasLocked = this.isLimitAlertActive;
+    const wasLocked = this.isLimitAlertActive || this.isLimitDismissedToBedtime;
     this.isLimitAlertActive = false;
+    this.isLimitDismissedToBedtime = false;
     if (wasLocked) this.listeners.forEach((l) => l.onDailyLimitUnlocked?.());
   }
 
@@ -275,12 +277,11 @@ class ScreenWellnessService {
 
     if (deltaMinutes <= 0) return;
 
-    // 1. Eye care reminder: every 20 continuous minutes
+    // 1. Eye care reminder: every 20 continuous minutes (handles >= 2 min ticks cleanly)
     if (
       this.eyeCareEnabled &&
       !this.isEyeCareAlertActive &&
-      this.continuousMinutes > 0 &&
-      this.continuousMinutes % 20 === 0
+      this.continuousMinutes >= 20
     ) {
       this.isEyeCareAlertActive = true;
       this.listeners.forEach((l) => l.onEyeCareDue?.());
@@ -291,6 +292,7 @@ class ScreenWellnessService {
     if (
       limitMinutes > 0 &&
       !this.isLimitAlertActive &&
+      !this.isLimitDismissedToBedtime &&
       this.dailyMinutesUsed >= limitMinutes &&
       this.dailyMinutesUsed >= this.snoozeUntilMinute
     ) {
@@ -364,9 +366,16 @@ class ScreenWellnessService {
     if (limitMinutes === 0 || this.dailyMinutesUsed < limitMinutes) {
       // Limit relaxed or set to unlimited: unlock immediately
       this.isLimitAlertActive = false;
+      this.isLimitDismissedToBedtime = false;
       this.snoozeUntilMinute = 0;
+      await this.saveDailyUsage(this.dailyMinutesUsed);
       this.listeners.forEach((l) => l.onDailyLimitUnlocked?.());
-    } else if (limitMinutes > 0 && this.dailyMinutesUsed >= limitMinutes) {
+    } else if (
+      limitMinutes > 0 &&
+      this.dailyMinutesUsed >= limitMinutes &&
+      this.dailyMinutesUsed >= this.snoozeUntilMinute &&
+      !this.isLimitDismissedToBedtime
+    ) {
       this.isLimitAlertActive = true;
       this.listeners.forEach((l) =>
         l.onDailyLimitReached?.(this.dailyMinutesUsed, limitMinutes)
@@ -436,6 +445,7 @@ class ScreenWellnessService {
     this.continuousMinutes = 0;
     this.snoozeUntilMinute = 0;
     this.isLimitAlertActive = false;
+    this.isLimitDismissedToBedtime = false;
     this.lastActiveCheckpointMs = this.isAppActive ? Date.now() : null;
     delete this.historySeconds[this.dailyDateKey];
     await this.saveDailyUsage(0);
@@ -453,6 +463,7 @@ class ScreenWellnessService {
    */
   snoozeDailyLimit(additionalMinutes: number = 15) {
     this.isLimitAlertActive = false;
+    this.isLimitDismissedToBedtime = false;
     // Grants additional active minutes before prompting again
     this.snoozeUntilMinute = this.dailyMinutesUsed + additionalMinutes;
     // Persist so the grown-up's extra time survives an app relaunch
@@ -465,6 +476,7 @@ class ScreenWellnessService {
    */
   dismissDailyLimit() {
     this.isLimitAlertActive = false;
+    this.isLimitDismissedToBedtime = true;
   }
 }
 
