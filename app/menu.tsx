@@ -112,7 +112,7 @@ const MENU_ITEMS: MenuItem[] = [
     descGu: 'રોજિંદી સારી આદતો અને વાંચન કેલેન્ડર',
     descHi: 'दैनिक आदतें और लक्ष्य ट्रैकर',
     bgColor: '#FDF2F8',
-    route: '/calendar_habits',
+    route: '/calendar_habits?tab=habits',
   },
   {
     id: 'adventure',

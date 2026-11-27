@@ -37,6 +37,7 @@ import { AppGlobalBackground } from '../../src/components/common/AppGlobalBackgr
 import * as Art from '../../src/components/art3d/Art3D';
 import { VisualArt, EmojiArt, splitEmojiLabel } from '../../src/components/art3d/ContentArt';
 import { resolveOfflineMediaSource } from '../../src/utils/remoteAssets';
+import { webStyle } from '../../src/utils/webStyle';
 import type { TimerHandle } from '../../src/utils/runtime';
 
 /** Balloon Pop pacing (ms): auto-advance after a correct pop, and the burst animation length. */
@@ -914,6 +915,8 @@ export default function GameRunnerScreen() {
     );
   }
 
+  const isQuizMode = gameType !== 'memory-match' && gameType !== 'picture-puzzle';
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <AppGlobalBackground id="gamePlayerBgGrad" />
@@ -925,12 +928,18 @@ export default function GameRunnerScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={[styles.container, isBalloonPop && styles.balloonContainer]}
+        scrollEnabled={!isQuizMode}
+        style={isQuizMode ? webStyle({ overflowY: 'hidden' }) : undefined}
+        contentContainerStyle={[
+          styles.container,
+          isQuizMode && styles.quizContainer,
+          isBalloonPop && styles.balloonContainer,
+        ]}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
       >
         {/* Game-show HUD: hearts, level star meter, coin bank */}
-        <View style={[styles.hud, isBalloonPop && styles.balloonHud, clayShadow(2)]}>
+        <View style={[styles.hud, (isBalloonPop || isQuizMode) && styles.balloonHud, clayShadow(2)]}>
           <View style={styles.hudTopRow}>
             {usesLives ? <HeartMeter lives={lives} max={maxLives} /> : <Art.GamepadArt size={29} />}
             <View style={styles.hudCoins}>
@@ -1309,6 +1318,7 @@ export default function GameRunnerScreen() {
             <View
               style={[
                 styles.promptCard,
+                isQuizMode && !isBalloonPop && styles.quizPromptCard,
                 gameType === 'balloon-pop' && styles.balloonPromptCard,
                 shadows.soft,
               ]}
@@ -1334,13 +1344,13 @@ export default function GameRunnerScreen() {
                 </View>
               ) : (
                 <>
-                  <Text style={styles.promptText}>
+                  <Text style={[styles.promptText, isQuizMode && styles.quizPromptText]}>
                     {getLocalizedPrompt(currentQ)}
                   </Text>
 
                   {/* Display Real Image, Visual, or Repeated Counting Items */}
                   {currentQ.displayImageSource || currentQ.displayImage ? (
-                    <View style={styles.gameImageBox}>
+                    <View style={[styles.gameImageBox, isQuizMode && styles.quizImageBox]}>
                       <Image
                         source={resolveOfflineMediaSource(
                           currentQ.displayImageSource || {
@@ -1352,18 +1362,18 @@ export default function GameRunnerScreen() {
                       />
                     </View>
                   ) : currentQ.countTarget ? (
-                    <View style={styles.counterRow}>
+                    <View style={[styles.counterRow, isQuizMode && styles.quizCounterRow]}>
                       {Array.from({ length: currentQ.countTarget }).map((_, i) => {
                         const singleEmoji = currentQ.displayVisual
                           ? currentQ.displayVisual.trim().split(/\s+/)[0]
                           : '⭐';
                         return (
-                          <VisualArt key={i} value={singleEmoji} size={50} textStyle={styles.counterItem} />
+                          <VisualArt key={i} value={singleEmoji} size={isQuizMode ? 36 : 50} textStyle={styles.counterItem} />
                         );
                       })}
                     </View>
                   ) : currentQ.displayVisual && currentQ.displayVisual.includes('_') ? (
-                    <View style={styles.sequenceContainer}>
+                    <View style={[styles.sequenceContainer, isQuizMode && styles.quizSequenceContainer]}>
                       <View style={styles.sequenceRow}>
                         {currentQ.displayVisual.split(/\s+/).filter(Boolean).map((part, pIdx) => {
                           const isBlank = part.includes('_');
@@ -1406,19 +1416,20 @@ export default function GameRunnerScreen() {
                     <View
                       style={[
                         styles.visualBox,
+                        isQuizMode && styles.quizVisualBox,
                         currentQ.displayVisualColor
                           ? { backgroundColor: currentQ.displayVisualColor }
                           : null,
                       ]}
                     >
-                      <VisualArt value={currentQ.displayVisual} size={54} textStyle={styles.visualText} />
+                      <VisualArt value={currentQ.displayVisual} size={isQuizMode ? 42 : 54} textStyle={styles.visualText} />
                     </View>
                   ) : null}
 
                   {/* Speaker for Listen & Choose or Prompt Audio */}
                   <AudioSpeakerButton
                     onPress={() => speak(getLocalizedAudioText(currentQ), language)}
-                    size={50}
+                    size={isQuizMode ? 42 : 50}
                     label={t('lesson.repeatAudio')}
                   />
                 </>
@@ -1430,7 +1441,7 @@ export default function GameRunnerScreen() {
               style={
                 isBalloonPop
                   ? [styles.balloonGrid, { maxWidth: width >= BALLOON_WIDE_MIN ? undefined : BALLOON_TWO_COL_MAX }]
-                  : styles.optionsGrid
+                  : [styles.optionsGrid, isQuizMode && styles.quizOptionsGrid]
               }
             >
               {currentQ.options.map((option, optIdx) => {
@@ -1597,6 +1608,7 @@ export default function GameRunnerScreen() {
                     activeOpacity={0.8}
                     style={[
                       styles.optionCard,
+                      isQuizMode && styles.quizOptionCard,
                       {
                         backgroundColor: cardBg,
                         borderColor: cardBorder,
@@ -1615,11 +1627,11 @@ export default function GameRunnerScreen() {
                         />
                       ) : null}
                       {option.visual ? (
-                        <VisualArt value={option.visual} size={36} textStyle={styles.optionVisual} />
+                        <VisualArt value={option.visual} size={isQuizMode ? 30 : 36} textStyle={styles.optionVisual} />
                       ) : (
-                        <EmojiArt emoji={splitEmojiLabel(option.label || '').emoji} size={36} />
+                        <EmojiArt emoji={splitEmojiLabel(option.label || '').emoji} size={isQuizMode ? 30 : 36} />
                       )}
-                      <Text style={styles.optionLabel}>
+                      <Text style={[styles.optionLabel, isQuizMode && styles.quizOptionLabel]}>
                         {option.visual || splitEmojiLabel(option.label || '').emoji ? splitEmojiLabel(option.label || '').label : option.label}
                       </Text>
                     </View>
@@ -1633,6 +1645,7 @@ export default function GameRunnerScreen() {
               <View
                 style={[
                   styles.feedbackBanner,
+                  isQuizMode && styles.quizFeedbackBanner,
                   isBalloonPop && styles.balloonFeedbackBanner,
                   {
                     backgroundColor: feedback.isCorrect ? colors.mint : colors.yellow,
@@ -1654,7 +1667,11 @@ export default function GameRunnerScreen() {
                     }
                     onPress={handleNextQuestion}
                     variant="primary"
-                    style={styles.nextFeedbackBtn}
+                    style={
+                      isQuizMode
+                        ? { ...styles.nextFeedbackBtn, ...styles.quizNextFeedbackBtn }
+                        : styles.nextFeedbackBtn
+                    }
                     textStyle={styles.nextFeedbackBtnText}
                   />
                 ) : null}
@@ -1975,6 +1992,59 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 12,
+  },
+  quizContainer: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 12,
+  },
+  quizPromptCard: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+  },
+  quizPromptText: {
+    fontSize: 18,
+    lineHeight: 24,
+    marginBottom: 6,
+  },
+  quizImageBox: {
+    width: 96,
+    height: 96,
+    marginVertical: 4,
+  },
+  quizVisualBox: {
+    minHeight: 56,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginVertical: 4,
+  },
+  quizCounterRow: {
+    gap: 8,
+    marginVertical: 6,
+  },
+  quizSequenceContainer: {
+    marginVertical: 6,
+  },
+  quizOptionsGrid: {
+    gap: 10,
+  },
+  quizOptionCard: {
+    minHeight: 62,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 5,
+  },
+  quizOptionLabel: {
+    fontSize: 19,
+  },
+  quizFeedbackBanner: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  quizNextFeedbackBtn: {
+    marginTop: 8,
   },
   balloonHud: {
     padding: 10,

@@ -15,6 +15,9 @@ export interface WebOnlyStyle {
   backgroundImage?: string;
   backgroundAttachment?: 'fixed' | 'scroll' | 'local';
   touchAction?: 'none' | 'auto' | 'pan-x' | 'pan-y' | 'manipulation';
+  overflowX?: 'auto' | 'hidden' | 'scroll' | 'visible';
+  overflowY?: 'auto' | 'hidden' | 'scroll' | 'visible';
+  willChange?: string;
 }
 
 type AnyStyle = ViewStyle | TextStyle | ImageStyle;

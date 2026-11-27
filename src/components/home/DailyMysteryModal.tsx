@@ -139,7 +139,12 @@ const RewardToken: React.FC<{
       ) : (
         <Text style={styles.tokenEmoji}>{emoji}</Text>
       )}
-      <Text style={[styles.tokenValue, { color: spec.text }]} numberOfLines={1}>
+      <Text
+        style={[styles.tokenValue, { color: spec.text }]}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.72}
+      >
         {value}
       </Text>
       <Text style={styles.tokenLabel} numberOfLines={1}>
@@ -239,6 +244,8 @@ export const DailyMysteryModal: React.FC<DailyMysteryModalProps> = ({ visible, l
       emblemImage={REWARD_ART.gift}
       tone="lavender"
       sparkles
+      scrollEnabled={false}
+      cardStyle={styles.modalCard}
       title={
         showClaimedView
           ? tr(language, { gu: 'આજનું ઇનામ મળી ગયું!', hi: 'आज का उपहार मिल चुका!', en: 'Already Claimed Today!' })
@@ -280,7 +287,7 @@ export const DailyMysteryModal: React.FC<DailyMysteryModalProps> = ({ visible, l
           accessibilityLabel="Open mystery box"
           style={[styles.stage, webStyle({ cursor: 'pointer' })]}
         >
-          <Starburst size={210} color="#FFD166" />
+          <Starburst size={180} color="#FFD166" />
           <Animated.View style={{ transform: [{ translateY: boxY }, { rotate: boxRotate }, { scale: boxScale }] }}>
             <GiftBox />
           </Animated.View>
@@ -288,12 +295,12 @@ export const DailyMysteryModal: React.FC<DailyMysteryModalProps> = ({ visible, l
         </Pressable>
       ) : (
         <View style={styles.stage}>
-          <Starburst size={210} color="#FFD166" />
+          <Starburst size={180} color="#FFD166" />
           <Animated.View style={[styles.heroSticker, { transform: [{ scale: heroScale }] }]}>
             <Remote3DImage
               source={STICKER_ART[sticker.emoji] ?? REWARD_ART.gift}
-              style={{ width: 110, height: 110 }}
-              fallback={<Text style={{ fontSize: 72 }}>{sticker.emoji}</Text>}
+              style={{ width: 92, height: 92 }}
+              fallback={<Text style={{ fontSize: 60 }}>{sticker.emoji}</Text>}
             />
           </Animated.View>
         </View>
@@ -329,62 +336,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  modalCard: {
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    gap: 10,
+  },
   stage: {
     width: '100%',
-    height: 210,
+    height: 168,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: 24,
+    borderRadius: 22,
     backgroundColor: kidTones.lavender.tint,
   },
   shadowBlob: {
     position: 'absolute',
-    bottom: 22,
+    bottom: 16,
     width: 110,
     height: 14,
     borderRadius: 7,
     backgroundColor: 'rgba(114, 9, 183, 0.18)',
   },
   heroSticker: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
     backgroundColor: '#FFFFFF',
     borderWidth: 4,
     borderColor: kidTones.sun.fill,
-    borderBottomWidth: 9,
+    borderBottomWidth: 8,
     borderBottomColor: kidTones.sun.edge,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   heroStickerEmoji: {
-    fontSize: 70,
+    fontSize: 60,
   },
   tokens: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     width: '100%',
   },
   token: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 6,
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 2,
-    borderBottomWidth: 6,
+    borderBottomWidth: 5,
+    overflow: 'hidden',
   },
   tokenEmoji: {
-    fontSize: 30,
+    fontSize: 28,
   },
   tokenValue: {
-    fontSize: 17,
+    width: '100%',
+    flexShrink: 1,
+    fontSize: 13.5,
+    lineHeight: 17,
     fontWeight: '700',
+    textAlign: 'center',
     marginTop: 2,
   },
   tokenLabel: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '600',
     color: kidPalette.inkMuted,
   },

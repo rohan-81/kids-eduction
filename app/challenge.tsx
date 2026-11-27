@@ -28,6 +28,7 @@ import { kidTones, kidPalette, claySurface, clayShadow, kidRadii } from '../src/
 import { formatNumberDigits } from '../src/utils/languageData';
 import { formatChildName } from '../src/utils/nameTransliterator';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import { webStyle } from '../src/utils/webStyle';
 import {
   TestQuestion,
   TEST_QUESTIONS,
@@ -289,7 +290,12 @@ export default function ChallengeCertificateScreen() {
       {/* Confetti celebration when test is completed */}
       <ConfettiCelebration visible={testFinished} language={language} speakPraise={false} />
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        scrollEnabled={testFinished}
+        style={!testFinished ? webStyle({ overflowY: 'hidden' }) : undefined}
+        contentContainerStyle={[styles.container, !testFinished && styles.containerQuiz]}
+        showsVerticalScrollIndicator={false}
+      >
         {!testFinished ? (
           /* ========================================================= */
           /* QUIZ IN PROGRESS - 3D CLAY AESTHETIC MATCHING HOMEPAGE     */
@@ -299,8 +305,8 @@ export default function ChallengeCertificateScreen() {
             <View style={[styles.heroBanner, claySurface('lavender', 2), shadows.soft]}>
               <View style={styles.heroTopRow}>
                 <View style={styles.heroTitleGroup}>
-                  <AppIcon name="fire" size={34} />
-                  <View>
+                  <AppIcon name="fire" size={26} />
+                  <View style={{ flexShrink: 1 }}>
                     <Text style={styles.heroTitle}>
                       {language === 'gu'
                         ? 'આજનો પડકાર'
@@ -391,7 +397,7 @@ export default function ChallengeCertificateScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Listen again"
                 >
-                  <AppIcon name="speaker" size={24} />
+                  <AppIcon name="speaker" size={20} />
                 </TouchableOpacity>
               </View>
 
@@ -444,7 +450,7 @@ export default function ChallengeCertificateScreen() {
                       </View>
 
                       {/* Option Text */}
-                      <EmojiArt emoji={splitEmojiLabel(opt).emoji ?? splitEmojiLabel(q.optionsEn[idx] ?? '').emoji} size={40} />
+                      <EmojiArt emoji={splitEmojiLabel(opt).emoji ?? splitEmojiLabel(q.optionsEn[idx] ?? '').emoji} size={30} />
                       <Text style={[styles.optLabelText, optTextStyle]} numberOfLines={2}>
                         {splitEmojiLabel(opt).label}
                       </Text>
@@ -645,7 +651,7 @@ export default function ChallengeCertificateScreen() {
             </View>
           </View>
         )}
-        <View style={{ height: 90 }} />
+        {testFinished ? <View style={{ height: 90 }} /> : null}
       </ScrollView>
       <BottomNav activeTab="challenges" />
     </SafeAreaView>
@@ -662,6 +668,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl * 2,
     alignItems: 'center',
   },
+  containerQuiz: {
+    paddingTop: 8,
+    paddingHorizontal: 12,
+    paddingBottom: 80,
+  },
   contentWrap: {
     width: '100%',
     maxWidth: 520,
@@ -672,14 +683,15 @@ const styles = StyleSheet.create({
   heroBanner: {
     width: '100%',
     borderRadius: kidRadii.card,
-    padding: spacing.md + 2,
-    marginBottom: spacing.md,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 8,
   },
   heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.sm + 2,
+    marginBottom: 6,
   },
   heroTitleGroup: {
     flexDirection: 'row',
@@ -688,27 +700,27 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroFlameIcon: {
-    fontSize: 28,
+    fontSize: 24,
   },
   heroTitle: {
-    fontSize: 18,
+    fontSize: 15.5,
     fontWeight: '700',
     color: '#4C1D95',
   },
   heroSubtitle: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#6D28D9',
-    marginTop: 2,
+    marginTop: 1,
   },
   rewardBadge: {
     borderRadius: radii.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     marginLeft: 8,
   },
   rewardBadgeText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: kidTones.sun.text,
   },
@@ -716,13 +728,13 @@ const styles = StyleSheet.create({
   // Stepper Progress Indicators
   progressRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     width: '100%',
-    marginTop: 4,
+    marginTop: 2,
   },
   progressStep: {
     flex: 1,
-    height: 32,
+    height: 26,
     borderRadius: radii.full,
     backgroundColor: '#EDE9FE',
     borderWidth: 2,
@@ -755,32 +767,32 @@ const styles = StyleSheet.create({
   questionCard: {
     width: '100%',
     borderRadius: kidRadii.card,
-    padding: spacing.lg,
+    padding: 12,
   },
   questionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: 6,
   },
   subjectPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: radii.full,
     borderWidth: 1.5,
   },
   subjectPillText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
   },
   scoreCounterPill: {
     backgroundColor: '#F1F5F9',
     borderRadius: radii.full,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
   scoreCounterText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
     color: '#475569',
   },
@@ -789,19 +801,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 4,
+    gap: 10,
+    marginBottom: 2,
   },
   qPromptText: {
-    fontSize: 21,
+    fontSize: 17.5,
     fontWeight: '700',
     color: '#1E1B4B',
-    lineHeight: 30,
+    lineHeight: 24,
     flex: 1,
   },
   speakerBtn: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: radii.full,
     backgroundColor: '#F3E8FF',
     borderWidth: 2,
@@ -810,27 +822,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   qPromptEnSubtitle: {
-    fontSize: 13.5,
+    fontSize: 12,
     fontWeight: '600',
     color: '#64748B',
-    marginBottom: spacing.lg,
-    marginTop: 2,
+    marginBottom: 8,
+    marginTop: 1,
   },
 
   // 3. Options
   optionsCol: {
-    gap: 12,
+    gap: 7,
     width: '100%',
   },
   optClayBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderWidth: 2,
-    borderBottomWidth: 5,
+    borderBottomWidth: 4,
   },
   optClayDefault: {
     backgroundColor: '#FFFFFF',
@@ -854,21 +866,21 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   optLetterBubble: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
   optLetterText: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontWeight: '700',
   },
   optLabelText: {
     flex: 1,
-    fontSize: 17,
+    fontSize: 15.5,
     fontWeight: '600',
   },
   optTextDefault: {
@@ -894,9 +906,9 @@ const styles = StyleSheet.create({
 
   // Feedback Banner
   feedbackPill: {
-    marginTop: spacing.md + 2,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    marginTop: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',

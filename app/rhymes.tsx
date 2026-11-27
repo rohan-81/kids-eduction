@@ -21,6 +21,7 @@ import { ClayButton } from '../src/components/clay';
 import { FloatingSparkles, SpeechBubble, Glyph, useKidDialog } from '../src/components/fun';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import { HorizontalScrollRow } from '../src/components/common/HorizontalScrollRow';
 import { GoldCoinStack } from '../src/components/common/GoldCoinIcon';
 import * as Art from '../src/components/art3d/Art3D';
 import { getRhyme3DVisual } from '../src/utils/rhymeRenders';
@@ -423,8 +424,7 @@ export default function RhymesScreen() {
         </View>
 
         {/* Song picker */}
-        <ScrollView
-          horizontal
+        <HorizontalScrollRow
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.songsRow}
           nestedScrollEnabled={true}
@@ -472,7 +472,7 @@ export default function RhymesScreen() {
               </Pressable>
             );
           })}
-        </ScrollView>
+        </HorizontalScrollRow>
 
         {/* Coming Soon or Studio Singing Banner */}
         <Pressable

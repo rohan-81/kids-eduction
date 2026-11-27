@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   useWindowDimensions,
   Platform,
@@ -16,6 +15,7 @@ import { AppLanguage } from '../../types';
 import { ClayBadgeToken } from '../SubjectBadgeIcons';
 import * as Art from '../art3d/Art3D';
 import { webStyle } from '../../utils/webStyle';
+import { HorizontalScrollRow } from '../common/HorizontalScrollRow';
 import type { ArtProps } from '../art3d/Art3D';
 
 interface FeaturedGamesSectionProps {
@@ -254,8 +254,7 @@ export const FeaturedGamesSection: React.FC<FeaturedGamesSectionProps> = ({
       </View>
 
       {/* Horizontal Carousel of Games */}
-      <ScrollView
-        horizontal={true}
+      <HorizontalScrollRow
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.gamesScroll}
         nestedScrollEnabled={true}
@@ -331,7 +330,7 @@ export const FeaturedGamesSection: React.FC<FeaturedGamesSectionProps> = ({
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </HorizontalScrollRow>
     </View>
   );
 };

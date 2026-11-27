@@ -28,7 +28,6 @@ import { AppGlobalBackground } from '../../src/components/common/AppGlobalBackgr
 import { GameType, AgeGroup, AppLanguage } from '../../src/types';
 import { soundEffects } from '../../src/services/soundEffects';
 import { formatNumberDigits } from '../../src/utils/languageData';
-import { getAgeClassBadgeInfo } from '../../src/utils/ageDetailHelper';
 import {
   BalloonsArt,
   PaletteArt,
@@ -468,8 +467,6 @@ export default function GamesHubScreen() {
     router.replace('/subjects');
   };
 
-  const classBadge = getAgeClassBadgeInfo(ageGroup, language, 'logic');
-
   // Games automatically tailored and prioritized for the active class/ageGroup
   const filteredGames = GAMES_LIST.filter((game) => {
     if (ageGroup === '2-4') {
@@ -529,37 +526,6 @@ export default function GamesHubScreen() {
         contentContainerStyle={[styles.container, isMobile && styles.containerMobile]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Adaptive Class & Age Badge Banner matching Subjects and Lessons screen */}
-        <TouchableOpacity
-          style={[
-            styles.classBadgeBanner,
-            { backgroundColor: classBadge.tagBg, borderColor: classBadge.border },
-            shadows.soft,
-          ]}
-          onPress={() => {
-            soundEffects.playBubblePop();
-            router.push('/classes');
-          }}
-          activeOpacity={0.85}
-        >
-          <View style={styles.classBadgeHeaderRow}>
-            <View style={styles.classBadgeTitleGroup}>
-              <Text style={[styles.classBadgeText, { color: classBadge.tagColor }]}>
-                {classBadge.badgeLabel}
-              </Text>
-              <View style={[styles.classLevelPill, { backgroundColor: classBadge.tagColor }]}>
-                <Text style={styles.classLevelPillText}>{classBadge.title}</Text>
-              </View>
-            </View>
-            <View style={[styles.changeClassPill, { borderColor: classBadge.border }]}>
-              <Text style={[styles.changeClassPillText, { color: classBadge.tagColor }]}>
-                {language === 'gu' ? 'ક્લાસ બદલો' : language === 'hi' ? 'कक्षा बदलें' : 'Change'}
-              </Text>
-            </View>
-          </View>
-          <Text style={styles.classBadgeSubtitle}>{classBadge.subtitle}</Text>
-        </TouchableOpacity>
-
         {/* 3D Gamified Hero Banner */}
         <View style={[styles.heroBanner, shadows.card]}>
           <View style={styles.heroTextCol}>
@@ -826,57 +792,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 40,
-  },
-  classBadgeBanner: {
-    borderRadius: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    borderWidth: 1.5,
-  },
-  classBadgeHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  classBadgeTitleGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-    flexWrap: 'wrap',
-  },
-  classBadgeText: {
-    fontSize: 14.5,
-    fontWeight: '600',
-  },
-  classLevelPill: {
-    paddingHorizontal: 9,
-    paddingVertical: 3,
-    borderRadius: radii.full,
-  },
-  classLevelPillText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  classBadgeSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  changeClassPill: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 5,
-    paddingHorizontal: 11,
-    borderRadius: radii.full,
-    borderWidth: 1,
-  },
-  changeClassPillText: {
-    fontSize: 11.5,
-    fontWeight: '700',
   },
   heroBanner: {
     flexDirection: 'row',

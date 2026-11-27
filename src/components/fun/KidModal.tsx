@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
+  Easing,
   Image,
   Modal,
   Platform,
@@ -11,7 +12,6 @@ import {
   View,
   ViewStyle,
   StyleProp,
-  useWindowDimensions,
   type ImageSourcePropType
 } from 'react-native';
 import { kidTones, kidPalette, KidTone } from '../../theme/kidTheme';
@@ -78,6 +78,7 @@ export interface KidModalProps {
   /** Floating stars/sparkles behind the content. */
   sparkles?: boolean;
   maxWidth?: number;
+  scrollEnabled?: boolean;
   cardStyle?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -101,11 +102,11 @@ export const KidModal: React.FC<KidModalProps> = ({
   children,
   sparkles = false,
   maxWidth = 420,
+  scrollEnabled = true,
   cardStyle,
   testID,
 }) => {
   const spec = kidTones[tone];
-  const { height } = useWindowDimensions();
   const fade = useRef(new Animated.Value(0)).current;
   const pop = useRef(new Animated.Value(0)).current;
   const wobble = useRef(new Animated.Value(0)).current;
@@ -134,9 +135,20 @@ export const KidModal: React.FC<KidModalProps> = ({
       return;
     }
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: useNative }),
-      Animated.spring(pop, { toValue: 1, friction: 5, tension: 90, useNativeDriver: useNative }),
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: useNative,
+      }),
+      Animated.timing(pop, {
+        toValue: 1,
+        duration: 190,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: useNative,
+      }),
     ]).start();
+    if (!useNative) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(wobble, { toValue: 1, duration: 900, useNativeDriver: useNative }),
@@ -147,7 +159,9 @@ export const KidModal: React.FC<KidModalProps> = ({
     return () => loop.stop();
   }, [visible, fade, pop, wobble]);
 
-  const scale = pop.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] });
+  if (!visible) return null;
+
+  const scale = pop.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });
   const emblemY = wobble.interpolate({ inputRange: [0, 1], outputRange: [0, -5] });
   const emblemRotate = wobble.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] });
 
@@ -161,19 +175,24 @@ export const KidModal: React.FC<KidModalProps> = ({
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose ? close : () => { }} statusBarTranslucent>
-      <Animated.View style={[styles.backdrop, { opacity: fade }]} testID={testID}>
+      <Animated.View style={[styles.backdrop, webStyle({ willChange: 'opacity' }), { opacity: fade }]} testID={testID}>
         <ScrollView
-          contentContainerStyle={[styles.scroll, { minHeight: height }]}
+          scrollEnabled={scrollEnabled}
+          style={!scrollEnabled ? webStyle({ overflowY: 'hidden' }) : undefined}
+          contentContainerStyle={[
+            styles.scroll,
+            !scrollEnabled && styles.scrollCompact,
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View style={[styles.cardWrap, { maxWidth, transform: [{ scale }] }]}>
+          <Animated.View style={[styles.cardWrap, webStyle({ willChange: 'transform' }), { maxWidth, transform: [{ scale }] }]}>
             <View
               style={[
                 styles.card,
                 { paddingTop: hasEmblem ? EMBLEM / 2 + 18 : 28, borderBottomColor: spec.tintBorder },
                 Platform.OS === 'web'
-                  ? webStyle({ boxShadow: '0 20px 45px rgba(0, 0, 0, 0.22), 0 4px 0 rgba(0,0,0,0.04)' })
+                  ? webStyle({ boxShadow: '0 14px 28px rgba(0, 0, 0, 0.18), 0 4px 0 rgba(0,0,0,0.04)' })
                   : styles.cardNativeShadow,
                 cardStyle,
               ]}
@@ -236,10 +255,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
   },
   scroll: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 18,
     paddingVertical: 40,
+  },
+  scrollCompact: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   cardWrap: {
     width: '100%',

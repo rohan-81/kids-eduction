@@ -39,7 +39,7 @@ export const ProgressRing: React.FC<ProgressRingProps> = ({
   if (Platform.OS === 'web') {
     return (
       <View
-        style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
+        style={{ width: size, height: size, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}
         accessibilityRole="progressbar"
         accessibilityValue={{ min: 0, max: 100, now: roundedPct }}
       >
@@ -89,7 +89,7 @@ export const ProgressRing: React.FC<ProgressRingProps> = ({
 
   return (
     <View
-      style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
+      style={{ width: size, height: size, flexShrink: 0, alignItems: 'center', justifyContent: 'center' }}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: roundedPct }}
     >

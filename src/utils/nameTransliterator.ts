@@ -123,6 +123,67 @@ const COMMON_NAMES: Record<string, { gu: string; hi: string }> = {
   isha: { gu: 'ઈશા', hi: 'ईशा' },
   shreya: { gu: 'શ્રેયા', hi: 'श्रेया' },
   sneha: { gu: 'સ્નેહા', hi: 'स्नेहा' },
+  rhea: { gu: 'રિયા', hi: 'रिया' },
+  aadhya: { gu: 'આધ્યા', hi: 'आध्या' },
+  aarna: { gu: 'આર્ના', hi: 'आर्ना' },
+  advait: { gu: 'અદ્વૈત', hi: 'अद्वैत' },
+  ankit: { gu: 'અંકિત', hi: 'अंकित' },
+  bhumi: { gu: 'ભૂમિ', hi: 'भूमि' },
+  chintu: { gu: 'ચીંટુ', hi: 'चींटू' },
+  devansh: { gu: 'દેવાંશ', hi: 'देवांश' },
+  harsh: { gu: 'હર્ષ', hi: 'हर्ष' },
+  het: { gu: 'હેત', hi: 'हेत' },
+  heer: { gu: 'હીર', hi: 'हीर' },
+  kajal: { gu: 'કાજલ', hi: 'काजल' },
+  kartik: { gu: 'કાર્તિક', hi: 'कार्तिक' },
+  kashvi: { gu: 'કાશ્વી', hi: 'काश्वी' },
+  kinjal: { gu: 'કિંજલ', hi: 'किंजल' },
+  komal: { gu: 'કોમલ', hi: 'कोमल' },
+  krish: { gu: 'ક્રિશ', hi: 'क्रिश' },
+  krupa: { gu: 'કૃપા', hi: 'कृपा' },
+  kush: { gu: 'કુશ', hi: 'कुश' },
+  mahir: { gu: 'માહિર', hi: 'माहिर' },
+  mayur: { gu: 'મયૂર', hi: 'मयूर' },
+  mitesh: { gu: 'મિતેશ', hi: 'मितेश' },
+  nirav: { gu: 'નીરવ', hi: 'नीरव' },
+  parth: { gu: 'પાર્થ', hi: 'पार्थ' },
+  pintu: { gu: 'પિન્ટુ', hi: 'पिंटू' },
+  pranav: { gu: 'પ્રણવ', hi: 'प्रणव' },
+  pratham: { gu: 'પ્રથમ', hi: 'प्रथम' },
+  pratik: { gu: 'પ્રતીક', hi: 'प्रतीक' },
+  preet: { gu: 'પ્રીત', hi: 'प्रीत' },
+  sagar: { gu: 'સાગર', hi: 'सागर' },
+  shaurya: { gu: 'શૌર્ય', hi: 'शौर्य' },
+  shlok: { gu: 'શ્લોક', hi: 'श्लोक' },
+  shiva: { gu: 'શિવા', hi: 'शिवा' },
+  sonu: { gu: 'સોનુ', hi: 'सोनू' },
+  tarun: { gu: 'તરુણ', hi: 'तरुण' },
+  tejas: { gu: 'તેજસ', hi: 'तेजस' },
+  tirth: { gu: 'તીર્થ', hi: 'तीर्थ' },
+  utsav: { gu: 'ઉત્સવ', hi: 'उत्सव' },
+  vaibhav: { gu: 'વૈભવ', hi: 'वैभव' },
+  vatsal: { gu: 'વત્સલ', hi: 'वत्सल' },
+  vishal: { gu: 'વિશાલ', hi: 'विशाल' },
+  vivek: { gu: 'વિવેક', hi: 'विवेक' },
+  yashvi: { gu: 'યશ્વી', hi: 'यश्वी' },
+  yug: { gu: 'યુગ', hi: 'युग' },
+  zeel: { gu: 'ઝીલ', hi: 'झील' },
+  zoya: { gu: 'ઝોયા', hi: 'ज़ोया' },
+
+  // Kid titles & fun nickname words (Indian phonetic pronunciation)
+  little: { gu: 'લિટલ', hi: 'लिटिल' },
+  hero: { gu: 'હીરો', hi: 'हीरो' },
+  super: { gu: 'સુપર', hi: 'सुपर' },
+  star: { gu: 'સ્ટાર', hi: 'स्टार' },
+  champion: { gu: 'ચેમ્પિયન', hi: 'चैम्पियन' },
+  king: { gu: 'કિંગ', hi: 'किंग' },
+  queen: { gu: 'ક્વીન', hi: 'क्वीन' },
+  prince: { gu: 'પ્રિન્સ', hi: 'प्रिंस' },
+  princess: { gu: 'પ્રિન્સેસ', hi: 'प्रिंसेस' },
+  angel: { gu: 'એન્જલ', hi: 'एंजल' },
+  lucky: { gu: 'લકી', hi: 'लकी' },
+  honey: { gu: 'હની', hi: 'हनी' },
+  buddy: { gu: 'બડી', hi: 'बडी' },
 
   // Surnames
   shah: { gu: 'શાહ', hi: 'शाह' },
@@ -168,6 +229,7 @@ const CONSONANTS: [string, string, string][] = [
   ['ph', 'ફ', 'फ'],
   ['bh', 'ભ', 'भ'],
   ['sh', 'શ', 'श'],
+  ['ck', 'ક', 'क'],
   ['k', 'ક', 'क'],
   ['g', 'ગ', 'ग'],
   ['j', 'જ', 'ज'],
@@ -186,6 +248,8 @@ const CONSONANTS: [string, string, string][] = [
   ['s', 'સ', 'स'],
   ['h', 'હ', 'ह'],
   ['c', 'ક', 'क'],
+  ['q', 'ક', 'क'],
+  ['x', 'ક્સ', 'क्स'],
   ['z', 'ઝ', 'ज़'],
 ];
 
@@ -206,7 +270,10 @@ const VOWEL_MATRAS: [string, string, string, string, string][] = [
 ];
 
 const phoneticConvertWord = (word: string, lang: 'gu' | 'hi'): string => {
-  let str = word.toLowerCase();
+  // Collapse doubled Latin consonants (e.g. sunny -> suny, kittu -> kitu) before phonetic mapping.
+  let str = word.toLowerCase().replace(/([bcdfgklmnpqrstvz])\1+/g, '$1');
+  // In Indian pronunciation, trailing consonant + y sounds like long 'ee' (e.g. rocky -> rockee).
+  str = str.replace(/([bcdfghjklmnpqrstvwxz])y$/, '$1ee');
   let result = '';
   let i = 0;
 

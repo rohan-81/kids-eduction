@@ -96,10 +96,11 @@ import {
   GUJARATI_NUMBERS,
   ENGLISH_NUMBERS,
 } from '../../src/utils/languageData';
-import { filterLessonsForClass, getAgeClassBadgeInfo } from '../../src/utils/ageDetailHelper';
+import { filterLessonsForClass } from '../../src/utils/ageDetailHelper';
 import { isBirdLesson } from '../../src/utils/lessonNavigation';
 import * as Art from '../../src/components/art3d/Art3D';
 import { webStyle } from '../../src/utils/webStyle';
+import { HorizontalScrollRow } from '../../src/components/common/HorizontalScrollRow';
 import type { ImageAsset } from '../../src/utils/remoteAssets';
 
 
@@ -439,32 +440,6 @@ export default function CategoryLessonsScreen() {
     accent: '#2563EB',
     badgeBg: '#DBEAFE',
   };
-
-  const getSubjectForCategory = (catId?: string, subCatId?: string): string => {
-    if (!catId) return 'math';
-    if (['numbers', 'math', 'ghadiya', 'math-time', 'math-money', 'math-missing', 'math-word-problems'].includes(catId)) {
-      return 'math';
-    }
-    if (catId === 'colors-shapes') {
-      return subCatId === 'patterns' ? 'logic' : 'math';
-    }
-    if (['plants-nature', 'human-body', 'water-air', 'weather-seasons', 'earth-environment', 'space-solar', 'scientific-discoveries', 'fruits', 'animals'].includes(catId)) {
-      return 'science';
-    }
-    if (['en-alphabet', 'en-phonics', 'en-vowels', 'en-words', 'en-grammar', 'en-nouns', 'en-verbs', 'en-sentences', 'gu-varnamala', 'gu-barakhadi', 'hi-varnamala'].includes(catId)) {
-      return 'english';
-    }
-    if (catId.startsWith('gk') || catId === 'objects') {
-      return 'gk';
-    }
-    if (catId === 'games') {
-      return 'logic';
-    }
-    return 'math';
-  };
-
-  const activeSubject = getSubjectForCategory(currentCategory.id, subcategoryId);
-  const classBadge = getAgeClassBadgeInfo(ageGroup, language, activeSubject);
 
   const [lessons, setLessons] = useState<LessonItem[]>([]);
   const [isLoadingLessons, setIsLoadingLessons] = useState<boolean>(true);
@@ -1403,12 +1378,6 @@ export default function CategoryLessonsScreen() {
         >
           {/* Left Column: Title, Subtitle & Gamified Progress */}
           <View style={styles.heroContentCol}>
-            <View style={[styles.heroTagBadge, { backgroundColor: classBadge.tagBg }]}>
-              <Text style={[styles.heroTagText, { color: classBadge.tagColor }]}>
-                {classBadge.badgeLabel} • {classBadge.title}
-              </Text>
-            </View>
-
             <Text style={styles.heroTitle}>{categoryHeaderTitle}</Text>
             <Text style={styles.heroSubtitle}>{categorySubtitle}</Text>
 
@@ -1469,8 +1438,7 @@ export default function CategoryLessonsScreen() {
             {/* Math Operations Filter Bar (Multiplication, Division, Addition, Subtraction) */}
             {currentCategory.id === 'math' && (
               <View style={styles.mathOpsContainer}>
-                <ScrollView
-                  horizontal
+                <HorizontalScrollRow
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.mathOpsScroll}
                   nestedScrollEnabled={true}
@@ -1534,15 +1502,14 @@ export default function CategoryLessonsScreen() {
                       </TouchableOpacity>
                     );
                   })}
-                </ScrollView>
+                </HorizontalScrollRow>
               </View>
             )}
 
             {/* Topic Subcategory Tabs for Gujarati, Hindi, English, and Numbers */}
             {topicTabs.length > 0 && (
               <View style={styles.mathOpsContainer}>
-                <ScrollView
-                  horizontal
+                <HorizontalScrollRow
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.mathOpsScroll}
                   nestedScrollEnabled={true}
@@ -1607,7 +1574,7 @@ export default function CategoryLessonsScreen() {
                       </TouchableOpacity>
                     );
                   })}
-                </ScrollView>
+                </HorizontalScrollRow>
               </View>
             )}
 
@@ -1946,17 +1913,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: spacing.sm,
     minWidth: 0,
-  },
-  heroTagBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 3,
-    borderRadius: radii.full,
-    marginBottom: spacing.xs,
-  },
-  heroTagText: {
-    fontSize: 11,
-    fontWeight: '700',
   },
   heroTitle: {
     fontSize: 20,

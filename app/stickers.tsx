@@ -123,21 +123,40 @@ const StickerCard: React.FC<StickerCardProps> = ({ sticker, name, unlocked, sele
             >
               <Remote3DImage
                 source={stickerImg}
-                style={{ width: Math.round(width * 0.44), height: Math.round(width * 0.44) }}
+                style={{ width: Math.round(width * 0.42), height: Math.round(width * 0.42) }}
                 contentFit="contain"
                 fallback={
-                  <Text style={[styles.cardEmoji, { fontSize: Math.round(width * 0.42), marginBottom: 0 }]}>
+                  <Text
+                    style={[
+                      styles.cardEmoji,
+                      {
+                        fontSize: Math.round(width * (sticker.emoji.length > 2 ? 0.23 : 0.40)),
+                        marginBottom: 0,
+                      },
+                    ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.55}
+                  >
                     {sticker.emoji === '🪄' ? '✨' : sticker.emoji}
                   </Text>
                 }
               />
             </Animated.View>
           ) : (
-            <Animated.Text
-              style={[styles.cardEmoji, { fontSize: Math.round(width * 0.42) }, !unlocked && styles.cardEmojiLocked, { transform: [{ rotate }] }]}
-            >
-              {sticker.emoji === '🪄' ? '✨' : sticker.emoji}
-            </Animated.Text>
+            <Animated.View style={[styles.cardEmojiWrap, !unlocked && styles.cardEmojiLocked, { transform: [{ rotate }] }]}>
+              <Text
+                style={[
+                  styles.cardEmoji,
+                  { fontSize: Math.round(width * (sticker.emoji.length > 2 ? 0.23 : 0.40)), marginBottom: 0 },
+                ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.55}
+              >
+                {sticker.emoji === '🪄' ? '✨' : sticker.emoji}
+              </Text>
+            </Animated.View>
           )}
           <Text
             style={[styles.cardName, !unlocked && styles.cardNameLocked, selected && { color: spec.text }]}
@@ -294,7 +313,6 @@ export default function StickerAlbumScreen() {
       <ConfettiCelebration visible={showConfetti} language={language} speakPraise={false} />
 
       <ScrollView
-        nestedScrollEnabled={true}
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
@@ -348,13 +366,31 @@ export default function StickerAlbumScreen() {
                       ]}
                       contentFit="contain"
                       fallback={
-                        <Text style={[styles.showcaseEmoji, !isSelectedUnlocked && styles.cardEmojiLocked]}>
+                        <Text
+                          style={[
+                            styles.showcaseEmoji,
+                            selected.emoji.length > 2 && styles.showcaseEmojiCompact,
+                            !isSelectedUnlocked && styles.cardEmojiLocked,
+                          ]}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.55}
+                        >
                           {selected.emoji === '🪄' ? '✨' : selected.emoji}
                         </Text>
                       }
                     />
                   ) : (
-                    <Text style={[styles.showcaseEmoji, !isSelectedUnlocked && styles.cardEmojiLocked]}>
+                    <Text
+                      style={[
+                        styles.showcaseEmoji,
+                        selected.emoji.length > 2 && styles.showcaseEmojiCompact,
+                        !isSelectedUnlocked && styles.cardEmojiLocked,
+                      ]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.55}
+                    >
                       {selected.emoji === '🪄' ? '✨' : selected.emoji}
                     </Text>
                   )}
@@ -392,16 +428,8 @@ export default function StickerAlbumScreen() {
           )}
 
           {/* Category tabs, built from the catalogue so new backend categories appear automatically */}
-          <ScrollView
-            horizontal
-            nestedScrollEnabled={true}
-            keyboardShouldPersistTaps="handled"
-            showsHorizontalScrollIndicator={false}
-            scrollEventThrottle={16}
-            style={styles.tabsScroll}
-            contentContainerStyle={styles.tabsRow}
-          >
-            {categories.map((cat, i) => {
+          {(() => {
+            const tabNodes = categories.map((cat, i) => {
               const meta = getStickerCategoryMeta(cat, language);
               const active = cat === activeCategory;
               const tone = toneAt(i);
@@ -410,6 +438,7 @@ export default function StickerAlbumScreen() {
                 <TouchableOpacity
                   key={cat}
                   activeOpacity={0.8}
+                  rejectResponderTermination={false}
                   onPress={() => {
                     soundEffects.playBubblePop();
                     setActiveCategory(cat);
@@ -419,6 +448,7 @@ export default function StickerAlbumScreen() {
                     active
                       ? [styles.tabActive, { backgroundColor: spec.fill, borderBottomColor: spec.edge }]
                       : styles.tabInactive,
+                    webStyle({ cursor: 'pointer' }),
                   ]}
                   accessibilityRole="button"
                   accessibilityLabel={meta.label}
@@ -435,8 +465,26 @@ export default function StickerAlbumScreen() {
                   </Text>
                 </TouchableOpacity>
               );
-            })}
-          </ScrollView>
+            });
+
+            return Platform.OS === 'web' ? (
+              <View style={[styles.tabsScroll, styles.tabsRow, webStyle({ overflowX: 'auto', overflowY: 'hidden' })]}>
+                {tabNodes}
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                nestedScrollEnabled={true}
+                keyboardShouldPersistTaps="handled"
+                showsHorizontalScrollIndicator={false}
+                scrollEventThrottle={16}
+                style={styles.tabsScroll}
+                contentContainerStyle={styles.tabsRow}
+              >
+                {tabNodes}
+              </ScrollView>
+            );
+          })()}
 
           {/* Sticker grid */}
           <View style={[styles.grid, { gap }]}>
@@ -524,9 +572,14 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   showcaseEmoji: {
-    fontSize: 42,
+    fontSize: 40,
+    textAlign: 'center',
+  },
+  showcaseEmojiCompact: {
+    fontSize: 24,
   },
   showcaseText: {
     flex: 1,
@@ -612,6 +665,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
+    overflow: 'hidden',
   },
   cardFaceLocked: {
     borderStyle: 'dashed',
@@ -637,15 +691,25 @@ const styles = StyleSheet.create({
   },
   cardEmoji: {
     marginBottom: 6,
+    textAlign: 'center',
   },
-  cardImageWrap: {
+  cardEmojiWrap: {
+    maxWidth: '100%',
     marginBottom: 6,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  cardImageWrap: {
+    maxWidth: '100%',
+    marginBottom: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
   showcaseImage: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
   },
   cardEmojiLocked: {
     opacity: 0.25,

@@ -50,6 +50,7 @@ import { ClayButton } from '../src/components/clay';
 import { kidTones, kidPalette, kidBackdrops } from '../src/theme/kidTheme';
 import * as Art from '../src/components/art3d/Art3D';
 import { webStyle } from '../src/utils/webStyle';
+import { HorizontalScrollRow } from '../src/components/common/HorizontalScrollRow';
 import type { ScreenTimeLimitId } from '../src/services/screenWellnessService';
 
 const AVATAR_OPTIONS = ['avatar_3d_boy', '🦁', '🐰', '🐼', '🦊', '🐯', '🐥', '🦄', '🐬'];
@@ -984,8 +985,7 @@ export default function ParentsScreen() {
                 </TouchableOpacity>
               </View>
 
-              <ScrollView
-                horizontal
+              <HorizontalScrollRow
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.profilesRow}
                 nestedScrollEnabled={true}
@@ -1048,7 +1048,7 @@ export default function ParentsScreen() {
                     </TouchableOpacity>
                   );
                 })}
-              </ScrollView>
+              </HorizontalScrollRow>
             </View>
 
             {/* 3. QUICK METRICS DASHBOARD (4 PREMIUM CARDS) */}
@@ -1585,8 +1585,7 @@ export default function ParentsScreen() {
           <Text style={styles.funLabel}>
             {language === 'gu' ? 'અવતાર પસંદ કરો' : language === 'hi' ? 'अवतार चुनें' : 'Pick an avatar'}
           </Text>
-          <ScrollView
-            horizontal
+          <HorizontalScrollRow
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.funAvatarRow}
             nestedScrollEnabled={true}
@@ -1625,7 +1624,7 @@ export default function ParentsScreen() {
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </HorizontalScrollRow>
 
           <ClayButton
             tone="mint"

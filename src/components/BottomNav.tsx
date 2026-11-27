@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useId } from 'react';
 import { View, Text, StyleSheet, Pressable, Animated, useWindowDimensions, Platform } from 'react-native';
 import { useSafeRouter, type AppRoute } from '../utils/navigationHelper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -107,6 +107,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'home' }) => {
   const { language } = useApp();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const navGradId = `bottomNavFadeGrad_${useId().replace(/:/g, '')}`;
   const isCompact = width < 380;
   // 5 primary navigation destinations matching Reference 1 (High Contrast & Clear Visibility)
   const navItems = [
@@ -235,20 +236,20 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab = 'home' }) => {
         pointerEvents="none"
         style={[
           styles.navShield,
-          { height: 118 + Math.max(insets.bottom, Platform.OS === 'ios' ? 14 : 10) },
+          { height: 128 + Math.max(insets.bottom, Platform.OS === 'ios' ? 14 : 10) },
         ]}
       >
         <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
           <Defs>
-            <SvgLinearGradient id="bottomNavFadeGrad" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0%" stopColor="#FFFBEB" stopOpacity="0" />
-              <Stop offset="32%" stopColor="#FEF9C3" stopOpacity="0.55" />
-              <Stop offset="58%" stopColor="#FEF3C7" stopOpacity="0.92" />
-              <Stop offset="76%" stopColor="#FEF3C7" stopOpacity="1" />
+            <SvgLinearGradient id={navGradId} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0%" stopColor="#FFFDF5" stopOpacity="0" />
+              <Stop offset="24%" stopColor="#FEF9C3" stopOpacity="0.72" />
+              <Stop offset="42%" stopColor="#FEF9C3" stopOpacity="0.98" />
+              <Stop offset="55%" stopColor="#FEF3C7" stopOpacity="1" />
               <Stop offset="100%" stopColor="#FDE68A" stopOpacity="1" />
             </SvgLinearGradient>
           </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#bottomNavFadeGrad)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${navGradId})`} />
         </Svg>
       </View>
       <View style={[styles.container, isCompact && styles.containerCompact]} accessibilityRole="tablist">
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 8,
     borderRadius: 30,
     width: '100%',

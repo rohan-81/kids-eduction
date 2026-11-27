@@ -131,7 +131,7 @@ export default function ProgressScreen() {
   if (language === 'gu') {
     langSubjectName = 'Gujarati Varnamala';
     langSubjectNameGu = 'ગુજરાતી મૂળાક્ષરો (ક ખ ગ)';
-    langSubjectNameHi = 'गुजराती वर्णमाला (ક ખ ગ)';
+    langSubjectNameHi = 'गुजराती वर्णमाला (क ख ग)';
     langCatIds = ['gu-varnamala', 'gu-barakhadi'];
   } else if (language === 'hi') {
     langSubjectName = 'Hindi Varnamala';
@@ -141,7 +141,9 @@ export default function ProgressScreen() {
   }
 
   const rawLangLessons = LESSONS.filter((l) => langCatIds.includes(l.categoryId));
-  const langLessons = filterLessonsForClass(rawLangLessons, ageGroup, langCatIds[0]);
+  const langLessons = langCatIds.flatMap((cid) =>
+    filterLessonsForClass(rawLangLessons.filter((l) => l.categoryId === cid), ageGroup, cid)
+  );
   const langDone = langLessons.filter((l) => completedSet.has(l.id)).length;
 
   const rawMathLessons = LESSONS.filter((l) =>
@@ -176,12 +178,13 @@ export default function ProgressScreen() {
 
   // Rhyme ids come from the bundled catalogue (same `rhyme-${id}` key rhymes.tsx saves), so a
   // renamed or replaced rhyme can never leave a progress slot that is impossible to complete.
-  const allStoryRhymeIds = [
-    'story-crow',
-    'story-lion-mouse',
-    'story-tortoise-hare',
-    ...RHYMES_DATA.map((r) => `rhyme-${r.id.replace(/^rhyme-/, '')}`),
-  ];
+  const allStoryRhymeIds = Array.from(
+    new Set([
+      'story-crow',
+      ...STORIES_DATA.map((s) => s.id),
+      ...RHYMES_DATA.map((r) => `rhyme-${r.id.replace(/^rhyme-/, '')}`),
+    ])
+  );
 
   const targetStoryRhymeIds =
     ageGroup === '2-4'
@@ -1102,8 +1105,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   timePill: {
-    paddingHorizontal: 5,
-    paddingVertical: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    minWidth: 34,
+    alignItems: 'center',
     borderRadius: 8,
     backgroundColor: '#F1F5F9',
   },

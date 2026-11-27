@@ -38,13 +38,13 @@ export default function ProfileScreen() {
   const isMobile = width < 768;
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [nameInput, setNameInput] = useState(progress.childName || 'Little Learner');
+  const [nameInput, setNameInput] = useState(() =>
+    formatChildName(progress.childName || 'Little Learner', language)
+  );
 
   useEffect(() => {
-    if (progress.childName) {
-      setNameInput(progress.childName);
-    }
-  }, [progress.childName]);
+    setNameInput(formatChildName(progress.childName || 'Little Learner', language));
+  }, [progress.childName, language]);
 
   useEffect(() => {
     async function syncActiveChildProfile() {
@@ -69,6 +69,7 @@ export default function ProfileScreen() {
   }, []);
 
   const childName = progress.childName || 'Little Learner';
+  const displayedChildName = formatChildName(childName, language);
 
   const classLabel =
     language === 'gu'
@@ -141,7 +142,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.childNameText}>{formatChildName(childName, language)}</Text>
+          <Text style={styles.childNameText}>{displayedChildName}</Text>
           <View style={styles.classChip}>
             <Text style={styles.classChipText}>{classLabel}</Text>
           </View>
@@ -151,7 +152,7 @@ export default function ProfileScreen() {
               style={styles.editBtn}
               onPress={() => {
                 soundEffects.playBubblePop();
-                setNameInput(childName);
+                setNameInput(displayedChildName);
                 setIsEditModalOpen(true);
               }}
               activeOpacity={0.8}

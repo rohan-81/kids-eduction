@@ -137,8 +137,8 @@ export default function AvatarScreen() {
   const [activeTab, setActiveTab] = useState<'character' | 'hat' | 'accessory'>('character');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [tempFirstName, setTempFirstName] = useState(firstName);
-  const [tempLastName, setTempLastName] = useState(lastName);
+  const [tempFirstName, setTempFirstName] = useState(() => formatChildName(firstName, language));
+  const [tempLastName, setTempLastName] = useState(() => formatChildName(lastName, language));
   const [tempDob, setTempDob] = useState(dob);
   const isPurchasingRef = useRef(false);
 
@@ -160,8 +160,8 @@ export default function AvatarScreen() {
 
   const handleOpenEditModal = () => {
     soundEffects.playBubblePop();
-    setTempFirstName(progress.firstName || '');
-    setTempLastName(progress.lastName || '');
+    setTempFirstName(formatChildName(progress.firstName || '', language));
+    setTempLastName(formatChildName(progress.lastName || '', language));
     setTempDob(progress.dob || '');
     setIsEditModalOpen(true);
   };
@@ -673,7 +673,6 @@ export default function AvatarScreen() {
               placeholder={language === 'gu' ? 'દા.ત. આરવ / Aarav' : language === 'hi' ? 'उदा. आरव / Aarav' : 'e.g. Aarav'}
               placeholderTextColor="#94A3B8"
               maxLength={24}
-              autoFocus={true}
             />
           </View>
 
@@ -747,19 +746,22 @@ export default function AvatarScreen() {
             {language === 'gu' ? 'ઝડપી નામો:' : language === 'hi' ? 'त्वरित नाम सुझाव:' : 'Quick name ideas:'}
           </Text>
           <View style={styles.chipsRow}>
-            {NAME_SUGGESTIONS.map((suggestion) => (
-              <TouchableOpacity
-                key={suggestion}
-                style={styles.nameChip}
-                onPress={() => {
-                  soundEffects.playBubblePop();
-                  setTempFirstName(suggestion);
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.nameChipText}>{suggestion}</Text>
-              </TouchableOpacity>
-            ))}
+            {NAME_SUGGESTIONS.map((suggestion) => {
+              const displaySuggestion = formatChildName(suggestion, language);
+              return (
+                <TouchableOpacity
+                  key={suggestion}
+                  style={styles.nameChip}
+                  onPress={() => {
+                    soundEffects.playBubblePop();
+                    setTempFirstName(displaySuggestion);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.nameChipText}>{displaySuggestion}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -785,21 +787,23 @@ export default function AvatarScreen() {
       </KidModal>
 
       {/* Birthday picker: fills the Edit Profile draft, or saves directly when opened from the 🎂 badge */}
-      <KidsDatePickerModal
-        visible={isDatePickerOpen}
-        initialDate={isEditModalOpen ? tempDob : progress.dob || ''}
-        language={language}
-        onClose={() => setIsDatePickerOpen(false)}
-        onConfirm={async (formattedDate) => {
-          setIsDatePickerOpen(false);
-          if (isEditModalOpen) {
-            setTempDob(formattedDate);
-          } else {
-            soundEffects.playTadaaa();
-            await updateProgress({ dob: formattedDate });
-          }
-        }}
-      />
+      {isDatePickerOpen ? (
+        <KidsDatePickerModal
+          visible={isDatePickerOpen}
+          initialDate={isEditModalOpen ? tempDob : progress.dob || ''}
+          language={language}
+          onClose={() => setIsDatePickerOpen(false)}
+          onConfirm={async (formattedDate) => {
+            setIsDatePickerOpen(false);
+            if (isEditModalOpen) {
+              setTempDob(formattedDate);
+            } else {
+              soundEffects.playTadaaa();
+              await updateProgress({ dob: formattedDate });
+            }
+          }}
+        />
+      ) : null}
 
       {/* Persistent Bottom Nav */}
       <BottomNav activeTab="profile" />

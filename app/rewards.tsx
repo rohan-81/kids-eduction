@@ -411,7 +411,7 @@ export default function RewardsScreen() {
           style={[styles.featureActionCard, styles.habitsCard, shadows.card]}
           onPress={() => {
             soundEffects.playBubblePop();
-            router.push('/calendar_habits');
+            router.push('/calendar_habits?tab=habits');
           }}
           activeOpacity={0.88}
         >
@@ -422,17 +422,17 @@ export default function RewardsScreen() {
             <View style={styles.featureTextCol}>
               <Text style={[styles.featureCardTitle, { color: '#166534' }]}>
                 {language === 'gu'
-                  ? 'દૈનિક ભેટ અને સારી ટેવો'
+                  ? 'દૈનિક સારી ટેવો'
                   : language === 'hi'
-                  ? 'दैनिक उपहार और अच्छी आदतें'
-                  : 'Daily Gifts & Habits'}
+                  ? 'दैनिक अच्छी आदतें'
+                  : 'Daily Healthy Habits'}
               </Text>
               <Text style={[styles.featureCardSub, { color: '#15803D' }]}>
                 {language === 'gu'
-                  ? 'રોજ હાજરી પૂરીને નવા સિક્કા અને રહસ્યમય ગિફ્ટ જીતો!'
+                  ? 'આજે અપનાવેલી સારી ટેવો ટીક કરો અને સિક્કા જીતો!'
                   : language === 'hi'
-                  ? 'रोज़ हाजिरी भरके नए सिक्के और गिफ्ट जीतें!'
-                  : 'Check in daily to win mystery coin rewards!'}
+                  ? 'आज की अच्छी आदतें टिक करें और सिक्के जीतें!'
+                  : 'Tick healthy habits practiced today & earn coins!'}
               </Text>
             </View>
           </View>

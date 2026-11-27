@@ -33,6 +33,7 @@ import { StoryIllustration } from '../src/components/story/StoryIllustration';
 import { composeCover, getSceneComposition, resolveStoryCover, resolveStoryScene } from '../src/utils/storyArt';
 import { MagicStoryWizard, MagicStoryChoice } from '../src/components/story/MagicStoryWizard';
 import { STORY_IMAGE_MAP, MAGIC_UI_ART } from '../src/utils/imageHelper';
+import { HorizontalScrollRow } from '../src/components/common/HorizontalScrollRow';
 import { resolveOfflineMediaSource } from '../src/utils/remoteAssets';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { kidTones, kidPalette, kidBackdrops, kidRadii, clayShadow, toneAt, KidTone } from '../src/theme/kidTheme';
@@ -748,7 +749,6 @@ export default function StoryModeScreen() {
       <ConfettiCelebration visible={isStoryFinished} language={activeLang} speakPraise={false} />
 
       <ScrollView
-        nestedScrollEnabled={true}
         contentContainerStyle={[styles.container, { maxWidth: selectedStory ? 680 : 1040, paddingBottom: selectedStory ? 56 : 130 }]}
         showsVerticalScrollIndicator={false}
       >
@@ -870,7 +870,7 @@ export default function StoryModeScreen() {
                   )}
                 </View>
 
-                <ScrollView horizontal nestedScrollEnabled={true} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.savedScrollRow}>
+                <HorizontalScrollRow nestedScrollEnabled={true} contentContainerStyle={styles.savedScrollRow}>
                   {savedMagicStories.map((s) => (
                     <SavedStoryCover
                       key={s.id}
@@ -879,7 +879,7 @@ export default function StoryModeScreen() {
                       onOpen={() => startStory(s)}
                     />
                   ))}
-                </ScrollView>
+                </HorizontalScrollRow>
               </View>
             )}
 

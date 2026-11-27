@@ -23,6 +23,7 @@ import { HOME_CARD_ART, SUBJECT_CARD_ART } from '../src/utils/imageHelper';
 import { Glyph, PencilIcon, PrinterIcon } from '../src/components/fun';
 import { formatChildName } from '../src/utils/nameTransliterator';
 import { webDomProps } from '../src/utils/webStyle';
+import { HorizontalScrollRow } from '../src/components/common/HorizontalScrollRow';
 
 const CERTIFICATE_CATEGORIES: { id: string; titleGu: string; titleHi: string; titleEn: string; art: BadgeArt; tone: TokenTone; badgeGu: string; badgeHi: string; badgeEn: string }[] = [
   {
@@ -316,8 +317,7 @@ export default function CertificateScreen() {
                   {language === 'gu' ? 'સિદ્ધિ / વિષય પસંદ કરો:' : language === 'hi' ? 'उपलब्धि / विषय चुनें:' : 'Select Achievement Subject:'}
                 </Text>
               </View>
-              <ScrollView
-                horizontal
+              <HorizontalScrollRow
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.chipsScroll}
                 nestedScrollEnabled={true}
@@ -343,7 +343,7 @@ export default function CertificateScreen() {
                     </TouchableOpacity>
                   );
                 })}
-              </ScrollView>
+              </HorizontalScrollRow>
             </View>
 
             {/* Print & PDF Download Action Button */}

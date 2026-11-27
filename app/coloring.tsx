@@ -23,6 +23,7 @@ import Svg, {
 import { colors } from '../src/theme/colors';
 import { spacing, radii, shadows } from '../src/theme/spacing';
 import { kidRadii, kidPalette, clayShadow } from '../src/theme/kidTheme';
+import { HorizontalScrollRow } from '../src/components/common/HorizontalScrollRow';
 import { useApp } from '../src/context/AppContext';
 import { soundEffects } from '../src/services/soundEffects';
 import { audioService } from '../src/services/audioService';
@@ -1448,11 +1449,10 @@ export default function TapToFillColoringScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
         {/* 3. Horizontal Template Selector */}
-        <ScrollView
-          horizontal
+        <HorizontalScrollRow
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.templateScrollRow}
           nestedScrollEnabled={true}
@@ -1486,7 +1486,7 @@ export default function TapToFillColoringScreen() {
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </HorizontalScrollRow>
 
         {/* 4. Live Progress Pill (Shows filled count / total parts) */}
         <View style={styles.progressStatusRow}>

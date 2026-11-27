@@ -21,6 +21,7 @@ import { BottomNav } from '../src/components/BottomNav';
 import { LESSONS } from '../src/data/lessons';
 import { STORIES_DATA } from '../src/data/storiesData';
 import { ProgressRing } from '../src/components/clay';
+import { HorizontalScrollRow } from '../src/components/common/HorizontalScrollRow';
 import { RHYMES_DATA } from '../src/data/rhymesData';
 import { kidTones, kidPalette, clayShadow, toneAt } from '../src/theme/kidTheme';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
@@ -87,7 +88,6 @@ import {
   TopicCriticalThinkingBadge,
 } from '../src/components/SubjectBadgeIcons';
 import { toGujDigits, toHiDigits, formatNumberDigits } from '../src/utils/languageData';
-import { getAgeClassBadgeInfo } from '../src/utils/ageDetailHelper';
 import { SUBJECT_CARD_ART } from '../src/utils/imageHelper';
 import { webStyle } from '../src/utils/webStyle';
 import type { AppRoute } from '../src/utils/navigationHelper';
@@ -827,8 +827,6 @@ export default function SubjectsScreen() {
     return true;
   });
 
-  const classBadge = getAgeClassBadgeInfo(ageGroup, language, activeSubject);
-
   const currentSubjectMeta = {
     math: {
       title: language === 'gu' ? 'ગણિત' : language === 'hi' ? 'गणित' : 'Math',
@@ -979,8 +977,7 @@ export default function SubjectsScreen() {
         </View>
 
         {/* Subject Navigation Tabs with full localization */}
-        <ScrollView
-          horizontal
+        <HorizontalScrollRow
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.subjectPillsRow}
           nestedScrollEnabled={true}
@@ -1016,7 +1013,7 @@ export default function SubjectsScreen() {
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </HorizontalScrollRow>
 
         {/* Large Subject Heading & Subtitle Matching Active Language */}
         <View style={styles.titleSection}>
@@ -1029,25 +1026,7 @@ export default function SubjectsScreen() {
           </View>
         </View>
 
-        {/* Adaptive Class & Age Badge Banner */}
-        <View
-          style={[
-            styles.classBadgeBanner,
-            { backgroundColor: classBadge.tagBg, borderColor: classBadge.border },
-          ]}
-        >
-          <View style={styles.classBadgeHeaderRow}>
-            <Text style={[styles.classBadgeText, { color: classBadge.tagColor }]}>
-              {classBadge.badgeLabel}
-            </Text>
-            <View style={[styles.classLevelPill, { backgroundColor: classBadge.tagColor }]}>
-              <Text style={styles.classLevelPillText}>{classBadge.title}</Text>
-            </View>
-          </View>
-          <Text style={styles.classBadgeSubtitle}>{classBadge.subtitle}</Text>
-        </View>
-
-        {/* Rounded White Topic Cards with Distinct 3D Badges (Matching Image 2) */}
+        {/* Rounded White Topic Cards with Distinct 3D Badges */}
         <View style={styles.topicsList}>
           {currentTopics.map((topic, topicIndex) => {
             const stats = getTopicProgressStats(topic);
@@ -1078,9 +1057,9 @@ export default function SubjectsScreen() {
 
                 {/* Title, Subtitle and Progress Row */}
                 <View style={styles.topicInfoCol}>
-                  <Text style={styles.topicName} numberOfLines={1}>{topic.name}</Text>
+                  <Text style={styles.topicName} numberOfLines={2}>{topic.name}</Text>
                   {topic.subtitle ? (
-                    <Text style={styles.topicSubtitle} numberOfLines={1}>{topic.subtitle}</Text>
+                    <Text style={styles.topicSubtitle} numberOfLines={2}>{topic.subtitle}</Text>
                   ) : null}
 
                   <View style={styles.topicProgressRow}>
@@ -1247,40 +1226,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: kidPalette.surface,
     borderRadius: 24,
-    padding: 16,
-    gap: 4,
+    padding: 14,
+    gap: 10,
     borderWidth: 2,
     borderColor: kidPalette.border,
     // Claymorphic 3D lip (colour set per card tone)
     borderBottomWidth: 5,
     marginBottom: 4,
+    overflow: 'hidden',
   },
   topicBadgeWrapper: {
     // the badge itself is the embossed 3D circular clay token
-    width: 56,
-    height: 56,
+    width: 54,
+    height: 54,
+    flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 6,
   },
   topicInfoCol: {
     flex: 1,
+    flexShrink: 1,
     minWidth: 0,
-    marginHorizontal: 14,
+    overflow: 'hidden',
     justifyContent: 'center',
   },
   topicName: {
-    fontSize: 16.5,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: '600',
     color: '#1E293B',
     marginBottom: 2,
     letterSpacing: -0.2,
+    flexShrink: 1,
   },
   topicSubtitle: {
     fontSize: 12.5,
     fontWeight: '600',
     color: '#64748B',
     marginBottom: 4,
+    flexShrink: 1,
   },
   topicProgressRow: {
     flexDirection: 'row',
@@ -1326,37 +1310,5 @@ const styles = StyleSheet.create({
     ...(webStyle({
       boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
     })),
-  },
-  classBadgeBanner: {
-    borderRadius: 18,
-    borderWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 18,
-  },
-  classBadgeHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  classBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  classLevelPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  classLevelPillText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  classBadgeSubtitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
   },
 });

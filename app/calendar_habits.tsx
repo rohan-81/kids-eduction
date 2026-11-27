@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../src/theme/colors';
 import { spacing, radii, shadows } from '../src/theme/spacing';
@@ -252,11 +252,20 @@ const HABITS_LIST = [
 
 export default function CalendarHabitsScreen() {
   const router = useRouter();
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
   const { addCoins, language } = useApp();
 
   const activeLang = language || 'en';
+  const resolvedParamTab: ActiveTab =
+    tab === 'days' || tab === 'habits' || tab === 'seasons' ? tab : 'seasons';
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('seasons');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(resolvedParamTab);
+
+  useEffect(() => {
+    if (tab === 'days' || tab === 'habits' || tab === 'seasons') {
+      setActiveTab(tab);
+    }
+  }, [tab]);
   const [selectedSeason, setSelectedSeason] = useState<string | null>('winter');
   const [completedHabits, setCompletedHabits] = useState<string[]>([]);
   // Habits already paid today. Unticking and re-ticking used to pay +2 coins every time.

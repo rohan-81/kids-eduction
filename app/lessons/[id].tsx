@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, type ComponentRef } from 'react';
 import {
   View,
   Text,
@@ -148,6 +148,21 @@ export default function LessonDetailScreen() {
 
   const [currentLesson, setCurrentLesson] = useState<LessonItem | null>(null);
   const [showTracing, setShowTracing] = useState(false);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const scrollToTracingPendingRef = useRef(false);
+  const tracingSectionYRef = useRef<number | null>(null);
+
+  const scrollToTracingPad = useCallback((y: number) => {
+    const targetY = Math.max(0, y - 12);
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollTo({ y: targetY, animated: true });
+    });
+  }, []);
+
+  useEffect(() => {
+    scrollToTracingPendingRef.current = false;
+    tracingSectionYRef.current = null;
+  }, [id]);
   const [showCelebration, setShowCelebration] = useState(false);
   /** True when the lesson was completed by tracing (affects popup copy and what "Retry" does). */
   const [finishedViaTracing, setFinishedViaTracing] = useState(false);
@@ -630,6 +645,7 @@ export default function LessonDetailScreen() {
       />
 
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={[styles.container, isNarrow && styles.containerNarrow]}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
@@ -660,29 +676,6 @@ export default function LessonDetailScreen() {
             }),
           ]}
         >
-          {/* Top Class Adaptation Badge */}
-          {adaptation ? (
-            <View
-              style={[
-                styles.cardHeaderTag,
-                {
-                  backgroundColor: adaptation.tierBadge.tagBg,
-                  borderColor: adaptation.tierBadge.border,
-                },
-                shadows.soft,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.cardHeaderTagText,
-                  { color: adaptation.tierBadge.tagColor },
-                ]}
-              >
-                {adaptation.tierBadge.badgeLabel} • {adaptation.tierBadge.title}
-              </Text>
-            </View>
-          ) : null}
-
           {/* Real Photo Image or Large Readable Symbol */}
           <TouchableOpacity style={styles.imageTouchable} onPress={handleSpeak} activeOpacity={0.85}>
             {(() => {
@@ -826,7 +819,15 @@ export default function LessonDetailScreen() {
             onPlayPhonics={handlePlayPhonicsSound}
             canTrace={canShowTracing}
             isTracingOpen={showTracing}
-            onToggleTracing={() => setShowTracing(!showTracing)}
+            onToggleTracing={() => {
+              const next = !showTracing;
+              scrollToTracingPendingRef.current = next;
+              setShowTracing(next);
+              if (next && tracingSectionYRef.current !== null) {
+                scrollToTracingPendingRef.current = false;
+                scrollToTracingPad(tracingSectionYRef.current);
+              }
+            }}
             isNumberLesson={isNumberCategory}
             speechFeedback={speechFeedback}
             hasPrevious={Boolean(prevLesson)}
@@ -843,7 +844,17 @@ export default function LessonDetailScreen() {
 
         {/* Finger Tracing Canvas (Opened on demand beneath main card) */}
         {canShowTracing && showTracing && (
-          <View style={styles.tracingSection}>
+          <View
+            style={styles.tracingSection}
+            onLayout={(e) => {
+              const y = e.nativeEvent.layout.y;
+              tracingSectionYRef.current = y;
+              if (scrollToTracingPendingRef.current) {
+                scrollToTracingPendingRef.current = false;
+                scrollToTracingPad(y);
+              }
+            }}
+          >
             <TracingCanvas
               key={tracingKey}
               symbol={displayedSymbol}
@@ -1122,20 +1133,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 0,
-  },
-  cardHeaderTag: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: spacing.md + 2,
-    paddingVertical: 4,
-    borderRadius: radii.full,
-    marginBottom: 6,
-    borderWidth: 1.5,
-    borderColor: '#FDE68A',
-  },
-  cardHeaderTagText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#B45309',
   },
   imageTouchable: {
     width: '100%',
