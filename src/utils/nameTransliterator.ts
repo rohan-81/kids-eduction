@@ -276,8 +276,16 @@ export const formatChildName = (rawName: string | undefined | null, lang: AppLan
 
   const trimmed = rawName.trim();
 
-  // If a slug or avatar identifier leaked into childName (e.g. avatar_3d_boy), show friendly name
-  if (trimmed === 'avatar_3d_boy' || trimmed.startsWith('avatar_') || trimmed === 'null' || trimmed === 'undefined') {
+  // If a slug, avatar identifier, or default star alias is used, localize to the active language
+  const defaultAliases = new Set([
+    'avatar_3d_boy',
+    'null',
+    'undefined',
+    'little star',
+    'નાનો તારો',
+    'छोटा तारा',
+  ]);
+  if (defaultAliases.has(trimmed.toLowerCase()) || trimmed.startsWith('avatar_')) {
     return lang === 'gu' ? 'નાનો તારો' : lang === 'hi' ? 'छोटा तारा' : 'Little Star';
   }
 

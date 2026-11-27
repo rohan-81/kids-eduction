@@ -38,6 +38,7 @@ import { soundEffects } from '../src/services/soundEffects';
 import { screenWellnessService } from '../src/services/screenWellnessService';
 import { storageService } from '../src/services/storageService';
 import { normalizeAvatarEmoji, is3DAvatar, AVATAR_3D_BOY } from '../src/utils/avatarHelper';
+import { formatChildName } from '../src/utils/nameTransliterator';
 import { ChildProfile, AgeGroup } from '../src/types';
 import { CATEGORIES } from '../src/data/categories';
 import { LESSONS } from '../src/data/lessons';
@@ -293,15 +294,16 @@ export default function ParentsScreen() {
 
   // Active Profile details
   const rawActive = profiles.find((p) => p.id === activeProfileId) || profiles[0];
+  const rawNickname =
+    rawActive?.nickname &&
+    rawActive.nickname !== 'Little Star' &&
+    rawActive.nickname !== 'નાનો તારો' &&
+    rawActive.nickname !== 'छोटा तारा'
+      ? rawActive.nickname
+      : progress.childName?.trim() || rawActive?.nickname || 'Little Star';
   const activeProfile = {
     id: rawActive?.id || 1,
-    nickname:
-      (rawActive?.nickname &&
-      rawActive.nickname !== 'Little Star' &&
-      rawActive.nickname !== 'નાનો તારો' &&
-      rawActive.nickname !== 'छोटा तारा')
-        ? rawActive.nickname
-        : (progress.childName?.trim() || rawActive?.nickname || (language === 'gu' ? 'નાનો તારો' : language === 'hi' ? 'छोटा तारा' : 'Little Star')),
+    nickname: formatChildName(rawNickname, language) || (language === 'gu' ? 'નાનો તારો' : language === 'hi' ? 'छोटा तारा' : 'Little Star'),
     age_group: ageGroup || rawActive?.age_group || '2-4',
     avatar: rawActive?.avatar || 'avatar_3d_boy',
   };
@@ -575,16 +577,16 @@ export default function ParentsScreen() {
     if (language === 'gu') {
       if (ag === '2-4') return '૨ થી ૪ વર્ષ (બાલવાટિકા/નર્સરી)';
       if (ag === '4-6') return '૪ થી ૬ વર્ષ (ધોરણ ૧-૨ પાયો)';
-      return '૬ થી ૮ વર્ષ (ધોરણ ૩-૪ માસ્ટરી)';
+      return '૬ થી ૮ વર્ષ (ધોરણ ૩-૫ માસ્ટરી)';
     }
     if (language === 'hi') {
       if (ag === '2-4') return '२ से ४ वर्ष (नर्सरी/केजी)';
       if (ag === '4-6') return '४ से ६ वर्ष (कक्षा १-२ नींव)';
-      return '६ से ८ वर्ष (कक्षा ३-४ मास्टरी)';
+      return '६ से ८ वर्ष (कक्षा ३-५ मास्टरी)';
     }
     if (ag === '2-4') return '2 to 4 Years (Nursery / KG)';
     if (ag === '4-6') return '4 to 6 Years (Class 1-2 Foundation)';
-    return '6 to 8 Years (Class 3-4 Mastery)';
+    return '6 to 8 Years (Class 3-5 Mastery)';
   };
 
   return (
@@ -1024,10 +1026,10 @@ export default function ParentsScreen() {
                         style={[styles.profileName, isActive && styles.activeProfileText]}
                         numberOfLines={1}
                       >
-                        {p.nickname}
+                        {formatChildName(p.nickname, language) || p.nickname}
                       </Text>
                       <Text style={styles.profileAgeGroup}>
-                        {p.age_group} {language === 'gu' ? 'વર્ષ' : language === 'hi' ? 'वर्ष' : 'Yrs'}
+                        {formatNumberDigits(p.age_group, language)} {language === 'gu' ? 'વર્ષ' : language === 'hi' ? 'वर्ष' : 'Yrs'}
                       </Text>
                     </TouchableOpacity>
                   );

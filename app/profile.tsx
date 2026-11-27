@@ -338,7 +338,7 @@ export default function ProfileScreen() {
               <Text style={styles.createAccountBtnText}>
                 {language === 'gu' ? 'નવું ખાતું બનાવો' : language === 'hi' ? 'नया खाता बनाएं' : 'Create New Account'}
               </Text>
-              <Text style={[styles.btnChevron, { color: '#7E22CE' }]}>➔</Text>
+              <Glyph name="next" size={14} color={'#7E22CE'} strokeWidth={3} />
             </TouchableOpacity>
 
             {/* 3. Log Out & Open Login Page (or Sign In if guest) */}
@@ -711,6 +711,7 @@ const styles = StyleSheet.create({
   parentsCornerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
@@ -735,6 +736,7 @@ const styles = StyleSheet.create({
   createAccountBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: '#F3E8FF',
     borderWidth: 1.5,
     borderColor: '#C084FC',

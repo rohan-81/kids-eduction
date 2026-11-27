@@ -1870,6 +1870,12 @@ export const audioService = {
         const playPromise = audio.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch((err) => {
+            const errName = (err as { name?: string } | null)?.name;
+            // Intentional stop/pause during rapid navigation rejects play() with AbortError; ignore cleanly.
+            if (errName === 'AbortError' || activeWebAudio !== audio) {
+              finishOnce();
+              return;
+            }
             console.warn('Web audio play failed, trying direct fallback:', err);
             if (proxyUrl && audio.src === proxyUrl && directUrl) {
               audio.src = directUrl;
