@@ -949,7 +949,7 @@ export const ENGLISH_LESSONS: LessonItem[] = [
     categoryId: 'en-sentences',
     language: 'all',
     ageGroup: 'all',
-    symbol: '📚',
+    symbol: '📖',
     title: 'I love reading books. • મને વાંચવું ગમે છે. • मुझे किताबें पसंद हैं।',
     subtitle: 'Expressing likes: Subject (I) + Verb (love) + Activity (reading books)',
     phonetic: 'I love reading books.',

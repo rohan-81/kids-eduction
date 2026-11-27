@@ -153,21 +153,41 @@ describe('screen-level reward and race guards', () => {
     expect(src).toMatch(/recordScore\(gameType, scoreRef\.current, questions\.length\)/);
   });
 
-  test('balloon pop: wrong pop re-opens for a retry, and every outcome auto-advances quickly', () => {
+  test('every quiz mode: a wrong answer is announced and auto-skips (no retry)', () => {
     const src = read('app/games/[type].tsx');
     const ms = (name: string) => Number(src.match(new RegExp(`const ${name} = (\\d+);`))?.[1]);
-    expect(ms('BALLOON_RETRY_MS')).toBeGreaterThanOrEqual(1000);
-    expect(ms('BALLOON_RETRY_MS')).toBeLessThanOrEqual(1200);
+    expect(src).not.toMatch(/BALLOON_RETRY_MS|BALLOON_MAX_WRONG_TRIES|getTryAgainSpeech/);
+    expect(src).toContain("gu: 'ખોટો જવાબ!'");
+    expect(src).toContain("hi: 'गलत जवाब!'");
+    expect(src).toContain("en: 'Wrong answer!'");
+    // Standard quizzes / balloon pop and find-object share one wrong-answer flow.
+    expect(src.match(/handleWrongAnswer\(\);/g)?.length).toBe(2);
+    expect(src).toMatch(/advanceTimerRef\.current = setTimeout\(skipSafely, WRONG_SKIP_FALLBACK_MS\);/);
+    expect(ms('WRONG_SKIP_FALLBACK_MS')).toBeLessThanOrEqual(2500);
+    // Find-object locks after one answer instead of re-opening for another try.
+    expect(src).toMatch(/const handleFindObjectOptionSelect = \(option: GameOption\) => \{\s*if \(isAnsweredRef\.current \|\| isAnswered\) return;\s*isAnsweredRef\.current = true;/);
+    // Correct pop and out-of-lives still use the quick balloon delay instead of 7s / 1.8s.
     expect(ms('BALLOON_ADVANCE_MS')).toBeGreaterThanOrEqual(1200);
     expect(ms('BALLOON_ADVANCE_MS')).toBeLessThanOrEqual(1500);
-    // Retry: the lock is released and the tried balloon stays disabled.
-    expect(src).toMatch(/isAnsweredRef\.current = false;\s*setIsAnswered\(false\);\s*setSelectedOptionId\(null\);/);
-    expect(src).toMatch(/disabled=\{isAnswered \|\| isTried\}/);
-    // Correct pop and out-of-lives use the quick delay instead of 7s / 1.8s.
     expect(src).toMatch(/setTimeout\(advanceSafely, isBalloonPop \? BALLOON_ADVANCE_MS : 7000\)/);
     expect(src).toMatch(/\}, isBalloonPop \? BALLOON_ADVANCE_MS : 1800\);/);
-    // Attempts reset per question and per game.
-    expect(src.match(/resetBalloonAttempts\(\);/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test('balloon pop: the tapped balloon bursts and the animation resets per question', () => {
+    const src = read('app/games/[type].tsx');
+    expect(src).toMatch(/Animated\.timing\(popAnim, \{\s*toValue: 1,\s*duration: BALLOON_POP_MS,/);
+    expect(src).toContain('onPress={() => handleBalloonPop(option)}');
+    expect(src).toContain('BALLOON_BURST_ANGLES.map(');
+    expect(src.match(/popAnim\.setValue\(0\);/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+
+  test('victory popup shows a single star rating and an emoji-free title under the emblem', () => {
+    const src = read('app/games/[type].tsx');
+    const modal = src.slice(src.indexOf('{/* Victory / game-over popup */}'), src.indexOf('</KidModal>'));
+    expect(modal).not.toContain('<StarMeter');
+    expect(modal.match(/<Art\.StarArt size=\{i === 1 \? 52 : 42\} \/>/g)).toHaveLength(1);
+    expect(modal).toContain("t('games.gameOver').replace(/[\\p{Extended_Pictographic}\\uFE0F\\u200D]/gu, '')");
+    expect(modal).toContain('styles.victoryActions');
   });
 
   test('lesson finish is single-shot and reports progress once', () => {

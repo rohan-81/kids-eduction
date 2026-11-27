@@ -1,6 +1,6 @@
 {
   "meta": {
-    "exportedAt": "2026-11-26T10:40:37.706Z",
+    "exportedAt": "2026-11-27T09:55:51.351Z",
     "generator": "KidsZone Static Data Extractor",
     "version": "1.0.0"
   },
@@ -12035,7 +12035,7 @@
         "categoryId": "en-sentences",
         "language": "all",
         "ageGroup": "all",
-        "symbol": "📚",
+        "symbol": "📖",
         "title": "I love reading books. • મને વાંચવું ગમે છે. • मुझे किताबें पसंद हैं।",
         "subtitle": "Expressing likes: Subject (I) + Verb (love) + Activity (reading books)",
         "phonetic": "I love reading books.",
@@ -16404,9 +16404,9 @@
       "game_type": "find-letter",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આમાંથી \"જ\" (જલેબી નો જ) શોધો:",
+      "question_text": "આમાંથી \"જ\" (જહાજ નો જ) શોધો:",
       "audio_text": "જ શોધો",
-      "display_visual": "🥨",
+      "display_visual": "🚢",
       "count_target": null,
       "options": [
         {
@@ -16476,9 +16476,9 @@
       "game_type": "find-letter",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આમાંથી \"ત\" (તલવાર નો ત) શોધો:",
+      "question_text": "આમાંથી \"ત\" (તરબૂચ નો ત) શોધો:",
       "audio_text": "ત શોધો",
-      "display_visual": "⚔️",
+      "display_visual": "🍉",
       "count_target": null,
       "options": [
         {
@@ -16980,9 +16980,9 @@
       "game_type": "find-letter",
       "language": "hi",
       "age_group": "all",
-      "question_text": "इनमें से \"अ\" (अनार का अ) खोजें:",
+      "question_text": "इनमें से \"अ\" (अनानास का अ) खोजें:",
       "audio_text": "अ खोजें",
-      "display_visual": "🍎",
+      "display_visual": "🍍",
       "count_target": null,
       "options": [
         {
@@ -17016,9 +17016,9 @@
       "game_type": "find-letter",
       "language": "hi",
       "age_group": "all",
-      "question_text": "इनमें से \"ग\" (गमला का ग) खोजें:",
+      "question_text": "इनमें से \"ग\" (गाय का ग) खोजें:",
       "audio_text": "ग खोजें",
-      "display_visual": "🌱",
+      "display_visual": "🐄",
       "count_target": null,
       "options": [
         {
@@ -17088,9 +17088,9 @@
       "game_type": "find-letter",
       "language": "hi",
       "age_group": "all",
-      "question_text": "इनमें से \"र\" (रथ का र) खोजें:",
+      "question_text": "इनमें से \"र\" (रेल का र) खोजें:",
       "audio_text": "र खोजें",
-      "display_visual": "🏹",
+      "display_visual": "🚂",
       "count_target": null,
       "options": [
         {
@@ -17304,26 +17304,26 @@
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આ ચિત્ર શેનું છે ઓળખો:",
-      "audio_text": "આ પક્ષી કયું છે?",
+      "question_text": "ચિત્ર જુઓ: આ પક્ષીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પક્ષીનું નામ શું છે?",
       "display_visual": "🦚",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🦚 મોર"
+          "label": "મોર"
         },
         {
           "id": "2",
-          "label": "🐦 ચકલી"
+          "label": "પોપટ"
         },
         {
           "id": "3",
-          "label": "🦜 પોપટ"
+          "label": "ચકલી"
         },
         {
           "id": "4",
-          "label": "🦅 કાગડો"
+          "label": "કબૂતર"
         }
       ],
       "correct_answer": "1",
@@ -17340,26 +17340,26 @@
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આ કયું પ્રાણી છે ઓળખો:",
-      "audio_text": "આ કયું પ્રાણી છે?",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
       "display_visual": "🐱",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🐶 કૂતરો"
+          "label": "કૂતરો"
         },
         {
           "id": "2",
-          "label": "🐱 બિલાડી"
+          "label": "બિલાડી"
         },
         {
           "id": "3",
-          "label": "🐰 સસલું"
+          "label": "સસલું"
         },
         {
           "id": "4",
-          "label": "🐵 વાંદરો"
+          "label": "ઉંદર"
         }
       ],
       "correct_answer": "2",
@@ -17376,30 +17376,30 @@
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આ કયું ફળ છે ઓળખો:",
-      "audio_text": "આ કયું ફળ છે?",
-      "display_visual": "🥭",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "display_visual": "🦁",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🍌 કેળું"
+          "label": "વાઘ"
         },
         {
           "id": "2",
-          "label": "🥭 કેરી"
+          "label": "દીપડો"
         },
         {
           "id": "3",
-          "label": "🍎 સફરજન"
+          "label": "સિંહ"
         },
         {
           "id": "4",
-          "label": "🍇 દ્રાક્ષ"
+          "label": "રીંછ"
         }
       ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
+      "correct_answer": "3",
+      "correct_option_id": "3",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -17412,30 +17412,30 @@
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આ વનરાજ કોણ છે ઓળખો:",
-      "audio_text": "આ વનરાજ કોણ છે?",
-      "display_visual": "🦁",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "display_visual": "🐶",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🐯 વાઘ"
+          "label": "બિલાડી"
         },
         {
           "id": "2",
-          "label": "🦁 સિંહ"
+          "label": "શિયાળ"
         },
         {
           "id": "3",
-          "label": "🐘 હાથી"
+          "label": "વરુ"
         },
         {
           "id": "4",
-          "label": "🐆 ચિત્તો"
+          "label": "કૂતરો"
         }
       ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
+      "correct_answer": "4",
+      "correct_option_id": "4",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -17448,30 +17448,30 @@
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આ કયું પક્ષી છે ઓળખો:",
-      "audio_text": "આ કયું પક્ષી છે?",
-      "display_visual": "🦜",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "display_visual": "🐄",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🦚 મોર"
+          "label": "ગાય"
         },
         {
           "id": "2",
-          "label": "🦜 પોપટ"
+          "label": "ભેંસ"
         },
         {
           "id": "3",
-          "label": "🕊️ કબૂતર"
+          "label": "બકરી"
         },
         {
           "id": "4",
-          "label": "🐦 કોયલ"
+          "label": "ઘેટું"
         }
       ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
+      "correct_answer": "1",
+      "correct_option_id": "1",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -17484,26 +17484,26 @@
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આ વફાદાર પ્રાણી કયું છે?",
-      "audio_text": "આ વફાદાર પ્રાણી કયું છે?",
-      "display_visual": "🐶",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "display_visual": "🐯",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🐱 બિલાડી"
+          "label": "સિંહ"
         },
         {
           "id": "2",
-          "label": "🐶 કૂતરો"
+          "label": "વાઘ"
         },
         {
           "id": "3",
-          "label": "🦊 શિયાળ"
+          "label": "ચિત્તો"
         },
         {
           "id": "4",
-          "label": "🐺 વરુ"
+          "label": "ઝીબ્રા"
         }
       ],
       "correct_answer": "2",
@@ -17520,98 +17520,26 @@
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આ કયું પાલતુ પ્રાણી છે ઓળખો:",
-      "audio_text": "આ કયું પ્રાણી છે?",
-      "display_visual": "🐄",
-      "count_target": null,
-      "options": [
-        {
-          "id": "1",
-          "label": "🐄 ગાય"
-        },
-        {
-          "id": "2",
-          "label": "🐃 ભેંસ"
-        },
-        {
-          "id": "3",
-          "label": "🐐 બકરી"
-        },
-        {
-          "id": "4",
-          "label": "🐪 ઊંટ"
-        }
-      ],
-      "correct_answer": "1",
-      "correct_option_id": "1",
-      "explanation": "",
-      "hint": "",
-      "image": "",
-      "audio": "",
-      "points": 10,
-      "difficulty": 1
-    },
-    {
-      "stable_id": "pm-gu-8",
-      "game_type": "picture-matching",
-      "language": "gu",
-      "age_group": "all",
-      "question_text": "આ કયું રાષ્ટ્રીય પ્રાણી છે?",
-      "audio_text": "આ વાઘ છે કે સિંહ?",
-      "display_visual": "🐯",
-      "count_target": null,
-      "options": [
-        {
-          "id": "1",
-          "label": "🦁 સિંહ"
-        },
-        {
-          "id": "2",
-          "label": "🐯 વાઘ"
-        },
-        {
-          "id": "3",
-          "label": "🐆 દીપડો"
-        },
-        {
-          "id": "4",
-          "label": "🐺 શિયાળ"
-        }
-      ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
-      "explanation": "",
-      "hint": "",
-      "image": "",
-      "audio": "",
-      "points": 10,
-      "difficulty": 1
-    },
-    {
-      "stable_id": "pm-gu-9",
-      "game_type": "picture-matching",
-      "language": "gu",
-      "age_group": "all",
-      "question_text": "રણનું વહાણ કોને કહેવાય?",
-      "audio_text": "રણનું વહાણ કોને કહેવાય?",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
       "display_visual": "🐪",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🐘 હાથી"
+          "label": "ઘોડો"
         },
         {
           "id": "2",
-          "label": "🐎 ઘોડો"
+          "label": "ગધેડો"
         },
         {
           "id": "3",
-          "label": "🐪 ઊંટ"
+          "label": "ઊંટ"
         },
         {
           "id": "4",
-          "label": "🫏 ગધેડો"
+          "label": "જિરાફ"
         }
       ],
       "correct_answer": "3",
@@ -17624,30 +17552,66 @@
       "difficulty": 1
     },
     {
-      "stable_id": "pm-gu-10",
+      "stable_id": "pm-gu-8",
       "game_type": "picture-matching",
       "language": "gu",
       "age_group": "all",
-      "question_text": "ઝાડ પર કૂદકા મારનાર કોણ છે?",
-      "audio_text": "ઝાડ પર કૂદકા મારનાર કોણ છે?",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
       "display_visual": "🐵",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "🐵 વાંદરો"
+          "label": "ખિસકોલી"
         },
         {
           "id": "2",
-          "label": "🐿️ ખિસકોલી"
+          "label": "રીંછ"
         },
         {
           "id": "3",
-          "label": "🐻 રીંછ"
+          "label": "સસલું"
         },
         {
           "id": "4",
-          "label": "🦌 હરણ"
+          "label": "વાંદરો"
+        }
+      ],
+      "correct_answer": "4",
+      "correct_option_id": "4",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-gu-9",
+      "game_type": "picture-matching",
+      "language": "gu",
+      "age_group": "all",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "display_visual": "🦓",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "ઝીબ્રા"
+        },
+        {
+          "id": "2",
+          "label": "ઘોડો"
+        },
+        {
+          "id": "3",
+          "label": "ગધેડો"
+        },
+        {
+          "id": "4",
+          "label": "વાઘ"
         }
       ],
       "correct_answer": "1",
@@ -17660,12 +17624,120 @@
       "difficulty": 1
     },
     {
+      "stable_id": "pm-gu-10",
+      "game_type": "picture-matching",
+      "language": "gu",
+      "age_group": "all",
+      "question_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પ્રાણીનું નામ શું છે?",
+      "display_visual": "🦒",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "ઊંટ"
+        },
+        {
+          "id": "2",
+          "label": "જિરાફ"
+        },
+        {
+          "id": "3",
+          "label": "હરણ"
+        },
+        {
+          "id": "4",
+          "label": "હાથી"
+        }
+      ],
+      "correct_answer": "2",
+      "correct_option_id": "2",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-gu-11",
+      "game_type": "picture-matching",
+      "language": "gu",
+      "age_group": "all",
+      "question_text": "ચિત્ર જુઓ: આ પક્ષીનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ પક્ષીનું નામ શું છે?",
+      "display_visual": "🦆",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "હંસ"
+        },
+        {
+          "id": "2",
+          "label": "મરઘો"
+        },
+        {
+          "id": "3",
+          "label": "બતક"
+        },
+        {
+          "id": "4",
+          "label": "કબૂતર"
+        }
+      ],
+      "correct_answer": "3",
+      "correct_option_id": "3",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-gu-12",
+      "game_type": "picture-matching",
+      "language": "gu",
+      "age_group": "all",
+      "question_text": "ચિત્ર જુઓ: આ ફળનું નામ શું છે?",
+      "audio_text": "ચિત્ર જુઓ: આ ફળનું નામ શું છે?",
+      "display_visual": "🥭",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "કેળું"
+        },
+        {
+          "id": "2",
+          "label": "સફરજન"
+        },
+        {
+          "id": "3",
+          "label": "દ્રાક્ષ"
+        },
+        {
+          "id": "4",
+          "label": "કેરી"
+        }
+      ],
+      "correct_answer": "4",
+      "correct_option_id": "4",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
       "stable_id": "pm-en-1",
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "What bird is this?",
-      "audio_text": "What bird is this?",
+      "question_text": "Look at the picture: what is this bird called?",
+      "audio_text": "Look at the picture: what is this bird called?",
       "display_visual": "🦚",
       "count_target": null,
       "options": [
@@ -17683,7 +17755,7 @@
         },
         {
           "id": "4",
-          "label": "Duck"
+          "label": "Pigeon"
         }
       ],
       "correct_answer": "1",
@@ -17700,8 +17772,8 @@
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "What animal is this?",
-      "audio_text": "What animal is this?",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
       "display_visual": "🐱",
       "count_target": null,
       "options": [
@@ -17719,7 +17791,7 @@
         },
         {
           "id": "4",
-          "label": "Cow"
+          "label": "Mouse"
         }
       ],
       "correct_answer": "2",
@@ -17736,26 +17808,26 @@
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "What fruit is this?",
-      "audio_text": "What fruit is this?",
-      "display_visual": "🍎",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
+      "display_visual": "🦁",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "Orange"
+          "label": "Tiger"
         },
         {
           "id": "2",
-          "label": "Banana"
+          "label": "Leopard"
         },
         {
           "id": "3",
-          "label": "Apple"
+          "label": "Lion"
         },
         {
           "id": "4",
-          "label": "Mango"
+          "label": "Bear"
         }
       ],
       "correct_answer": "3",
@@ -17772,30 +17844,30 @@
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "What animal is this?",
-      "audio_text": "What animal is this?",
-      "display_visual": "🦁",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
+      "display_visual": "🐶",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "Tiger"
+          "label": "Cat"
         },
         {
           "id": "2",
-          "label": "Lion"
+          "label": "Fox"
         },
         {
           "id": "3",
-          "label": "Bear"
+          "label": "Wolf"
         },
         {
           "id": "4",
-          "label": "Leopard"
+          "label": "Dog"
         }
       ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
+      "correct_answer": "4",
+      "correct_option_id": "4",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -17808,80 +17880,8 @@
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "What bird is this?",
-      "audio_text": "What bird is this?",
-      "display_visual": "🦜",
-      "count_target": null,
-      "options": [
-        {
-          "id": "1",
-          "label": "Pigeon"
-        },
-        {
-          "id": "2",
-          "label": "Crow"
-        },
-        {
-          "id": "3",
-          "label": "Parrot"
-        },
-        {
-          "id": "4",
-          "label": "Duck"
-        }
-      ],
-      "correct_answer": "3",
-      "correct_option_id": "3",
-      "explanation": "",
-      "hint": "",
-      "image": "",
-      "audio": "",
-      "points": 10,
-      "difficulty": 1
-    },
-    {
-      "stable_id": "pm-en-6",
-      "game_type": "picture-matching",
-      "language": "en",
-      "age_group": "all",
-      "question_text": "Which faithful pet is this?",
-      "audio_text": "Which faithful pet is this?",
-      "display_visual": "🐶",
-      "count_target": null,
-      "options": [
-        {
-          "id": "1",
-          "label": "Cat"
-        },
-        {
-          "id": "2",
-          "label": "Dog"
-        },
-        {
-          "id": "3",
-          "label": "Fox"
-        },
-        {
-          "id": "4",
-          "label": "Wolf"
-        }
-      ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
-      "explanation": "",
-      "hint": "",
-      "image": "",
-      "audio": "",
-      "points": 10,
-      "difficulty": 1
-    },
-    {
-      "stable_id": "pm-en-7",
-      "game_type": "picture-matching",
-      "language": "en",
-      "age_group": "all",
-      "question_text": "What animal is this?",
-      "audio_text": "What animal is this?",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
       "display_visual": "🐄",
       "count_target": null,
       "options": [
@@ -17891,15 +17891,15 @@
         },
         {
           "id": "2",
-          "label": "Horse"
+          "label": "Buffalo"
         },
         {
           "id": "3",
-          "label": "Sheep"
+          "label": "Goat"
         },
         {
           "id": "4",
-          "label": "Camel"
+          "label": "Sheep"
         }
       ],
       "correct_answer": "1",
@@ -17912,12 +17912,12 @@
       "difficulty": 1
     },
     {
-      "stable_id": "pm-en-8",
+      "stable_id": "pm-en-6",
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "Which wild striped animal is this?",
-      "audio_text": "Which wild animal is this?",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
       "display_visual": "🐯",
       "count_target": null,
       "options": [
@@ -17935,7 +17935,7 @@
         },
         {
           "id": "4",
-          "label": "Bear"
+          "label": "Zebra"
         }
       ],
       "correct_answer": "2",
@@ -17948,22 +17948,22 @@
       "difficulty": 1
     },
     {
-      "stable_id": "pm-en-9",
+      "stable_id": "pm-en-7",
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "Which animal is the ship of the desert?",
-      "audio_text": "Which animal is the ship of the desert?",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
       "display_visual": "🐪",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "Elephant"
+          "label": "Horse"
         },
         {
           "id": "2",
-          "label": "Horse"
+          "label": "Donkey"
         },
         {
           "id": "3",
@@ -17971,7 +17971,7 @@
         },
         {
           "id": "4",
-          "label": "Donkey"
+          "label": "Giraffe"
         }
       ],
       "correct_answer": "3",
@@ -17984,30 +17984,66 @@
       "difficulty": 1
     },
     {
-      "stable_id": "pm-en-10",
+      "stable_id": "pm-en-8",
       "game_type": "picture-matching",
       "language": "en",
       "age_group": "all",
-      "question_text": "Which playful animal loves bananas?",
-      "audio_text": "Which playful animal loves bananas?",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
       "display_visual": "🐵",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "Monkey"
-        },
-        {
-          "id": "2",
           "label": "Squirrel"
         },
         {
+          "id": "2",
+          "label": "Bear"
+        },
+        {
           "id": "3",
-          "label": "Panda"
+          "label": "Rabbit"
         },
         {
           "id": "4",
-          "label": "Rabbit"
+          "label": "Monkey"
+        }
+      ],
+      "correct_answer": "4",
+      "correct_option_id": "4",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-en-9",
+      "game_type": "picture-matching",
+      "language": "en",
+      "age_group": "all",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
+      "display_visual": "🦓",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "Zebra"
+        },
+        {
+          "id": "2",
+          "label": "Horse"
+        },
+        {
+          "id": "3",
+          "label": "Donkey"
+        },
+        {
+          "id": "4",
+          "label": "Tiger"
         }
       ],
       "correct_answer": "1",
@@ -18020,12 +18056,120 @@
       "difficulty": 1
     },
     {
+      "stable_id": "pm-en-10",
+      "game_type": "picture-matching",
+      "language": "en",
+      "age_group": "all",
+      "question_text": "Look at the picture: what is this animal called?",
+      "audio_text": "Look at the picture: what is this animal called?",
+      "display_visual": "🦒",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "Camel"
+        },
+        {
+          "id": "2",
+          "label": "Giraffe"
+        },
+        {
+          "id": "3",
+          "label": "Deer"
+        },
+        {
+          "id": "4",
+          "label": "Elephant"
+        }
+      ],
+      "correct_answer": "2",
+      "correct_option_id": "2",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-en-11",
+      "game_type": "picture-matching",
+      "language": "en",
+      "age_group": "all",
+      "question_text": "Look at the picture: what is this bird called?",
+      "audio_text": "Look at the picture: what is this bird called?",
+      "display_visual": "🦆",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "Swan"
+        },
+        {
+          "id": "2",
+          "label": "Rooster"
+        },
+        {
+          "id": "3",
+          "label": "Duck"
+        },
+        {
+          "id": "4",
+          "label": "Pigeon"
+        }
+      ],
+      "correct_answer": "3",
+      "correct_option_id": "3",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-en-12",
+      "game_type": "picture-matching",
+      "language": "en",
+      "age_group": "all",
+      "question_text": "Look at the picture: what is this fruit called?",
+      "audio_text": "Look at the picture: what is this fruit called?",
+      "display_visual": "🥭",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "Banana"
+        },
+        {
+          "id": "2",
+          "label": "Apple"
+        },
+        {
+          "id": "3",
+          "label": "Grapes"
+        },
+        {
+          "id": "4",
+          "label": "Mango"
+        }
+      ],
+      "correct_answer": "4",
+      "correct_option_id": "4",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
       "stable_id": "pm-hi-1",
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "यह चित्र किसका है पहचानें:",
-      "audio_text": "यह पक्षी कौन सा है?",
+      "question_text": "चित्र देखें: इस पक्षी का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस पक्षी का नाम क्या है?",
       "display_visual": "🦚",
       "count_target": null,
       "options": [
@@ -18035,15 +18179,15 @@
         },
         {
           "id": "2",
-          "label": "चिड़िया"
-        },
-        {
-          "id": "3",
           "label": "तोता"
         },
         {
+          "id": "3",
+          "label": "चिड़िया"
+        },
+        {
           "id": "4",
-          "label": "कौआ"
+          "label": "कबूतर"
         }
       ],
       "correct_answer": "1",
@@ -18060,8 +18204,8 @@
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "यह कौन सा जानवर है पहचानें:",
-      "audio_text": "यह कौन सा जानवर है?",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
       "display_visual": "🐱",
       "count_target": null,
       "options": [
@@ -18079,7 +18223,7 @@
         },
         {
           "id": "4",
-          "label": "बंदर"
+          "label": "चूहा"
         }
       ],
       "correct_answer": "2",
@@ -18096,30 +18240,30 @@
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "यह कौन सा फल है पहचानें:",
-      "audio_text": "यह कौन सा फल है?",
-      "display_visual": "🥭",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "display_visual": "🦁",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "केला"
+          "label": "बाघ"
         },
         {
           "id": "2",
-          "label": "आम"
+          "label": "तेंदुआ"
         },
         {
           "id": "3",
-          "label": "सेब"
+          "label": "शेर"
         },
         {
           "id": "4",
-          "label": "अंगूर"
+          "label": "भालू"
         }
       ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
+      "correct_answer": "3",
+      "correct_option_id": "3",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -18132,30 +18276,30 @@
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "यह जंगल का राजा कौन है?",
-      "audio_text": "यह जंगल का राजा कौन है?",
-      "display_visual": "🦁",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "display_visual": "🐶",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "बाघ"
+          "label": "बिल्ली"
         },
         {
           "id": "2",
-          "label": "शेर"
+          "label": "लोमड़ी"
         },
         {
           "id": "3",
-          "label": "हाथी"
+          "label": "भेड़िया"
         },
         {
           "id": "4",
-          "label": "चीता"
+          "label": "कुत्ता"
         }
       ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
+      "correct_answer": "4",
+      "correct_option_id": "4",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -18168,80 +18312,8 @@
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "यह प्यारा पक्षी कौन सा है?",
-      "audio_text": "यह प्यारा पक्षी कौन सा है?",
-      "display_visual": "🦜",
-      "count_target": null,
-      "options": [
-        {
-          "id": "1",
-          "label": "कबूतर"
-        },
-        {
-          "id": "2",
-          "label": "तोता"
-        },
-        {
-          "id": "3",
-          "label": "चिड़िया"
-        },
-        {
-          "id": "4",
-          "label": "बत्तख"
-        }
-      ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
-      "explanation": "",
-      "hint": "",
-      "image": "",
-      "audio": "",
-      "points": 10,
-      "difficulty": 1
-    },
-    {
-      "stable_id": "pm-hi-6",
-      "game_type": "picture-matching",
-      "language": "hi",
-      "age_group": "all",
-      "question_text": "यह वफादार पालतू जानवर कौन सा है?",
-      "audio_text": "यह वफादार जानवर कौन सा है?",
-      "display_visual": "🐶",
-      "count_target": null,
-      "options": [
-        {
-          "id": "1",
-          "label": "बिल्ली"
-        },
-        {
-          "id": "2",
-          "label": "कुत्ता"
-        },
-        {
-          "id": "3",
-          "label": "लोमड़ी"
-        },
-        {
-          "id": "4",
-          "label": "भेड़िया"
-        }
-      ],
-      "correct_answer": "2",
-      "correct_option_id": "2",
-      "explanation": "",
-      "hint": "",
-      "image": "",
-      "audio": "",
-      "points": 10,
-      "difficulty": 1
-    },
-    {
-      "stable_id": "pm-hi-7",
-      "game_type": "picture-matching",
-      "language": "hi",
-      "age_group": "all",
-      "question_text": "यह कौन सा पालतू जानवर है पहचानें:",
-      "audio_text": "यह कौन सा जानवर है?",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
       "display_visual": "🐄",
       "count_target": null,
       "options": [
@@ -18259,7 +18331,7 @@
         },
         {
           "id": "4",
-          "label": "ऊंट"
+          "label": "भेड़"
         }
       ],
       "correct_answer": "1",
@@ -18272,12 +18344,12 @@
       "difficulty": 1
     },
     {
-      "stable_id": "pm-hi-8",
+      "stable_id": "pm-hi-6",
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "भारत का राष्ट्रीय पशु कौन सा है?",
-      "audio_text": "भारत का राष्ट्रीय पशु कौन सा है?",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
       "display_visual": "🐯",
       "count_target": null,
       "options": [
@@ -18295,7 +18367,7 @@
         },
         {
           "id": "4",
-          "label": "भालू"
+          "label": "ज़ेबरा"
         }
       ],
       "correct_answer": "2",
@@ -18308,22 +18380,22 @@
       "difficulty": 1
     },
     {
-      "stable_id": "pm-hi-9",
+      "stable_id": "pm-hi-7",
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "रेगिस्तान का जहाज किसे कहा जाता है?",
-      "audio_text": "रेगिस्तान का जहाज किसे कहा जाता है?",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
       "display_visual": "🐪",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "हाथी"
+          "label": "घोड़ा"
         },
         {
           "id": "2",
-          "label": "घोड़ा"
+          "label": "गधा"
         },
         {
           "id": "3",
@@ -18331,7 +18403,7 @@
         },
         {
           "id": "4",
-          "label": "गधा"
+          "label": "जिराफ"
         }
       ],
       "correct_answer": "3",
@@ -18344,34 +18416,178 @@
       "difficulty": 1
     },
     {
-      "stable_id": "pm-hi-10",
+      "stable_id": "pm-hi-8",
       "game_type": "picture-matching",
       "language": "hi",
       "age_group": "all",
-      "question_text": "पेड़ों पर कूदने वाला नटखट कौन है?",
-      "audio_text": "पेड़ों पर कूदने वाला नटखट कौन है?",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
       "display_visual": "🐵",
       "count_target": null,
       "options": [
         {
           "id": "1",
-          "label": "बंदर"
-        },
-        {
-          "id": "2",
           "label": "गिलहरी"
         },
         {
-          "id": "3",
+          "id": "2",
           "label": "भालू"
         },
         {
+          "id": "3",
+          "label": "खरगोश"
+        },
+        {
           "id": "4",
-          "label": "हिरण"
+          "label": "बंदर"
+        }
+      ],
+      "correct_answer": "4",
+      "correct_option_id": "4",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-hi-9",
+      "game_type": "picture-matching",
+      "language": "hi",
+      "age_group": "all",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "display_visual": "🦓",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "ज़ेबरा"
+        },
+        {
+          "id": "2",
+          "label": "घोड़ा"
+        },
+        {
+          "id": "3",
+          "label": "गधा"
+        },
+        {
+          "id": "4",
+          "label": "बाघ"
         }
       ],
       "correct_answer": "1",
       "correct_option_id": "1",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-hi-10",
+      "game_type": "picture-matching",
+      "language": "hi",
+      "age_group": "all",
+      "question_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस जानवर का नाम क्या है?",
+      "display_visual": "🦒",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "ऊंट"
+        },
+        {
+          "id": "2",
+          "label": "जिराफ"
+        },
+        {
+          "id": "3",
+          "label": "हिरण"
+        },
+        {
+          "id": "4",
+          "label": "हाथी"
+        }
+      ],
+      "correct_answer": "2",
+      "correct_option_id": "2",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-hi-11",
+      "game_type": "picture-matching",
+      "language": "hi",
+      "age_group": "all",
+      "question_text": "चित्र देखें: इस पक्षी का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस पक्षी का नाम क्या है?",
+      "display_visual": "🦆",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "हंस"
+        },
+        {
+          "id": "2",
+          "label": "मुर्गा"
+        },
+        {
+          "id": "3",
+          "label": "बत्तख"
+        },
+        {
+          "id": "4",
+          "label": "कबूतर"
+        }
+      ],
+      "correct_answer": "3",
+      "correct_option_id": "3",
+      "explanation": "",
+      "hint": "",
+      "image": "",
+      "audio": "",
+      "points": 10,
+      "difficulty": 1
+    },
+    {
+      "stable_id": "pm-hi-12",
+      "game_type": "picture-matching",
+      "language": "hi",
+      "age_group": "all",
+      "question_text": "चित्र देखें: इस फल का नाम क्या है?",
+      "audio_text": "चित्र देखें: इस फल का नाम क्या है?",
+      "display_visual": "🥭",
+      "count_target": null,
+      "options": [
+        {
+          "id": "1",
+          "label": "केला"
+        },
+        {
+          "id": "2",
+          "label": "सेब"
+        },
+        {
+          "id": "3",
+          "label": "अंगूर"
+        },
+        {
+          "id": "4",
+          "label": "आम"
+        }
+      ],
+      "correct_answer": "4",
+      "correct_option_id": "4",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -18600,8 +18816,8 @@
       "game_type": "counting",
       "language": "gu",
       "age_group": "all",
-      "question_text": "ઢીંગલી ગણો:",
-      "audio_text": "કેટલી ઢીંગલી છે?",
+      "question_text": "ટેડી રીંછ ગણો:",
+      "audio_text": "કેટલા ટેડી રીંછ છે?",
       "display_visual": "🧸",
       "count_target": 7,
       "options": [
@@ -19399,7 +19615,7 @@
       "options": [
         {
           "id": "1",
-          "label": "૮ 🎈"
+          "label": "८ 🎈"
         },
         {
           "id": "2",
@@ -19932,9 +20148,9 @@
       "game_type": "missing-letter",
       "language": "en",
       "age_group": "all",
-      "question_text": "Fill the missing letter: P _ N",
-      "audio_text": "Complete the word PEN",
-      "display_visual": "🖊️",
+      "question_text": "Fill the missing letter: B _ S",
+      "audio_text": "Complete the word BUS",
+      "display_visual": "🚌",
       "count_target": null,
       "options": [
         {
@@ -19954,8 +20170,8 @@
           "label": "O"
         }
       ],
-      "correct_answer": "1",
-      "correct_option_id": "1",
+      "correct_answer": "2",
+      "correct_option_id": "2",
       "explanation": "",
       "hint": "",
       "image": "",
@@ -26916,8 +27132,8 @@
       "game_type": "find-object",
       "language": "gu",
       "age_group": "all",
-      "question_text": "આમાંથી \"ઢીંગલી\" (Teddy Bear) શોધો:",
-      "audio_text": "ઢીંગલી શોધો",
+      "question_text": "આમાંથી \"ટેડી રીંછ\" (Teddy Bear) શોધો:",
+      "audio_text": "ટેડી રીંછ શોધો",
       "display_visual": "🔍",
       "count_target": null,
       "options": [
@@ -26927,7 +27143,7 @@
         },
         {
           "id": "2",
-          "label": "ઢીંગલી 🧸"
+          "label": "ટેડી રીંછ 🧸"
         },
         {
           "id": "3",
@@ -26967,7 +27183,7 @@
         },
         {
           "id": "3",
-          "label": "પુસ્તક 📚"
+          "label": "પુસ્તક 📖"
         },
         {
           "id": "4",
@@ -27143,7 +27359,7 @@
         },
         {
           "id": "2",
-          "label": "ચશ્મા 👓"
+          "label": "બેગ 🎒"
         },
         {
           "id": "3",
@@ -27183,7 +27399,7 @@
         },
         {
           "id": "3",
-          "label": "ચશ્મા 👓"
+          "label": "બેગ 🎒"
         },
         {
           "id": "4",
@@ -27287,7 +27503,7 @@
         },
         {
           "id": "2",
-          "label": "Teddy 🧸"
+          "label": "Teddy Bear 🧸"
         },
         {
           "id": "3",
@@ -27312,8 +27528,8 @@
       "game_type": "find-object",
       "language": "en",
       "age_group": "all",
-      "question_text": "Find the \"Books\" from below:",
-      "audio_text": "Find the Books",
+      "question_text": "Find the \"Book\" from below:",
+      "audio_text": "Find the Book",
       "display_visual": "🔍",
       "count_target": null,
       "options": [
@@ -27327,7 +27543,7 @@
         },
         {
           "id": "3",
-          "label": "Books 📚"
+          "label": "Book 📖"
         },
         {
           "id": "4",
@@ -27420,8 +27636,8 @@
       "game_type": "find-object",
       "language": "en",
       "age_group": "all",
-      "question_text": "Find the \"Soccer Ball\" from below:",
-      "audio_text": "Find the Soccer Ball",
+      "question_text": "Find the \"Ball\" from below:",
+      "audio_text": "Find the Ball",
       "display_visual": "🔍",
       "count_target": null,
       "options": [
@@ -27503,7 +27719,7 @@
         },
         {
           "id": "2",
-          "label": "Glasses 👓"
+          "label": "Bag 🎒"
         },
         {
           "id": "3",
@@ -27543,7 +27759,7 @@
         },
         {
           "id": "3",
-          "label": "Glasses 👓"
+          "label": "Bag 🎒"
         },
         {
           "id": "4",
@@ -27647,7 +27863,7 @@
         },
         {
           "id": "2",
-          "label": "टेडी 🧸"
+          "label": "टेडी बियर 🧸"
         },
         {
           "id": "3",
@@ -27687,7 +27903,7 @@
         },
         {
           "id": "3",
-          "label": "किताबें 📚"
+          "label": "किताब 📖"
         },
         {
           "id": "4",
@@ -27863,7 +28079,7 @@
         },
         {
           "id": "2",
-          "label": "चश्मा 👓"
+          "label": "बस्ता 🎒"
         },
         {
           "id": "3",
@@ -27903,7 +28119,7 @@
         },
         {
           "id": "3",
-          "label": "चश्मा 👓"
+          "label": "बस्ता 🎒"
         },
         {
           "id": "4",
@@ -28191,11 +28407,11 @@
         },
         {
           "id": "3",
-          "label": "ગરમ ધાબળો 🧶"
+          "label": "પતંગ 🪁"
         },
         {
           "id": "4",
-          "label": "ફેન 🌀"
+          "label": "દડો ⚽"
         }
       ],
       "correct_answer": "1",
@@ -28411,7 +28627,7 @@
         },
         {
           "id": "4",
-          "label": "Walk 🏃"
+          "label": "Run 🏃"
         }
       ],
       "correct_answer": "1",
@@ -28551,11 +28767,11 @@
         },
         {
           "id": "3",
-          "label": "Blanket 🧶"
+          "label": "Kite 🪁"
         },
         {
           "id": "4",
-          "label": "Fan 🌀"
+          "label": "Ball ⚽"
         }
       ],
       "correct_answer": "1",
@@ -28911,11 +29127,11 @@
         },
         {
           "id": "3",
-          "label": "कंबल 🧶"
+          "label": "पतंग 🪁"
         },
         {
           "id": "4",
-          "label": "पंखा 🌀"
+          "label": "गेंद ⚽"
         }
       ],
       "correct_answer": "1",
@@ -29267,7 +29483,7 @@
         },
         {
           "id": "2",
-          "label": "રબર 🧼"
+          "label": "ફૂટપટ્ટી 📏"
         },
         {
           "id": "3",
@@ -29311,7 +29527,7 @@
         },
         {
           "id": "4",
-          "label": "રોટલી 🍞"
+          "label": "બ્રેડ 🍞"
         }
       ],
       "correct_answer": "4",
@@ -29627,7 +29843,7 @@
         },
         {
           "id": "2",
-          "label": "Eraser 🧼"
+          "label": "Ruler 📏"
         },
         {
           "id": "3",
@@ -29987,7 +30203,7 @@
         },
         {
           "id": "2",
-          "label": "रबर 🧼"
+          "label": "स्केल 📏"
         },
         {
           "id": "3",
@@ -30031,7 +30247,7 @@
         },
         {
           "id": "4",
-          "label": "रोटी 🍞"
+          "label": "ब्रेड 🍞"
         }
       ],
       "correct_answer": "4",
