@@ -14,7 +14,7 @@ import {
   TopicPlantsBadge,
   TopicOurWorldBadge,
 } from '../src/components/SubjectBadgeIcons';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,7 +27,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../src/theme/colors';
 import { spacing, radii, shadows } from '../src/theme/spacing';
@@ -106,6 +106,21 @@ export default function ParentsScreen() {
   const [isVerified, setIsVerified] = useState(false);
   // Kid-styled confirm/notify dialogs (Alert.alert is a no-op on web).
   const { dialog, confirm, notify } = useKidDialog();
+  const [, setUsageRefreshTick] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = screenWellnessService.subscribeUsage(() => {
+      setUsageRefreshTick((t) => t + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      screenWellnessService.flushActiveTime();
+      setUsageRefreshTick((t) => t + 1);
+    }, [])
+  );
 
   useEffect(() => {
     loadProfiles();
@@ -373,14 +388,8 @@ export default function ParentsScreen() {
     ['colors-shapes', 'animals', 'fruits', 'objects'].includes(c.category.id)
   );
 
-  // Calculate estimated learning time (each lesson ~2 mins, each game round ~1.5 min)
-  const totalGamesPlayed = Object.values(progress.gameStats || {}).reduce(
-    (acc, curr) => acc + (curr.timesPlayed || 0),
-    0
-  );
-  const estimatedMins = Math.round(
-    progress.completedLessons.length * 2 + totalGamesPlayed * 1.5
-  );
+  // Real active foreground learning time tracked across active sessions
+  const activeLearningMins = screenWellnessService.getTotalTrackedMinutes();
 
 
 
@@ -1058,7 +1067,7 @@ export default function ParentsScreen() {
                 <View style={styles.statIconCircle}>
                   <Art.ClockArt size={36} />
                 </View>
-                <Text style={styles.statNumber}>{formatNumberDigits(estimatedMins, language)} {language === 'gu' ? 'મિનિટ' : language === 'hi' ? 'मिनट' : 'm'}</Text>
+                <Text style={styles.statNumber}>{formatNumberDigits(activeLearningMins, language)} {language === 'gu' ? 'મિનિટ' : language === 'hi' ? 'मिनट' : 'm'}</Text>
                 <Text style={styles.statLabel}>
                   {language === 'gu' ? 'અભ્યાસ સમય' : language === 'hi' ? 'अध्ययन समय' : 'Learning Time'}
                 </Text>

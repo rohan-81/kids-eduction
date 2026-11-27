@@ -11,6 +11,31 @@ const STORAGE_KEYS = {
   DAILY_USAGE: '@kidszone_daily_usage_v1',
 };
 
+const MAX_HISTORY_DAYS = 35;
+
+export function formatLocalDateKey(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function pruneHistorySeconds(raw: Record<string, number>): Record<string, number> {
+  const entries = Object.entries(raw)
+    .filter(
+      ([key, val]) =>
+        /^\d{4}-\d{2}-\d{2}$/.test(key) &&
+        typeof val === 'number' &&
+        Number.isFinite(val) &&
+        val > 0
+    )
+    .sort(([a], [b]) => a.localeCompare(b));
+  if (entries.length <= MAX_HISTORY_DAYS) {
+    return Object.fromEntries(entries);
+  }
+  return Object.fromEntries(entries.slice(entries.length - MAX_HISTORY_DAYS));
+}
+
 export const SCREEN_TIME_MINUTES_MAP: Record<ScreenTimeLimitId, number> = {
   '15m': 15,
   '30m': 30,
@@ -27,12 +52,16 @@ type WellnessListener = {
 
 class ScreenWellnessService {
   private listeners: Set<WellnessListener> = new Set();
+  private usageListeners: Set<() => void> = new Set();
   private continuousMinutes: number = 0;
   private timerInterval: TimerHandle | null = null;
   // Default to unlimited so kids/testers aren't randomly locked out unless parents set a limit
   private currentLimit: ScreenTimeLimitId = 'unlimited';
   private eyeCareEnabled: boolean = true;
   private dailyMinutesUsed: number = 0;
+  private todaySeconds: number = 0;
+  private historySeconds: Record<string, number> = {};
+  private lastActiveCheckpointMs: number | null = null;
   private snoozeUntilMinute: number = 0;
   private isEyeCareAlertActive: boolean = false;
   private isLimitAlertActive: boolean = false;
@@ -53,6 +82,10 @@ class ScreenWellnessService {
     return this.ready;
   }
 
+  private notifyUsageListeners() {
+    this.usageListeners.forEach((cb) => cb());
+  }
+
   async init() {
     if (this.initialized) return;
     if (Platform.OS === 'web' && typeof window === 'undefined') return;
@@ -62,16 +95,39 @@ class ScreenWellnessService {
     if (Platform.OS !== 'web') {
       try {
         this.isAppActive = AppState.currentState === 'active';
+        this.lastActiveCheckpointMs = this.isAppActive ? Date.now() : null;
         this.appStateSubscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
-          this.isAppActive = nextState === 'active';
+          if (nextState === 'active') {
+            this.rollOverIfNewDay();
+            this.isAppActive = true;
+            this.lastActiveCheckpointMs = Date.now();
+          } else {
+            this.flushActiveTime();
+            this.isAppActive = false;
+            this.lastActiveCheckpointMs = null;
+          }
         });
       } catch {}
     } else if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
       // Web: don't count screen time while the browser tab is hidden in the background
       this.isAppActive = !document.hidden;
+      this.lastActiveCheckpointMs = this.isAppActive ? Date.now() : null;
       document.addEventListener('visibilitychange', () => {
-        this.isAppActive = !document.hidden;
+        if (!document.hidden) {
+          this.rollOverIfNewDay();
+          this.isAppActive = true;
+          this.lastActiveCheckpointMs = Date.now();
+        } else {
+          this.flushActiveTime();
+          this.isAppActive = false;
+          this.lastActiveCheckpointMs = null;
+        }
       });
+      if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+        window.addEventListener('pagehide', () => {
+          this.flushActiveTime();
+        });
+      }
     }
 
     try {
@@ -90,23 +146,52 @@ class ScreenWellnessService {
       if (dailyVal) {
         try {
           const parsed = JSON.parse(dailyVal);
+          const loadedHistory =
+            parsed && parsed.history && typeof parsed.history === 'object'
+              ? pruneHistorySeconds(parsed.history as Record<string, number>)
+              : {};
+
           if (parsed && parsed.date === getTodayDateKey()) {
-            this.dailyMinutesUsed = Number(parsed.minutes) || 0;
+            const secs =
+              typeof parsed.seconds === 'number' && Number.isFinite(parsed.seconds)
+                ? Math.max(0, Math.round(parsed.seconds))
+                : Math.max(0, Math.round((Number(parsed.minutes) || 0) * 60));
+            this.todaySeconds = secs;
+            this.dailyMinutesUsed = Math.floor(secs / 60);
             // Restore extra time a grown-up granted earlier today
             this.snoozeUntilMinute = Number(parsed.snoozeUntil) || 0;
+            this.historySeconds = pruneHistorySeconds({
+              ...loadedHistory,
+              ...(secs > 0 ? { [this.dailyDateKey]: secs } : {}),
+            });
           } else {
-            // New day reset
+            // Preserve prior day's tracked time in history before resetting today's counters
+            if (parsed && parsed.date) {
+              const prevSecs =
+                typeof parsed.seconds === 'number' && Number.isFinite(parsed.seconds)
+                  ? Math.max(0, Math.round(parsed.seconds))
+                  : Math.max(0, Math.round((Number(parsed.minutes) || 0) * 60));
+              if (prevSecs > 0) {
+                loadedHistory[String(parsed.date)] = prevSecs;
+              }
+            }
+            this.historySeconds = pruneHistorySeconds(loadedHistory);
+            this.todaySeconds = 0;
             this.dailyMinutesUsed = 0;
             await this.saveDailyUsage(0);
           }
         } catch {
+          this.todaySeconds = 0;
           this.dailyMinutesUsed = 0;
+          this.historySeconds = {};
         }
       }
     } catch (e) {
       console.warn('ScreenWellnessService init error:', e);
     }
 
+    this.lastActiveCheckpointMs = this.isAppActive ? Date.now() : null;
+    this.notifyUsageListeners();
     this.startTracking();
   }
 
@@ -120,9 +205,20 @@ class ScreenWellnessService {
 
   private async saveDailyUsage(mins: number) {
     try {
+      const historyToPersist = pruneHistorySeconds({
+        ...this.historySeconds,
+        ...(this.todaySeconds > 0 ? { [this.dailyDateKey]: this.todaySeconds } : {}),
+      });
+      this.historySeconds = historyToPersist;
       await AsyncStorage.setItem(
         STORAGE_KEYS.DAILY_USAGE,
-        JSON.stringify({ date: this.dailyDateKey, minutes: mins, snoozeUntil: this.snoozeUntilMinute })
+        JSON.stringify({
+          date: this.dailyDateKey,
+          minutes: mins,
+          seconds: this.todaySeconds,
+          snoozeUntil: this.snoozeUntilMinute,
+          history: historyToPersist,
+        })
       );
     } catch {}
   }
@@ -134,7 +230,14 @@ class ScreenWellnessService {
   private rollOverIfNewDay() {
     const today = getTodayDateKey();
     if (today === this.dailyDateKey) return;
+    if (this.todaySeconds > 0) {
+      this.historySeconds = pruneHistorySeconds({
+        ...this.historySeconds,
+        [this.dailyDateKey]: this.todaySeconds,
+      });
+    }
     this.dailyDateKey = today;
+    this.todaySeconds = 0;
     this.dailyMinutesUsed = 0;
     this.continuousMinutes = 0;
     this.snoozeUntilMinute = 0;
@@ -143,14 +246,34 @@ class ScreenWellnessService {
     if (wasLocked) this.listeners.forEach((l) => l.onDailyLimitUnlocked?.());
   }
 
-  private handleMinuteTick() {
-    // Never count time if app is in background or device is asleep
+  private commitActiveElapsedTime(fallbackSecondsWhenNull: number) {
     if (!this.isAppActive) return;
 
     this.rollOverIfNewDay();
-    this.continuousMinutes += 1;
-    this.dailyMinutesUsed += 1;
+
+    const now = Date.now();
+    const elapsedSeconds =
+      this.lastActiveCheckpointMs !== null
+        ? Math.max(0, Math.round((now - this.lastActiveCheckpointMs) / 1000))
+        : fallbackSecondsWhenNull;
+    this.lastActiveCheckpointMs = now;
+
+    if (elapsedSeconds <= 0) return;
+
+    const prevMinutes = this.dailyMinutesUsed;
+    this.todaySeconds += elapsedSeconds;
+    this.dailyMinutesUsed = Math.floor(this.todaySeconds / 60);
+    this.historySeconds[this.dailyDateKey] = this.todaySeconds;
+
+    const deltaMinutes = Math.max(0, this.dailyMinutesUsed - prevMinutes);
+    if (deltaMinutes > 0) {
+      this.continuousMinutes += deltaMinutes;
+    }
+
     this.saveDailyUsage(this.dailyMinutesUsed);
+    this.notifyUsageListeners();
+
+    if (deltaMinutes <= 0) return;
 
     // 1. Eye care reminder: every 20 continuous minutes
     if (
@@ -176,6 +299,15 @@ class ScreenWellnessService {
         l.onDailyLimitReached?.(this.dailyMinutesUsed, limitMinutes)
       );
     }
+  }
+
+  private handleMinuteTick() {
+    this.commitActiveElapsedTime(60);
+  }
+
+  /** Commits any partial active seconds accumulated since the last tick or state change. */
+  flushActiveTime() {
+    this.commitActiveElapsedTime(0);
   }
 
   subscribe(listener: WellnessListener): () => void {
@@ -263,15 +395,51 @@ class ScreenWellnessService {
   }
 
   getTodayUsageMinutes(): number {
+    this.rollOverIfNewDay();
     return this.dailyMinutesUsed;
   }
 
+  getTodayUsageSeconds(): number {
+    this.rollOverIfNewDay();
+    return this.todaySeconds;
+  }
+
+  getUsageMinutesForDate(dateKey: string): number {
+    this.rollOverIfNewDay();
+    if (dateKey === this.dailyDateKey) {
+      return this.dailyMinutesUsed;
+    }
+    return Math.floor((this.historySeconds[dateKey] || 0) / 60);
+  }
+
+  getTotalTrackedMinutes(): number {
+    this.rollOverIfNewDay();
+    let total = this.dailyMinutesUsed;
+    for (const [key, secs] of Object.entries(this.historySeconds)) {
+      if (key !== this.dailyDateKey) {
+        total += Math.floor((secs || 0) / 60);
+      }
+    }
+    return total;
+  }
+
+  subscribeUsage(listener: () => void): () => void {
+    this.usageListeners.add(listener);
+    return () => {
+      this.usageListeners.delete(listener);
+    };
+  }
+
   async resetDailyUsage(): Promise<void> {
+    this.todaySeconds = 0;
     this.dailyMinutesUsed = 0;
     this.continuousMinutes = 0;
     this.snoozeUntilMinute = 0;
     this.isLimitAlertActive = false;
+    this.lastActiveCheckpointMs = this.isAppActive ? Date.now() : null;
+    delete this.historySeconds[this.dailyDateKey];
     await this.saveDailyUsage(0);
+    this.notifyUsageListeners();
     this.listeners.forEach((l) => l.onDailyLimitUnlocked?.());
   }
 
