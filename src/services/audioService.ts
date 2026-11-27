@@ -147,10 +147,20 @@ export interface WordBoundaryEvent {
 export type WordBoundaryListener = (data: WordBoundaryEvent) => void;
 export type SpeechEndListener = () => void;
 export type SpeechStartListener = () => void;
+export type SpeechLoadingListener = (loading: boolean) => void;
 
 const wordBoundaryListeners = new Set<WordBoundaryListener>();
 const speechEndListeners = new Set<SpeechEndListener>();
 const speechStartListeners = new Set<SpeechStartListener>();
+const speechLoadingListeners = new Set<SpeechLoadingListener>();
+
+export function emitSpeechLoading(loading: boolean): void {
+  speechLoadingListeners.forEach((fn) => {
+    try {
+      fn(loading);
+    } catch {}
+  });
+}
 
 export function emitWordBoundary(data: WordBoundaryEvent): void {
   wordBoundaryListeners.forEach((fn) => {
@@ -161,6 +171,7 @@ export function emitWordBoundary(data: WordBoundaryEvent): void {
 }
 
 export function emitSpeechEnd(): void {
+  emitSpeechLoading(false);
   speechEndListeners.forEach((fn) => {
     try {
       fn();
@@ -169,6 +180,7 @@ export function emitSpeechEnd(): void {
 }
 
 export function emitSpeechStart(): void {
+  emitSpeechLoading(false);
   speechStartListeners.forEach((fn) => {
     try {
       fn();
@@ -902,6 +914,13 @@ export const audioService = {
     };
   },
 
+  addSpeechLoadingListener(listener: SpeechLoadingListener): () => void {
+    speechLoadingListeners.add(listener);
+    return () => {
+      speechLoadingListeners.delete(listener);
+    };
+  },
+
   getEffectiveSpeechRate(lang: AppLanguage = 'en', baseRate?: number): number {
     const rateToUse = typeof baseRate === 'number' && !isNaN(baseRate) ? baseRate : currentVoiceRate;
     if (lang === 'gu') {
@@ -1192,6 +1211,7 @@ export const audioService = {
         }
 
         if (!exists) {
+          emitSpeechLoading(true);
           // Priority 1: Django LAN proxy (serves full MP3 headers & bypasses mobile Google 403)
           // Priority 2: Direct Google TTS endpoint
           const candidateUrls: string[] = [];
@@ -1226,6 +1246,7 @@ export const audioService = {
     }
 
     if (requestId !== currentSpeechRequestId || !globalSoundEnabled) {
+      emitSpeechLoading(false);
       if (onDone) try { onDone(); } catch {}
       return;
     }
@@ -1288,6 +1309,7 @@ export const audioService = {
               player.addListener('playbackStatusUpdate', (status: AudioStatus) => {
                 if (status?.playing) {
                   started = true;
+                  emitSpeechLoading(false);
                   clearTimeout(fallbackTimer);
                 }
                 if (status?.duration && status.duration > 0 && typeof status.currentTime === 'number') {
@@ -2185,6 +2207,7 @@ export const audioService = {
   /** Never rejects: it is called fire-and-forget from ~60 places (navigation, taps, unmount). */
   async stop(): Promise<void> {
     currentSpeechRequestId++;
+    emitSpeechLoading(false);
     try {
       this.stopInternal(true);
     } catch (e) {

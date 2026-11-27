@@ -26,6 +26,7 @@ import {
   Alert,
   Platform,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -98,6 +99,7 @@ export default function ParentsScreen() {
   const [newNickname, setNewNickname] = useState('');
   const [newAgeGroup, setNewAgeGroup] = useState<AgeGroup>('2-4');
   const [selectedAvatar, setSelectedAvatar] = useState('avatar_3d_boy');
+  const [isProfileBusy, setIsProfileBusy] = useState(false);
 
   // Screen time & Eye care settings state
   const [selectedScreenTime, setSelectedScreenTime] = useState('unlimited');
@@ -173,13 +175,19 @@ export default function ParentsScreen() {
   };
 
   const handleSelectProfile = async (profile: ChildProfile) => {
+    if (isProfileBusy) return;
     soundEffects.playBubblePop();
-    setActiveProfileId(profile.id);
-    await backendService.setActiveProfileId(profile.id);
-    if (switchProfile) {
-      await switchProfile(profile.id, profile.age_group, profile.nickname);
-    } else {
-      await setAgeGroup(profile.age_group);
+    setIsProfileBusy(true);
+    try {
+      setActiveProfileId(profile.id);
+      await backendService.setActiveProfileId(profile.id);
+      if (switchProfile) {
+        await switchProfile(profile.id, profile.age_group, profile.nickname);
+      } else {
+        await setAgeGroup(profile.age_group);
+      }
+    } finally {
+      setIsProfileBusy(false);
     }
   };
 
@@ -201,8 +209,9 @@ export default function ParentsScreen() {
   };
 
   const handleCreateProfile = async () => {
-    if (!newNickname.trim()) return;
+    if (!newNickname.trim() || isProfileBusy) return;
     soundEffects.playBubblePop();
+    setIsProfileBusy(true);
     try {
       const created = await backendService.createProfile(
         newNickname.trim(),
@@ -221,6 +230,8 @@ export default function ParentsScreen() {
       soundEffects.playTadaaa();
     } catch {
       // Ignore
+    } finally {
+      setIsProfileBusy(false);
     }
   };
 
@@ -270,6 +281,8 @@ export default function ParentsScreen() {
   };
 
   const executeDeleteProfile = async (profileId: number) => {
+    if (isProfileBusy) return;
+    setIsProfileBusy(true);
     try {
       soundEffects.playBubblePop();
       await backendService.deleteProfile(profileId);
@@ -287,6 +300,8 @@ export default function ParentsScreen() {
       }
     } catch (e) {
       console.warn('Failed to delete profile:', e);
+    } finally {
+      setIsProfileBusy(false);
     }
   };
 
@@ -1610,8 +1625,16 @@ export default function ParentsScreen() {
             size="lg"
             style={{ width: '100%', marginTop: 6 }}
             onPress={handleCreateProfile}
-            disabled={!newNickname.trim()}
-            title={`${language === 'gu' ? 'પ્રોફાઇલ સાચવો' : language === 'hi' ? 'प्रोफ़ाइल सहेजें' : 'Save Profile'}`}
+            disabled={!newNickname.trim() || isProfileBusy}
+            title={
+              isProfileBusy
+                ? language === 'gu'
+                  ? 'સાચવી રહ્યા છીએ...'
+                  : language === 'hi'
+                  ? 'सहेज रहे हैं...'
+                  : 'Saving...'
+                : `${language === 'gu' ? 'પ્રોફાઇલ સાચવો' : language === 'hi' ? 'प्रोफ़ाइल सहेजें' : 'Save Profile'}`
+            }
           />
         </View>
       </KidModal>
@@ -1743,6 +1766,23 @@ export default function ParentsScreen() {
 
       {/* Kid-styled confirm / notify dialogs */}
       {dialog}
+
+      {isProfileBusy && (
+        <Modal visible transparent animationType="fade">
+          <View style={styles.profileBusyOverlay}>
+            <View style={styles.profileBusyCard}>
+              <ActivityIndicator size="large" color="#3B82F6" />
+              <Text style={styles.profileBusyText}>
+                {language === 'gu'
+                  ? 'પ્રોફાઇલ અપડેટ થઈ રહી છે...'
+                  : language === 'hi'
+                  ? 'प्रोफ़ाइल अपडेट हो रही है...'
+                  : 'Updating profile...'}
+              </Text>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -3534,5 +3574,33 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontSize: 13,
     fontWeight: '700',
+  },
+  profileBusyOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  profileBusyCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingVertical: 22,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 2,
+    borderColor: '#DBEAFE',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  profileBusyText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E3A8A',
+    textAlign: 'center',
   },
 });

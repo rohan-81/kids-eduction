@@ -37,6 +37,7 @@ import { resolveOfflineMediaSource } from '../src/utils/remoteAssets';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { kidTones, kidPalette, kidBackdrops, kidRadii, clayShadow, toneAt, KidTone } from '../src/theme/kidTheme';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import { SkeletonGrid } from '../src/components/common/SkeletonCard';
 import { spacing, radii, shadows } from '../src/theme/spacing';
 import { AppLanguage } from '../src/types';
 import * as Art from '../src/components/art3d/Art3D';
@@ -435,6 +436,7 @@ export default function StoryModeScreen() {
   const { dialog: kidDialog, notify } = useKidDialog();
 
   const [stories, setStories] = useState<StoryBook[]>(STORIES_DATA);
+  const [isLoadingStories, setIsLoadingStories] = useState<boolean>(STORIES_DATA.length === 0);
   const [selectedStory, setSelectedStory] = useState<StoryBook | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [choiceFeedback, setChoiceFeedback] = useState<{ text: string; good: boolean } | null>(null);
@@ -524,11 +526,16 @@ export default function StoryModeScreen() {
 
   useEffect(() => {
     let isMounted = true;
-    apiService.fetchStories(language).then((fetched) => {
-      if (isMounted && fetched && fetched.length > 0) {
-        setStories(fetched);
-      }
-    });
+    apiService
+      .fetchStories(language)
+      .then((fetched) => {
+        if (isMounted && fetched && fetched.length > 0) {
+          setStories(fetched);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingStories(false);
+      });
     return () => {
       isMounted = false;
     };
@@ -886,17 +893,21 @@ export default function StoryModeScreen() {
             </Text>
 
             <View style={styles.shelfGrid}>
-              {stories.map((s, i) => (
-                <BookCover
-                  key={s.id}
-                  story={s}
-                  index={i}
-                  lang={activeLang}
-                  isRead={completed.has(s.id) || completed.has('story-' + s.id)}
-                  width={coverWidth}
-                  onOpen={() => startStory(s)}
-                />
-              ))}
+              {isLoadingStories && stories.length === 0 ? (
+                <SkeletonGrid count={4} columns={2} cardHeight={170} />
+              ) : (
+                stories.map((s, i) => (
+                  <BookCover
+                    key={s.id}
+                    story={s}
+                    index={i}
+                    lang={activeLang}
+                    isRead={completed.has(s.id) || completed.has('story-' + s.id)}
+                    width={coverWidth}
+                    onOpen={() => startStory(s)}
+                  />
+                ))
+              )}
             </View>
           </View>
         ) : (

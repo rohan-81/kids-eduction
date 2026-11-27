@@ -504,29 +504,57 @@ export default function GameRunnerScreen() {
         language,
       });
       soundEffects.playWrongSound();
+      const wrongLabel =
+        language === 'gu'
+          ? 'ખોટો જવાબ!'
+          : language === 'hi'
+          ? 'गलत जवाब!'
+          : 'Wrong answer!';
       setFeedback({
         isCorrect: false,
-        text: t('games.wrong'),
+        text: wrongLabel,
       });
-      const tryAgain = getTryAgainSpeech(language);
-      if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
-      speechTimerRef.current = setTimeout(() => {
-        speak(tryAgain, language);
-      }, 140);
 
+      const remaining = usesLives ? lives - 1 : lives;
       if (usesLives) {
-        const remaining = lives - 1;
         setLives(remaining);
-        if (remaining <= 0) {
-          // Out of hearts: end the round kindly (score still saved & synced).
-          if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
-          advanceTimerRef.current = setTimeout(() => {
-            audioService.stop();
-            setOutOfLives(true);
-            setIsGameOver(true);
-            recordScore(gameType, scoreRef.current, questions.length);
-          }, 1800);
-        }
+      }
+
+      if (usesLives && remaining <= 0) {
+        if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
+        speechTimerRef.current = setTimeout(() => {
+          speak(wrongLabel, language);
+        }, 140);
+        // Out of hearts: end the round kindly (score still saved & synced).
+        if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = setTimeout(() => {
+          audioService.stop();
+          setOutOfLives(true);
+          setIsGameOver(true);
+          recordScore(gameType, scoreRef.current, questions.length);
+        }, 1800);
+      } else {
+        let hasAdvanced = false;
+        const skipSafely = () => {
+          if (hasAdvanced) return;
+          hasAdvanced = true;
+          if (advanceTimerRef.current) {
+            clearTimeout(advanceTimerRef.current);
+            advanceTimerRef.current = null;
+          }
+          handleNextQuestion();
+        };
+
+        if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
+        speechTimerRef.current = setTimeout(() => {
+          speak(wrongLabel, language, () => {
+            if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+            advanceTimerRef.current = setTimeout(skipSafely, 500);
+          });
+        }, 140);
+
+        if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = setTimeout(skipSafely, 2200);
       }
     }
   };

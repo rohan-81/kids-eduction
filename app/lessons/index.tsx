@@ -32,6 +32,7 @@ import { renderMathCardVisual } from '../../src/components/MathCardVisuals';
 import { renderLesson3DVisual } from '../../src/components/Lesson3DVisuals';
 import { VisualArt } from '../../src/components/art3d/ContentArt';
 import { GhadiyaTableView } from '../../src/components/GhadiyaTableView';
+import { SkeletonGrid } from '../../src/components/common/SkeletonCard';
 import { soundEffects } from '../../src/services/soundEffects';
 import { audioService } from '../../src/services/audioService';
 import { AppIcon } from '../../src/components/AppIcon';
@@ -466,6 +467,7 @@ export default function CategoryLessonsScreen() {
   const classBadge = getAgeClassBadgeInfo(ageGroup, language, activeSubject);
 
   const [lessons, setLessons] = useState<LessonItem[]>([]);
+  const [isLoadingLessons, setIsLoadingLessons] = useState<boolean>(true);
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'done'>('all');
   const [mathOperation, setMathOperation] = useState<MathOperation>(() =>
     resolveInitialOp(subcategoryId, op)
@@ -565,13 +567,20 @@ export default function CategoryLessonsScreen() {
   useEffect(() => {
     let isMounted = true;
     const initialLocal = LESSONS.filter((l) => l.categoryId === currentCategory.id);
-    setLessons(applyCurriculumFilters(initialLocal));
+    const filteredLocal = applyCurriculumFilters(initialLocal);
+    setLessons(filteredLocal);
+    setIsLoadingLessons(filteredLocal.length === 0);
 
-    apiService.fetchLessons(language, ageGroup, currentCategory.id).then((fetched) => {
-      if (isMounted && fetched && fetched.length > 0) {
-        setLessons(applyCurriculumFilters(fetched));
-      }
-    });
+    apiService
+      .fetchLessons(language, ageGroup, currentCategory.id)
+      .then((fetched) => {
+        if (isMounted && fetched && fetched.length > 0) {
+          setLessons(applyCurriculumFilters(fetched));
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingLessons(false);
+      });
 
     return () => {
       isMounted = false;
@@ -1665,8 +1674,10 @@ export default function CategoryLessonsScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Empty State when no lessons match filter */}
-            {displayedLessons.length === 0 ? (
+            {/* Skeleton or Empty State when no lessons match filter */}
+            {isLoadingLessons && displayedLessons.length === 0 ? (
+              <SkeletonGrid count={4} columns={2} cardHeight={145} />
+            ) : displayedLessons.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <View style={{ marginBottom: 8 }}><Art.StarArt size={57} /></View>
                 <Text style={styles.emptyTitle}>

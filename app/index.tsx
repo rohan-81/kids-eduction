@@ -20,12 +20,13 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { isLoading, isAuthenticated, isGuest } = useApp();
+  const { isLoading, isAuthenticated, isGuest, language } = useApp();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const floatAnim = useRef(new Animated.Value(0)).current;
   const starPulseAnim = useRef(new Animated.Value(1)).current;
+  const progressBarAnim = useRef(new Animated.Value(0)).current;
 
   const hasNavigated = useRef(false);
   const bootCheckRef = useRef<Promise<{ packInstalled: boolean; online: boolean }> | null>(null);
@@ -119,9 +120,26 @@ export default function SplashScreen() {
     );
     starLoop.start();
 
+    const progressLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(progressBarAnim, {
+          toValue: 1,
+          duration: 950,
+          useNativeDriver: true,
+        }),
+        Animated.timing(progressBarAnim, {
+          toValue: 0,
+          duration: 950,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    progressLoop.start();
+
     return () => {
       floatLoop.stop();
       starLoop.stop();
+      progressLoop.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -189,6 +207,32 @@ export default function SplashScreen() {
             <View style={styles.subtitleCol}>
               <Text style={styles.subtitle}>Learn Today</Text>
               <Text style={styles.subtitle}>Lead Tomorrow</Text>
+            </View>
+            <View style={styles.loadingStatusWrap}>
+              <View style={styles.loadingTrack}>
+                <Animated.View
+                  style={[
+                    styles.loadingFill,
+                    {
+                      transform: [
+                        {
+                          translateX: progressBarAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [-56, 112],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              </View>
+              <Text style={styles.loadingStatusText}>
+                {language === 'gu'
+                  ? 'તૈયાર થઈ રહ્યું છે...'
+                  : language === 'hi'
+                    ? 'तैयार हो रहा है...'
+                    : 'Getting ready...'}
+              </Text>
             </View>
           </View>
         </Animated.View>
@@ -275,5 +319,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.2,
     lineHeight: 27,
+  },
+  loadingStatusWrap: {
+    marginTop: 14,
+    alignItems: 'center',
+    gap: 6,
+  },
+  loadingTrack: {
+    width: 140,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: 'rgba(59, 130, 246, 0.18)',
+    overflow: 'hidden',
+  },
+  loadingFill: {
+    width: 68,
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: '#2563EB',
+  },
+  loadingStatusText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E40AF',
+    letterSpacing: 0.2,
   },
 });

@@ -394,6 +394,7 @@ export default function LoginScreen() {
             <View style={styles.switchAuthRow}>
               <Text style={styles.switchAuthPrompt}>{t('auth.dontHaveAccount')}</Text>
               <TouchableOpacity
+                disabled={isLoading}
                 onPress={() => {
                   soundEffects.playBubblePop();
                   router.push('/register');
@@ -410,6 +411,7 @@ export default function LoginScreen() {
             tone="white"
             size="sm"
             sound={false}
+            disabled={isLoading}
             style={styles.guestButton}
             onPress={handleContinueAsGuest}
             icon={<UserIcon size={18} color={kidPalette.inkSoft} />}
