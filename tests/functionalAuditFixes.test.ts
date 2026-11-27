@@ -153,6 +153,23 @@ describe('screen-level reward and race guards', () => {
     expect(src).toMatch(/recordScore\(gameType, scoreRef\.current, questions\.length\)/);
   });
 
+  test('balloon pop: wrong pop re-opens for a retry, and every outcome auto-advances quickly', () => {
+    const src = read('app/games/[type].tsx');
+    const ms = (name: string) => Number(src.match(new RegExp(`const ${name} = (\\d+);`))?.[1]);
+    expect(ms('BALLOON_RETRY_MS')).toBeGreaterThanOrEqual(1000);
+    expect(ms('BALLOON_RETRY_MS')).toBeLessThanOrEqual(1200);
+    expect(ms('BALLOON_ADVANCE_MS')).toBeGreaterThanOrEqual(1200);
+    expect(ms('BALLOON_ADVANCE_MS')).toBeLessThanOrEqual(1500);
+    // Retry: the lock is released and the tried balloon stays disabled.
+    expect(src).toMatch(/isAnsweredRef\.current = false;\s*setIsAnswered\(false\);\s*setSelectedOptionId\(null\);/);
+    expect(src).toMatch(/disabled=\{isAnswered \|\| isTried\}/);
+    // Correct pop and out-of-lives use the quick delay instead of 7s / 1.8s.
+    expect(src).toMatch(/setTimeout\(advanceSafely, isBalloonPop \? BALLOON_ADVANCE_MS : 7000\)/);
+    expect(src).toMatch(/\}, isBalloonPop \? BALLOON_ADVANCE_MS : 1800\);/);
+    // Attempts reset per question and per game.
+    expect(src.match(/resetBalloonAttempts\(\);/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+
   test('lesson finish is single-shot and reports progress once', () => {
     const src = read('app/lessons/[id].tsx');
     expect(src).toMatch(/if \(finishingRef\.current\) return;/);

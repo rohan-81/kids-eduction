@@ -39,6 +39,18 @@ import { VisualArt, EmojiArt, splitEmojiLabel } from '../../src/components/art3d
 import { resolveOfflineMediaSource } from '../../src/utils/remoteAssets';
 import type { TimerHandle } from '../../src/utils/runtime';
 
+/** Balloon Pop pacing (ms): pause before a retry, and the auto-advance after a pop / last try. */
+const BALLOON_RETRY_MS = 1100;
+const BALLOON_ADVANCE_MS = 1400;
+const BALLOON_AFTER_PRAISE_MS = 200;
+/** Wrong pops allowed on one question before the answer is shown and the game moves on. */
+const BALLOON_MAX_WRONG_TRIES = 2;
+/** Zero-scroll balloon grid: 2 x 2 on phones, one row of 4 from this window width up. */
+const BALLOON_CELL_W = 108;
+const BALLOON_GAP = 12;
+const BALLOON_TWO_COL_MAX = BALLOON_CELL_W * 2 + BALLOON_GAP;
+const BALLOON_WIDE_MIN = 640;
+
 const MEMORY_EMOJI_BANK = [
   '🦁', '🐰', '🐢', '🦊', '🐯', '🐬', '🐘', '🦄', '🐒', '🐶',
   '🍎', '🥭', '🍓', '🍌', '🍉', '🍇', '🐸', '🦆', '🐄', '🍊',
@@ -126,6 +138,7 @@ export default function GameRunnerScreen() {
   // ---- Game-show HUD: lives, coin awards, correct-answer flash ----
   /** Little learners (2-4) get more hearts; nobody gets a harsh game over. */
   const maxLives = ageGroup === '2-4' ? 5 : 3;
+  const isBalloonPop = gameType === 'balloon-pop';
   const COINS_PER_CORRECT = 2;
   /** Only standard quizzes cost a heart; find-object is intentionally gentle and memory/puzzle have no wrong answers. */
   const usesLives = gameType !== 'memory-match' && gameType !== 'picture-puzzle' && gameType !== 'find-object';
@@ -150,6 +163,17 @@ export default function GameRunnerScreen() {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const isAnsweredRef = useRef(false);
+  // Balloon Pop retry flow: wrong balloons stay dimmed + disabled for the rest of the question,
+  // the others unlock again after a short pause; the correct one is only revealed when the round
+  // moves on (never during a retry, which would give the answer away).
+  const [triedOptionIds, setTriedOptionIds] = useState<string[]>([]);
+  const triedOptionIdsRef = useRef<string[]>([]);
+  const [revealCorrect, setRevealCorrect] = useState(false);
+  const resetBalloonAttempts = () => {
+    triedOptionIdsRef.current = [];
+    setTriedOptionIds([]);
+    setRevealCorrect(false);
+  };
   const [score, setScoreState] = useState(0);
   // Timers and speech callbacks run with the closure of the render that scheduled them, so the
   // final result is read from this ref; the state copy (one tap behind) undercounted by one.
@@ -271,6 +295,8 @@ export default function GameRunnerScreen() {
     }
     setLives(maxLives);
     setOutOfLives(false);
+    isAnsweredRef.current = false;
+    resetBalloonAttempts();
     setCoinsEarned(0);
     setCoinBurst(0);
 
@@ -448,8 +474,14 @@ export default function GameRunnerScreen() {
         isCorrect: true,
         text: t('games.correct'),
       });
-      const praise =
-        language === 'gu'
+      const praise = isBalloonPop
+        ? // Short enough to finish inside the quick balloon auto-advance.
+          language === 'gu'
+          ? 'શાબાશ!'
+          : language === 'hi'
+          ? 'शाबाश!'
+          : 'Super!'
+        : language === 'gu'
           ? cleanWord
             ? `શાબાશ! ${cleanWord} એકદમ સાચો જવાબ છે!`
             : `શાબાશ! એકદમ સાચો જવાબ છે!`
@@ -477,13 +509,14 @@ export default function GameRunnerScreen() {
       speechTimerRef.current = setTimeout(() => {
         speak(praise, language, () => {
           if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
-          advanceTimerRef.current = setTimeout(advanceSafely, 500);
+          advanceTimerRef.current = setTimeout(advanceSafely, isBalloonPop ? BALLOON_AFTER_PRAISE_MS : 500);
         });
       }, 140);
 
-      // Safety fallback timer if audio callback is not received or sound disabled
+      // Safety fallback timer if audio callback is not received or sound disabled.
+      // Balloon Pop always moves on within ~1.4s so the child never has to scroll to "Next".
       if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
-      advanceTimerRef.current = setTimeout(advanceSafely, 7000);
+      advanceTimerRef.current = setTimeout(advanceSafely, isBalloonPop ? BALLOON_ADVANCE_MS : 7000);
     } else {
       recordWrongAnswer({
         id: currentQ.id,
@@ -503,8 +536,8 @@ export default function GameRunnerScreen() {
         speak(tryAgain, language);
       }, 140);
 
+      const remaining = usesLives ? lives - 1 : lives;
       if (usesLives) {
-        const remaining = lives - 1;
         setLives(remaining);
         if (remaining <= 0) {
           // Out of hearts: end the round kindly (score still saved & synced).
@@ -514,7 +547,35 @@ export default function GameRunnerScreen() {
             setOutOfLives(true);
             setIsGameOver(true);
             recordScore(gameType, scoreRef.current, questions.length);
-          }, 1800);
+          }, isBalloonPop ? BALLOON_ADVANCE_MS : 1800);
+          return;
+        }
+      }
+
+      if (isBalloonPop) {
+        const tried = [...triedOptionIdsRef.current, option.id];
+        triedOptionIdsRef.current = tried;
+        setTriedOptionIds(tried);
+        const untriedWrong = currentQ.options.filter(
+          (o) => o.id !== currentQ.correctOptionId && !tried.includes(o.id)
+        ).length;
+        if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+        if (tried.length >= BALLOON_MAX_WRONG_TRIES || untriedWrong === 0) {
+          // Enough tries on this question: show the right balloon, then move on by itself.
+          setRevealCorrect(true);
+          advanceTimerRef.current = setTimeout(() => {
+            advanceTimerRef.current = null;
+            handleNextQuestion();
+          }, BALLOON_ADVANCE_MS);
+        } else {
+          // Let the child genuinely try again after the "oops" moment.
+          advanceTimerRef.current = setTimeout(() => {
+            advanceTimerRef.current = null;
+            isAnsweredRef.current = false;
+            setIsAnswered(false);
+            setSelectedOptionId(null);
+            setFeedback(null);
+          }, BALLOON_RETRY_MS);
         }
       }
     }
@@ -607,6 +668,7 @@ export default function GameRunnerScreen() {
       setSelectedOptionId(null);
       setIsAnswered(false);
       setFeedback(null);
+      resetBalloonAttempts();
 
       const nextAudio = getLocalizedAudioText(questions[nextIdx]);
       if (nextAudio) {
@@ -835,9 +897,13 @@ export default function GameRunnerScreen() {
         onBack={handleBack}
       />
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+      <ScrollView
+        contentContainerStyle={[styles.container, isBalloonPop && styles.balloonContainer]}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      >
         {/* Game-show HUD: hearts, level star meter, coin bank */}
-        <View style={[styles.hud, clayShadow(2)]}>
+        <View style={[styles.hud, isBalloonPop && styles.balloonHud, clayShadow(2)]}>
           <View style={styles.hudTopRow}>
             {usesLives ? <HeartMeter lives={lives} max={maxLives} /> : <Art.GamepadArt size={29} />}
             <View style={styles.hudCoins}>
@@ -1181,6 +1247,7 @@ export default function GameRunnerScreen() {
               <View
                 style={[
                   styles.feedbackBanner,
+                  isBalloonPop && styles.balloonFeedbackBanner,
                   {
                     backgroundColor: feedback.isCorrect ? colors.mint : colors.yellow,
                   },
@@ -1221,12 +1288,21 @@ export default function GameRunnerScreen() {
                   </Text>
                 </View>
               )}
-              <Text
-                style={[
-                  styles.promptText,
-                  gameType === 'balloon-pop' && styles.balloonPromptText,
-                ]}
-              >
+              {isBalloonPop ? (
+                // Zero-scroll layout: the prompt already names the balloon, so the generic 🎈 box
+                // and the labelled 50px speaker are replaced by one compact row.
+                <View style={styles.balloonPromptRow}>
+                  <Text style={[styles.promptText, styles.balloonPromptText]} numberOfLines={3}>
+                    {getLocalizedPrompt(currentQ)}
+                  </Text>
+                  <AudioSpeakerButton
+                    onPress={() => speak(getLocalizedAudioText(currentQ), language)}
+                    size={36}
+                  />
+                </View>
+              ) : (
+              <>
+              <Text style={styles.promptText}>
                 {getLocalizedPrompt(currentQ)}
               </Text>
 
@@ -1313,10 +1389,18 @@ export default function GameRunnerScreen() {
                 size={50}
                 label={t('lesson.repeatAudio')}
               />
+              </>
+              )}
             </View>
 
             {/* Answer Options Grid (Special 3D Floating Balloons for balloon-pop) */}
-            <View style={gameType === 'balloon-pop' ? styles.balloonGrid : styles.optionsGrid}>
+            <View
+              style={
+                isBalloonPop
+                  ? [styles.balloonGrid, { maxWidth: width >= BALLOON_WIDE_MIN ? undefined : BALLOON_TWO_COL_MAX }]
+                  : styles.optionsGrid
+              }
+            >
               {currentQ.options.map((option, optIdx) => {
                 const isSelected = selectedOptionId === option.id;
                 const isCorrect = option.id === currentQ.correctOptionId;
@@ -1334,22 +1418,24 @@ export default function GameRunnerScreen() {
                 const balloonColor = option.color || fallbackBalloonColors[optIdx % fallbackBalloonColors.length];
 
                 if (gameType === 'balloon-pop') {
+                  const isTried = triedOptionIds.includes(option.id);
+                  // The right balloon is shown only once the question is over (correct pop or
+                  // tries used up), never while the child is still allowed to try again.
+                  const answerRevealed = revealCorrect || (isAnswered && feedback?.isCorrect === true);
                   const balloonScale = isSelected ? 1.06 : 1;
-                  const balloonOpacity = isAnswered && !isSelected && !isCorrect ? 0.45 : 1;
+                  const balloonOpacity = isTried && !isSelected ? 0.45 : answerRevealed && !isCorrect && !isSelected ? 0.45 : 1;
                   let balloonBorder = '#FFFFFF';
                   let feedbackBadge: string | null = null;
 
-                  if (isAnswered) {
-                    if (isSelected && isCorrect) {
-                      balloonBorder = '#22C55E';
-                      feedbackBadge = 'great';
-                    } else if (isSelected && !isCorrect) {
-                      balloonBorder = '#DC2626';
-                      feedbackBadge = 'oops';
-                    } else if (isCorrect) {
-                      balloonBorder = '#22C55E';
-                      feedbackBadge = 'star';
-                    }
+                  if (isSelected && isAnswered && isCorrect) {
+                    balloonBorder = '#22C55E';
+                    feedbackBadge = 'great';
+                  } else if ((isSelected && isAnswered) || isTried) {
+                    balloonBorder = '#DC2626';
+                    feedbackBadge = 'oops';
+                  } else if (isCorrect && answerRevealed) {
+                    balloonBorder = '#22C55E';
+                    feedbackBadge = 'star';
                   }
 
                   const cleanLabel = option.label.replace(/^🎈\s*/, '').trim();
@@ -1361,7 +1447,7 @@ export default function GameRunnerScreen() {
                         soundEffects.playBubblePop();
                         handleOptionSelect(option);
                       }}
-                      disabled={isAnswered}
+                      disabled={isAnswered || isTried}
                       activeOpacity={0.82}
                       style={[
                         styles.balloonWrapper,
@@ -1488,6 +1574,7 @@ export default function GameRunnerScreen() {
               <View
                 style={[
                   styles.feedbackBanner,
+                  isBalloonPop && styles.balloonFeedbackBanner,
                   {
                     backgroundColor: feedback.isCorrect ? colors.mint : colors.yellow,
                   },
@@ -1498,17 +1585,20 @@ export default function GameRunnerScreen() {
                   <Text style={styles.hintText}>{currentQ.hint}</Text>
                 ) : null}
 
-                <PastelButton
-                  title={
-                    currentIndex < questions.length - 1
-                      ? `${t('lesson.next')} →`
-                      : t('lesson.finish')
-                  }
-                  onPress={handleNextQuestion}
-                  variant="primary"
-                  style={styles.nextFeedbackBtn}
-                  textStyle={styles.nextFeedbackBtnText}
-                />
+                {/* Balloon Pop advances (or re-opens for a retry) by itself. */}
+                {!isBalloonPop ? (
+                  <PastelButton
+                    title={
+                      currentIndex < questions.length - 1
+                        ? `${t('lesson.next')} →`
+                        : t('lesson.finish')
+                    }
+                    onPress={handleNextQuestion}
+                    variant="primary"
+                    style={styles.nextFeedbackBtn}
+                    textStyle={styles.nextFeedbackBtnText}
+                  />
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -1781,53 +1871,80 @@ const styles = StyleSheet.create({
     maxWidth: 620,
     alignSelf: 'center',
   },
+  balloonContainer: {
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+  },
+  balloonHud: {
+    padding: 10,
+    gap: 6,
+    marginBottom: 10,
+  },
   balloonPromptCard: {
     backgroundColor: '#F0F9FF',
     borderColor: '#BAE6FD',
     borderWidth: 2,
-    borderRadius: 26,
-    paddingTop: spacing.md,
+    borderRadius: 22,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 10,
   },
   balloonSkyBanner: {
     backgroundColor: '#E0F2FE',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: spacing.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 2,
+    borderRadius: 14,
+    marginBottom: 6,
     borderWidth: 1,
     borderColor: '#7DD3FC',
   },
   balloonSkyBannerText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: '#0369A1',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
+  },
+  balloonPromptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    alignSelf: 'stretch',
   },
   balloonPromptText: {
-    fontSize: 22,
+    fontSize: 19,
+    lineHeight: 25,
     color: '#0C4A6E',
+    marginBottom: 0,
+    flexShrink: 1,
   },
   balloonGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
+    gap: BALLOON_GAP,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    alignSelf: 'center',
+    width: '100%',
   },
   balloonWrapper: {
-    width: '45%',
-    maxWidth: 150,
+    // The whole balloon (body + knot + string, ~104 x 140) is the touch target.
+    width: BALLOON_CELL_W,
     alignItems: 'center',
-    marginBottom: spacing.md,
+  },
+  balloonFeedbackBanner: {
+    marginTop: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   balloonBody: {
-    width: 125,
-    height: 148,
-    borderTopLeftRadius: 62,
-    borderTopRightRadius: 62,
-    borderBottomLeftRadius: 52,
-    borderBottomRightRadius: 52,
+    width: 104,
+    height: 118,
+    borderTopLeftRadius: 50,
+    borderTopRightRadius: 50,
+    borderBottomLeftRadius: 42,
+    borderBottomRightRadius: 42,
     borderWidth: 3,
     borderColor: '#FFFFFF',
     borderBottomWidth: 5,
@@ -1843,16 +1960,16 @@ const styles = StyleSheet.create({
   },
   balloonGlossShine: {
     position: 'absolute',
-    top: 14,
-    left: 18,
-    width: 13,
-    height: 30,
+    top: 12,
+    left: 15,
+    width: 11,
+    height: 24,
     borderRadius: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.45)',
     transform: [{ rotate: '-28deg' }],
   },
   balloonText: {
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: '900',
     color: '#FFFFFF',
     textAlign: 'center',
@@ -1861,7 +1978,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   balloonTextSmall: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
   },
   balloonBadge: {
@@ -1897,7 +2014,7 @@ const styles = StyleSheet.create({
   },
   balloonString: {
     width: 2,
-    height: 26,
+    height: 13,
     backgroundColor: '#94A3B8',
     borderRadius: 1,
     marginTop: 0,
