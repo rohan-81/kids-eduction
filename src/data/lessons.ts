@@ -10876,6 +10876,36 @@ export function getLessonDisplayLabels(
     return { primaryLabel: name, secondaryBracket };
   }
 
+  // 2d. Word Problems (Clean localized story title + concise localized math equation)
+  if (item.categoryId === 'math-word-problems') {
+    const titleParts = (item.title || '').includes('•')
+      ? item.title.split('•').map((s) => s.trim())
+      : null;
+    const enTitle = titleParts ? titleParts[0] : item.phonetic || item.exampleWord || item.title;
+    const guTitle = titleParts?.[1] || enTitle;
+    const hiTitle = titleParts?.[2] || enTitle;
+
+    const eqMatch = (item.phonetic || item.title || '').match(/\d+\s*[+\-×÷]\s*\d+\s*=\s*\d+/);
+    const shortEq = eqMatch ? formatMathExpression(eqMatch[0], language) : '';
+
+    if (language === 'gu') {
+      return {
+        primaryLabel: guTitle,
+        secondaryBracket: shortEq ? `(${shortEq})` : '',
+      };
+    }
+    if (language === 'hi') {
+      return {
+        primaryLabel: hiTitle,
+        secondaryBracket: shortEq ? `(${shortEq})` : '',
+      };
+    }
+    return {
+      primaryLabel: enTitle,
+      secondaryBracket: '',
+    };
+  }
+
   // 3. English Alphabet & Phonics (Intentional English Learning)
   if (
     item.categoryId === 'en-alphabet' ||

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { LESSONS } from '../src/data/lessons';
+import { LESSONS, getLessonDisplayLabels } from '../src/data/lessons';
 import { filterLessonSiblings } from '../src/utils/lessonNavigation';
 
 const readNormalized = (rel: string) =>
@@ -82,6 +82,25 @@ describe('First-item Prev suppression & Lesson sibling scoping', () => {
     expect(detailSrc).toContain('useWindowDimensions');
     expect(detailSrc).toContain('styles.funFactCardNarrow');
     expect(detailSrc).toContain("flexWrap: 'wrap'");
+  });
+
+  test('Word problem labels localize concisely without clipped English equations in headers or cards', () => {
+    const probApple = LESSONS.find((l) => l.id === 'prob-apple-add')!;
+    expect(probApple).toBeDefined();
+
+    const gu = getLessonDisplayLabels(probApple, 'gu');
+    expect(gu.primaryLabel).toBe('સફરજનનો કોયડો');
+    expect(gu.secondaryBracket).toBe('(૩ + ૨ = ૫)');
+
+    const hi = getLessonDisplayLabels(probApple, 'hi');
+    expect(hi.primaryLabel).toBe('सेब का सवाल');
+    expect(hi.secondaryBracket).toBe('(३ + २ = ५)');
+
+    const indexSrc = readNormalized('app/lessons/index.tsx');
+    expect(indexSrc).toContain('cardSecondaryTitle} numberOfLines={2} ellipsizeMode="tail"');
+
+    const detailSrc = readNormalized('app/lessons/[id].tsx');
+    expect(detailSrc).toContain("currentLesson.categoryId === 'math-word-problems'");
   });
 });
 

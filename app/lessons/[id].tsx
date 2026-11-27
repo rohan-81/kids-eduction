@@ -565,7 +565,11 @@ export default function LessonDetailScreen() {
       const formatted = formatMathExpression(currentLesson.exampleWord || currentLesson.symbol, language);
       return `${language === 'gu' ? 'સરવાળો' : language === 'hi' ? 'जोड़' : 'Addition'} • ${formatted}`;
     }
-    if (currentLesson.categoryId === 'math-missing' || currentLesson.id.startsWith('cs-pattern')) {
+    if (
+      currentLesson.categoryId === 'math-missing' ||
+      currentLesson.categoryId === 'math-word-problems' ||
+      currentLesson.id.startsWith('cs-pattern')
+    ) {
       return primaryWord;
     }
     if (secondaryTranslation) {
@@ -753,6 +757,23 @@ export default function LessonDetailScreen() {
               {secondaryTranslation ? (
                 <Text style={styles.exampleMeaning}>{secondaryTranslation}</Text>
               ) : null}
+              {currentLesson.categoryId === 'math-word-problems' ? (() => {
+                const storyPrompt =
+                  language === 'gu'
+                    ? currentLesson.exampleMeaningGu
+                    : language === 'hi'
+                      ? currentLesson.exampleMeaningHi
+                      : currentLesson.subtitle;
+                if (!storyPrompt) return null;
+                return (
+                  <View style={styles.sentenceBox}>
+                    <Text style={styles.sentenceLabel}>
+                      {language === 'gu' ? 'કોયડો:' : language === 'hi' ? 'सवाल:' : 'Story Problem:'}
+                    </Text>
+                    <Text style={styles.sentenceText}>{storyPrompt}</Text>
+                  </View>
+                );
+              })() : null}
             </View>
           ) : null}
 

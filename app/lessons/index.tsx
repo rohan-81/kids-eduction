@@ -1850,18 +1850,18 @@ export default function CategoryLessonsScreen() {
                                 </View>
                               ) : null}
                               {gkTitleInfo.localSub ? (
-                                <Text style={styles.cardSecondaryTitle} numberOfLines={1}>
+                                <Text style={styles.cardSecondaryTitle} numberOfLines={2} ellipsizeMode="tail">
                                   {gkTitleInfo.localSub}
                                 </Text>
                               ) : null}
                             </>
                           ) : (
                             <>
-                              <Text style={styles.cardPrimaryTitle} numberOfLines={2}>
+                              <Text style={styles.cardPrimaryTitle} numberOfLines={2} ellipsizeMode="tail">
                                 {primaryLabel}
                               </Text>
                               {secondaryBracket ? (
-                                <Text style={styles.cardSecondaryTitle} numberOfLines={1}>
+                                <Text style={styles.cardSecondaryTitle} numberOfLines={2} ellipsizeMode="tail">
                                   {secondaryBracket}
                                 </Text>
                               ) : null}
