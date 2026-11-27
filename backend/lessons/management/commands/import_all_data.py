@@ -128,11 +128,11 @@ class Command(BaseCommand):
                             obj, created = Category.objects.update_or_create(
                                 slug=c_slug,
                                 defaults={
-                                    'title': cat.get('title', c_slug.capitalize()),
+                                    'title': cat.get('defaultTitle') or cat.get('title', c_slug.capitalize()),
                                     'title_gujarati': cat.get('titleGujarati', ''),
                                     'title_hindi': cat.get('titleHindi', ''),
-                                    'icon': cat.get('icon', '📚'),
-                                    'color': cat.get('color', '#3B82F6'),
+                                    'icon': cat.get('iconName') or cat.get('icon', '📚'),
+                                    'color': cat.get('bgColor') or cat.get('color', '#3B82F6'),
                                     'gradient_start': g_start,
                                     'gradient_end': g_end,
                                     'description': cat.get('description', ''),
@@ -184,7 +184,7 @@ class Command(BaseCommand):
                                     'phonetic': item.get('phonetic', ''),
                                     'example_word': item.get('exampleWord', ''),
                                     'example_meaning': item.get('exampleMeaning', ''),
-                                    'example_image': str(item.get('exampleImage') or ''),
+                                    'example_image': str(item.get('imageUrl') or item.get('exampleImage') or ''),
                                     'audio_prompt': item.get('audioPrompt', ''),
                                     'visual_color': item.get('visualColor', ''),
                                     'tracing_path': str(item.get('tracingPath') or ''),
@@ -258,17 +258,20 @@ class Command(BaseCommand):
                 stats['adventure']['discovered'] = len(raw_adv)
                 for idx, adv in enumerate(raw_adv):
                     try:
-                        lvl_num = adv.get('levelNumber') or adv.get('id') or (idx + 1)
+                        lvl_num = adv.get('level') or adv.get('levelNumber') or adv.get('id') or (idx + 1)
                         if not dry_run:
+                            raw_adv_qs = adv.get('questions')
+                            if raw_adv_qs is None and adv.get('question'):
+                                raw_adv_qs = [adv.get('question')]
                             obj, created = AdventureLevel.objects.update_or_create(
                                 level_number=lvl_num,
                                 defaults={
-                                    'world_name': adv.get('world') or adv.get('world_name', f"World {((lvl_num - 1) // 10) + 1}"),
-                                    'title': adv.get('title', f"Adventure Stage {lvl_num}"),
+                                    'world_name': adv.get('worldNameEn') or adv.get('world') or adv.get('world_name', f"World {((lvl_num - 1) // 10) + 1}"),
+                                    'title': adv.get('titleEn') or adv.get('title', f"Adventure Stage {lvl_num}"),
                                     'required_stars': adv.get('requiredStars', 0),
                                     'reward_coins': adv.get('rewardCoins', 10),
                                     'reward_stars': adv.get('rewardStars', 3),
-                                    'questions_data': adv.get('questions', []),
+                                    'questions_data': raw_adv_qs or [],
                                     'is_active': True,
                                 }
                             )
@@ -294,13 +297,13 @@ class Command(BaseCommand):
                             obj, created = ColoringTemplate.objects.update_or_create(
                                 slug=c_slug,
                                 defaults={
-                                    'title': col.get('title', c_slug.capitalize()),
+                                    'title': col.get('nameEn') or col.get('title', c_slug.capitalize()),
                                     'category': col.get('category', 'animals'),
-                                    'svg_path': col.get('svgPath', ''),
+                                    'svg_path': col.get('svgUri') or col.get('svgPath', ''),
                                     'view_box': col.get('viewBox', '0 0 200 200'),
                                     'difficulty': col.get('difficulty', 1),
                                     'default_color': col.get('defaultColor', '#FFD54F'),
-                                    'palette': col.get('palette', []),
+                                    'palette': col.get('recommendedColors') or col.get('palette', []),
                                     'order': idx,
                                     'is_active': True,
                                 }
@@ -355,6 +358,7 @@ class Command(BaseCommand):
                                     'moral': s.get('moralEn', ''),
                                     'moral_gujarati': s.get('moralGu', ''),
                                     'moral_hindi': s.get('moralHi', ''),
+                                    'cover_image': str(s.get('coverImage') or s.get('cover_image') or ''),
                                     'category': 'moral',
                                     'order': idx,
                                     'is_active': True,

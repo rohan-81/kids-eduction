@@ -1,10 +1,14 @@
 from rest_framework import serializers
+from lessons.serializers import AbsoluteMediaUrlMixin
 from .models import Question
 
-class QuestionSerializer(serializers.ModelSerializer):
+
+class QuestionSerializer(AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     """
     Public student serializer. Strictly excludes correct_answer to prevent client-side inspection.
     """
+    absolute_media_fields = ('image', 'audio')
+
     class Meta:
         model = Question
         fields = [
@@ -29,10 +33,12 @@ class QuestionSerializer(serializers.ModelSerializer):
         ]
 
 
-class GameQuestionSerializer(serializers.ModelSerializer):
+class GameQuestionSerializer(AbsoluteMediaUrlMixin, serializers.ModelSerializer):
     """
     Game runner serializer. Includes correct_option_id for instant tactile feedback on device.
     """
+    absolute_media_fields = ('image', 'audio')
+
     class Meta:
         model = Question
         fields = [
@@ -48,6 +54,7 @@ class GameQuestionSerializer(serializers.ModelSerializer):
             'count_target',
             'options',
             'correct_option_id',
+            'explanation',
             'hint',
             'image',
             'audio',

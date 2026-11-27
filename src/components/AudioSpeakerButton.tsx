@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { TouchableOpacity, Text, StyleSheet, View, ActivityIndicator } from 'react-native';
 import { colors } from '../theme/colors';
 import { radii, shadows, spacing } from '../theme/spacing';
+import { audioService } from '../services/audioService';
 
 import { AppIcon } from './AppIcon';
 
@@ -19,6 +20,12 @@ export const AudioSpeakerButton: React.FC<AudioSpeakerButtonProps> = ({
   testID,
 }) => {
   const [isPressing, setIsPressing] = useState(false);
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
+
+  useEffect(() => {
+    const unsub = audioService.addSpeechLoadingListener(setIsAudioLoading);
+    return unsub;
+  }, []);
 
   const handlePress = () => {
     setIsPressing(true);
@@ -38,13 +45,17 @@ export const AudioSpeakerButton: React.FC<AudioSpeakerButtonProps> = ({
             width: size,
             height: size,
             borderRadius: radii.full,
-            backgroundColor: isPressing ? '#E9D5FF' : '#F3E8FF',
+            backgroundColor: isPressing || isAudioLoading ? '#E9D5FF' : '#F3E8FF',
             borderColor: '#DDD6FE',
           },
         ]}
         testID={testID}
       >
-        <AppIcon name="speaker" size={Math.round(size * 0.52)} />
+        {isAudioLoading ? (
+          <ActivityIndicator size="small" color="#7C3AED" />
+        ) : (
+          <AppIcon name="speaker" size={Math.round(size * 0.52)} />
+        )}
       </TouchableOpacity>
       {label ? <Text style={styles.label}>{label}</Text> : null}
     </View>

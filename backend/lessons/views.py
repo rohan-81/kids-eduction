@@ -6,6 +6,8 @@ from rest_framework.throttling import ScopedRateThrottle
 from django.http import HttpResponse, FileResponse
 from django.conf import settings
 from pathlib import Path
+import re
+import threading
 import urllib.request
 import urllib.parse
 import logging
@@ -14,6 +16,8 @@ from .serializers import CategorySerializer, LessonSerializer, CharacterAssetSer
 
 logger = logging.getLogger(__name__)
 _TTS_CACHE = {}
+_TTS_CACHE_LOCK = threading.Lock()
+_SAFE_AUDIO_KEY_RE = re.compile(r'^[a-z0-9_-]+$')
 
 
 class AnimalAudioView(APIView):
@@ -24,16 +28,23 @@ class AnimalAudioView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, key):
-        clean_key = (key or '').strip().lower().replace('.mp3', '').replace('.wav', '')
-        media_dir = Path(settings.MEDIA_ROOT) / 'audio' / 'animals'
+        clean_key = (key or '').strip().lower()
+        if clean_key.endswith('.mp3'):
+            clean_key = clean_key[:-4]
+        elif clean_key.endswith('.wav'):
+            clean_key = clean_key[:-4]
+        if not clean_key or not _SAFE_AUDIO_KEY_RE.match(clean_key):
+            return Response({'error': 'Invalid audio key.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        target_file = media_dir / f"{clean_key}.mp3"
+        media_dir = (Path(settings.MEDIA_ROOT) / 'audio' / 'animals').resolve()
+
+        target_file = (media_dir / f"{clean_key}.mp3").resolve()
         content_type = 'audio/mpeg'
-        if not target_file.exists():
-            target_file = media_dir / f"{clean_key}.wav"
+        if not target_file.is_relative_to(media_dir) or not target_file.exists():
+            target_file = (media_dir / f"{clean_key}.wav").resolve()
             content_type = 'audio/wav'
 
-        if not target_file.exists():
+        if not target_file.is_relative_to(media_dir) or not target_file.exists():
             return Response({'error': f'Audio for animal "{clean_key}" not found'}, status=status.HTTP_404_NOT_FOUND)
 
         try:
@@ -79,7 +90,8 @@ class TTSAudioView(APIView):
         text = text[: self.MAX_TEXT_CHARS]
 
         cache_key = f"{lang}:{text}"
-        content = _TTS_CACHE.get(cache_key)
+        with _TTS_CACHE_LOCK:
+            content = _TTS_CACHE.get(cache_key)
         if content is None:
             query = urllib.parse.urlencode({'ie': 'UTF-8', 'client': 'tw-ob', 'tl': lang, 'q': text})
             url = f"https://translate.google.com/translate_tts?{query}"
@@ -89,13 +101,19 @@ class TTSAudioView(APIView):
                     headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
                 )
                 with urllib.request.urlopen(req, timeout=4.0) as res:
+                    upstream_ct = (res.headers.get('Content-Type') or '').lower()
+                    if upstream_ct and not (upstream_ct.startswith('audio/') or upstream_ct.startswith('application/octet-stream')):
+                        return Response({'error': 'Speech service unavailable.'}, status=status.HTTP_502_BAD_GATEWAY)
                     content = res.read(2 * 1024 * 1024)  # an utterance is a few KB; cap runaway bodies
+                    if not content:
+                        return Response({'error': 'Speech service unavailable.'}, status=status.HTTP_502_BAD_GATEWAY)
             except Exception:
                 logger.warning('TTS upstream request failed', exc_info=True)
                 return Response({'error': 'Speech service unavailable.'}, status=status.HTTP_502_BAD_GATEWAY)
-            if len(_TTS_CACHE) >= self.MAX_CACHE_ENTRIES:
-                _TTS_CACHE.pop(next(iter(_TTS_CACHE)))  # evict oldest (dicts keep insertion order)
-            _TTS_CACHE[cache_key] = content
+            with _TTS_CACHE_LOCK:
+                if len(_TTS_CACHE) >= self.MAX_CACHE_ENTRIES:
+                    _TTS_CACHE.pop(next(iter(_TTS_CACHE)))  # evict oldest (dicts keep insertion order)
+                _TTS_CACHE[cache_key] = content
 
         response = HttpResponse(content, content_type='audio/mpeg')
         response['Cache-Control'] = 'public, max-age=604800'
@@ -136,7 +154,11 @@ class LessonViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(age_group__in=[age_group, 'all'])
         if difficulty:
             try:
-                queryset = queryset.filter(difficulty=int(difficulty))
+                diff_val = int(difficulty)
+                if 0 <= diff_val <= 32767:
+                    queryset = queryset.filter(difficulty=diff_val)
+                else:
+                    queryset = queryset.none()
             except (ValueError, TypeError):
                 pass
 

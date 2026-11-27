@@ -147,10 +147,20 @@ export interface WordBoundaryEvent {
 export type WordBoundaryListener = (data: WordBoundaryEvent) => void;
 export type SpeechEndListener = () => void;
 export type SpeechStartListener = () => void;
+export type SpeechLoadingListener = (loading: boolean) => void;
 
 const wordBoundaryListeners = new Set<WordBoundaryListener>();
 const speechEndListeners = new Set<SpeechEndListener>();
 const speechStartListeners = new Set<SpeechStartListener>();
+const speechLoadingListeners = new Set<SpeechLoadingListener>();
+
+export function emitSpeechLoading(loading: boolean): void {
+  speechLoadingListeners.forEach((fn) => {
+    try {
+      fn(loading);
+    } catch {}
+  });
+}
 
 export function emitWordBoundary(data: WordBoundaryEvent): void {
   wordBoundaryListeners.forEach((fn) => {
@@ -161,6 +171,7 @@ export function emitWordBoundary(data: WordBoundaryEvent): void {
 }
 
 export function emitSpeechEnd(): void {
+  emitSpeechLoading(false);
   speechEndListeners.forEach((fn) => {
     try {
       fn();
@@ -169,6 +180,7 @@ export function emitSpeechEnd(): void {
 }
 
 export function emitSpeechStart(): void {
+  emitSpeechLoading(false);
   speechStartListeners.forEach((fn) => {
     try {
       fn();
@@ -902,6 +914,13 @@ export const audioService = {
     };
   },
 
+  addSpeechLoadingListener(listener: SpeechLoadingListener): () => void {
+    speechLoadingListeners.add(listener);
+    return () => {
+      speechLoadingListeners.delete(listener);
+    };
+  },
+
   getEffectiveSpeechRate(lang: AppLanguage = 'en', baseRate?: number): number {
     const rateToUse = typeof baseRate === 'number' && !isNaN(baseRate) ? baseRate : currentVoiceRate;
     if (lang === 'gu') {
@@ -1192,6 +1211,7 @@ export const audioService = {
         }
 
         if (!exists) {
+          emitSpeechLoading(true);
           // Priority 1: Django LAN proxy (serves full MP3 headers & bypasses mobile Google 403)
           // Priority 2: Direct Google TTS endpoint
           const candidateUrls: string[] = [];
@@ -1226,6 +1246,7 @@ export const audioService = {
     }
 
     if (requestId !== currentSpeechRequestId || !globalSoundEnabled) {
+      emitSpeechLoading(false);
       if (onDone) try { onDone(); } catch {}
       return;
     }
@@ -1288,6 +1309,7 @@ export const audioService = {
               player.addListener('playbackStatusUpdate', (status: AudioStatus) => {
                 if (status?.playing) {
                   started = true;
+                  emitSpeechLoading(false);
                   clearTimeout(fallbackTimer);
                 }
                 if (status?.duration && status.duration > 0 && typeof status.currentTime === 'number') {
@@ -1731,10 +1753,17 @@ export const audioService = {
         };
 
         audio.onerror = () => {
+          if (requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          if (activeWebAudio === audio) activeWebAudio = null;
           this.speakWebSynthesis(text, lang, requestId, onDone);
         };
 
-        audio.play().catch(() => {
+        audio.play().catch((err) => {
+          const errName = (err as { name?: string } | null)?.name;
+          if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) {
+            return;
+          }
+          if (activeWebAudio === audio) activeWebAudio = null;
           this.speakWebSynthesis(text, lang, requestId, onDone);
         });
         return;
@@ -1848,12 +1877,20 @@ export const audioService = {
           }
         };
 
-        audio.onerror = () => {
+        let chunkErrored = false;
+        let usingProxy = Boolean(proxyUrl);
+        const handleChunkFallbackOrAdvance = () => {
+          if (chunkErrored || requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          chunkErrored = true;
           if (trackInterval) clearInterval(trackInterval);
           // If proxy failed, try direct Google TTS
-          if (proxyUrl && audio.src === proxyUrl && directUrl) {
+          if (usingProxy && directUrl) {
+            usingProxy = false;
+            chunkErrored = false;
             audio.src = directUrl;
-            audio.play().catch(() => {
+            audio.play().catch((err) => {
+              const errName = (err as { name?: string } | null)?.name;
+              if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
               cumulativeWords += chunkWordCount;
               cumulativeChars += chunkChars;
               currentChunkIdx++;
@@ -1867,16 +1904,18 @@ export const audioService = {
           playNextChunk();
         };
 
+        audio.onerror = handleChunkFallbackOrAdvance;
+
         const playPromise = audio.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch((err) => {
-            console.warn('Web audio play failed, trying direct fallback:', err);
-            if (proxyUrl && audio.src === proxyUrl && directUrl) {
-              audio.src = directUrl;
-              audio.play().catch(() => finishOnce());
-            } else {
-              finishOnce();
+            const errName = (err as { name?: string } | null)?.name;
+            // Intentional stop/pause during rapid navigation rejects play() with AbortError; ignore cleanly.
+            if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) {
+              return;
             }
+            console.warn('Web audio play failed, trying direct fallback:', err);
+            handleChunkFallbackOrAdvance();
           });
         }
       };
@@ -2168,6 +2207,7 @@ export const audioService = {
   /** Never rejects: it is called fire-and-forget from ~60 places (navigation, taps, unmount). */
   async stop(): Promise<void> {
     currentSpeechRequestId++;
+    emitSpeechLoading(false);
     try {
       this.stopInternal(true);
     } catch (e) {
@@ -2485,23 +2525,13 @@ export const audioService = {
 
         audio.onended = onSentenceFinish;
 
-        audio.onerror = () => {
+        let sentenceHandledError = false;
+        let usingSentenceProxy = Boolean(proxyUrl);
+        const fallbackSentenceToWebSpeech = () => {
+          if (sentenceHandledError || requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          sentenceHandledError = true;
           if (trackInterval) clearInterval(trackInterval);
-          // Try direct URL if proxy failed
-          if (proxyUrl && audio && audio.src === proxyUrl && directUrl) {
-            audio.src = directUrl;
-            audio.play().catch(() => {
-              this.speakWebSynthesis(s.cleanText, effectiveLang, requestId, () => {
-                sentenceIdx++;
-                setTimeout(playSentence, 220);
-              }, {
-                startWordIndex: s.startWordIndex,
-                totalGlobalWords: globalWordSpans.length,
-                startChar: s.startChar,
-              });
-            });
-            return;
-          }
+          if (activeWebAudio === audio) activeWebAudio = null;
           this.speakWebSynthesis(s.cleanText, effectiveLang, requestId, () => {
             sentenceIdx++;
             setTimeout(playSentence, 220);
@@ -2512,16 +2542,30 @@ export const audioService = {
           });
         };
 
+        audio.onerror = () => {
+          if (requestId !== currentSpeechRequestId || activeWebAudio !== audio) return;
+          if (trackInterval) clearInterval(trackInterval);
+          // Try direct URL if proxy failed
+          if (usingSentenceProxy && audio && directUrl) {
+            usingSentenceProxy = false;
+            audio.src = directUrl;
+            audio.play().catch((err) => {
+              const errName = (err as { name?: string } | null)?.name;
+              if (errName === 'AbortError') return;
+              fallbackSentenceToWebSpeech();
+            });
+            return;
+          }
+          fallbackSentenceToWebSpeech();
+        };
+
         audio.play().catch((err) => {
+          const errName = (err as { name?: string } | null)?.name;
+          if (errName === 'AbortError' || requestId !== currentSpeechRequestId || activeWebAudio !== audio) {
+            return;
+          }
           if (IS_DEV) console.log('[AudioService] audio.play() caught:', err);
-          this.speakWebSynthesis(s.cleanText, effectiveLang, requestId, () => {
-            sentenceIdx++;
-            setTimeout(playSentence, 220);
-          }, {
-            startWordIndex: s.startWordIndex,
-            totalGlobalWords: globalWordSpans.length,
-            startChar: s.startChar,
-          });
+          fallbackSentenceToWebSpeech();
         });
 
         return;

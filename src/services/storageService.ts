@@ -146,6 +146,8 @@ export const storageService = {
     primaryProfileId = id;
     if (id !== null && id !== undefined) {
       AsyncStorage.setItem(STORAGE_KEYS.PRIMARY_PROFILE, String(id)).catch(() => {});
+    } else {
+      AsyncStorage.removeItem(STORAGE_KEYS.PRIMARY_PROFILE).catch(() => {});
     }
   },
 
@@ -199,45 +201,56 @@ export const storageService = {
   },
 
   async overwriteProgress(progress: UserProgress): Promise<UserProgress> {
-    try {
-      const key = this.getProgressKey();
-      await AsyncStorage.setItem(key, JSON.stringify(progress));
+    const task = saveQueue.then(async () => {
+      try {
+        const key = this.getProgressKey();
+        await AsyncStorage.setItem(key, JSON.stringify(progress));
+      } catch (e) {
+        console.warn('Failed to overwrite progress:', e);
+      }
       return progress;
-    } catch (e) {
-      console.warn('Failed to overwrite progress:', e);
-      return progress;
-    }
+    });
+    saveQueue = task.catch(() => {});
+    return task;
   },
 
-  async resetUserProgress(preservedChildName?: string): Promise<UserProgress> {
-    try {
-      const key = this.getProgressKey();
-      const fresh: UserProgress = {
-        ...DEFAULT_PROGRESS,
-        childName: preservedChildName || '',
-        streakDays: 1,
-        lastStreakDate: getTodayDateKey(),
-        completedLessons: [],
-        stars: 0,
-        coins: 50,
-        coinsSpentTotal: 0,
-        seeds: 5,
-        water: 10,
-        adventureLevel: 1,
-        earnedBadges: ['badge-welcome'],
-        gameStats: {},
-        wrongAnswers: [],
-        lastActive: new Date().toISOString(),
-      };
-      await AsyncStorage.setItem(key, JSON.stringify(fresh));
-      if (key !== STORAGE_KEYS.PROGRESS) {
-        await AsyncStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(fresh));
+  async resetUserProgress(
+    preservedChildName?: string,
+    preservedDetails?: Partial<Pick<UserProgress, 'firstName' | 'lastName' | 'dob' | 'hasCompletedFirstTimeName'>>
+  ): Promise<UserProgress> {
+    const task = saveQueue.then(async () => {
+      try {
+        const key = this.getProgressKey();
+        const fresh: UserProgress = {
+          ...DEFAULT_PROGRESS,
+          childName: preservedChildName || '',
+          firstName: preservedDetails?.firstName ?? '',
+          lastName: preservedDetails?.lastName ?? '',
+          dob: preservedDetails?.dob ?? '',
+          hasCompletedFirstTimeName: preservedDetails?.hasCompletedFirstTimeName ?? false,
+          streakDays: 1,
+          lastStreakDate: getTodayDateKey(),
+          completedLessons: [],
+          stars: 0,
+          coins: 50,
+          coinsSpentTotal: 0,
+          seeds: 5,
+          water: 10,
+          adventureLevel: 1,
+          earnedBadges: ['badge-welcome'],
+          gameStats: {},
+          wrongAnswers: [],
+          lastActive: new Date().toISOString(),
+        };
+        await AsyncStorage.setItem(key, JSON.stringify(fresh));
+        return fresh;
+      } catch (e) {
+        console.warn('Failed to reset user progress:', e);
+        return { ...DEFAULT_PROGRESS };
       }
-      return fresh;
-    } catch (e) {
-      console.warn('Failed to reset user progress:', e);
-      return DEFAULT_PROGRESS;
-    }
+    });
+    saveQueue = task.catch(() => {});
+    return task;
   },
 
   async getPreferences(): Promise<UserPreferences> {
@@ -275,7 +288,7 @@ export const storageService = {
           data = altData;
         }
       }
-      let base: UserProgress = DEFAULT_PROGRESS;
+      let base: UserProgress = { ...DEFAULT_PROGRESS };
       if (data) {
         const parsed = JSON.parse(data);
         base = {

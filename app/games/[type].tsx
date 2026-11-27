@@ -223,19 +223,19 @@ export default function GameRunnerScreen() {
       ? language === 'gu'
         ? 'સરસ પ્રયત્ન! ફરી રમીએ!'
         : language === 'hi'
-        ? 'बहुत अच्छी कोशिश! फिर से खेलें!'
-        : 'Great try! Let us play again!'
+          ? 'बहुत अच्छी कोशिश! फिर से खेलें!'
+          : 'Great try! Let us play again!'
       : stars === 3
-      ? language === 'gu'
-        ? 'વાહ! તમે ત્રણ તારા જીત્યા!'
-        : language === 'hi'
-        ? 'वाह! आपने तीन तारे जीते!'
-        : 'Wow! You won three stars!'
-      : language === 'gu'
-      ? 'શાબાશ! સરસ રમ્યા!'
-      : language === 'hi'
-      ? 'शाबाश! बढ़िया खेले!'
-      : 'Well done! Great playing!';
+        ? language === 'gu'
+          ? 'વાહ! તમે ત્રણ તારા જીત્યા!'
+          : language === 'hi'
+            ? 'वाह! आपने तीन तारे जीते!'
+            : 'Wow! You won three stars!'
+        : language === 'gu'
+          ? 'શાબાશ! સરસ રમ્યા!'
+          : language === 'hi'
+            ? 'शाबाश! बढ़िया खेले!'
+            : 'Well done! Great playing!';
     const id = setTimeout(() => speak(praise, language), 700);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -293,6 +293,10 @@ export default function GameRunnerScreen() {
     if (advanceTimerRef.current) {
       clearTimeout(advanceTimerRef.current);
     }
+    isAnsweredRef.current = false;
+    setSelectedOptionId(null);
+    setIsAnswered(false);
+    setFeedback(null);
     setLives(maxLives);
     setOutOfLives(false);
     isAnsweredRef.current = false;
@@ -401,6 +405,13 @@ export default function GameRunnerScreen() {
           options: shuffleArray(q.options || []),
         }));
         setQuestions(fallbackQuestions);
+        setCurrentIndex(0);
+        setSelectedOptionId(null);
+        setIsAnswered(false);
+        isAnsweredRef.current = false;
+        setScore(0);
+        setFeedback(null);
+        setIsGameOver(false);
       });
 
     // Initialize Memory Match cards adapted to age group with fresh random emoji pool and sequence
@@ -427,14 +438,14 @@ export default function GameRunnerScreen() {
         return language === 'gu'
           ? 'આમાંથી અલગ શું પડે છે શોધો:'
           : language === 'hi'
-          ? 'इनमें से अलग क्या है पहचानें:'
-          : 'Find the odd one out:';
+            ? 'इनमें से अलग क्या है पहचानें:'
+            : 'Find the odd one out:';
       }
       return language === 'gu'
         ? 'સાચો જવાબ પસંદ કરો:'
         : language === 'hi'
-        ? 'सही उत्तर चुनें:'
-        : 'Identify the correct answer:';
+          ? 'सही उत्तर चुनें:'
+          : 'Identify the correct answer:';
     }
     return raw;
   };
@@ -476,22 +487,22 @@ export default function GameRunnerScreen() {
       });
       const praise = isBalloonPop
         ? // Short enough to finish inside the quick balloon auto-advance.
-          language === 'gu'
+        language === 'gu'
           ? 'શાબાશ!'
           : language === 'hi'
-          ? 'शाबाश!'
-          : 'Super!'
+            ? 'शाबाश!'
+            : 'Super!'
         : language === 'gu'
           ? cleanWord
             ? `શાબાશ! ${cleanWord} એકદમ સાચો જવાબ છે!`
             : `શાબાશ! એકદમ સાચો જવાબ છે!`
           : language === 'hi'
-          ? cleanWord
-            ? `शाबाश! ${cleanWord} बिल्कुल सही जवाब है!`
-            : `शाबाश! बिल्कुल सही जवाब है!`
-          : cleanWord
-          ? `Super! ${cleanWord} is right!`
-          : `Super! That is right!`;
+            ? cleanWord
+              ? `शाबाश! ${cleanWord} बिल्कुल सही जवाब है!`
+              : `शाबाश! बिल्कुल सही जवाब है!`
+            : cleanWord
+              ? `Super! ${cleanWord} is right!`
+              : `Super! That is right!`;
 
       let hasAdvanced = false;
       const advanceSafely = () => {
@@ -526,57 +537,85 @@ export default function GameRunnerScreen() {
         language,
       });
       soundEffects.playWrongSound();
+      const wrongLabel =
+        language === 'gu'
+          ? 'ખોટો જવાબ!'
+          : language === 'hi'
+            ? 'गलत जवाब!'
+            : 'Wrong answer!';
       setFeedback({
         isCorrect: false,
-        text: t('games.wrong'),
+        text: wrongLabel,
       });
-      const tryAgain = getTryAgainSpeech(language);
-      if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
-      speechTimerRef.current = setTimeout(() => {
-        speak(tryAgain, language);
-      }, 140);
 
       const remaining = usesLives ? lives - 1 : lives;
       if (usesLives) {
         setLives(remaining);
-        if (remaining <= 0) {
-          // Out of hearts: end the round kindly (score still saved & synced).
-          if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
-          advanceTimerRef.current = setTimeout(() => {
-            audioService.stop();
-            setOutOfLives(true);
-            setIsGameOver(true);
-            recordScore(gameType, scoreRef.current, questions.length);
-          }, isBalloonPop ? BALLOON_ADVANCE_MS : 1800);
-          return;
-        }
       }
 
-      if (isBalloonPop) {
-        const tried = [...triedOptionIdsRef.current, option.id];
-        triedOptionIdsRef.current = tried;
-        setTriedOptionIds(tried);
-        const untriedWrong = currentQ.options.filter(
-          (o) => o.id !== currentQ.correctOptionId && !tried.includes(o.id)
-        ).length;
+      if (usesLives && remaining <= 0) {
+        if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
+        speechTimerRef.current = setTimeout(() => {
+          speak(wrongLabel, language);
+        }, 140);
+        // Out of hearts: end the round kindly (score still saved & synced).
         if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
-        if (tried.length >= BALLOON_MAX_WRONG_TRIES || untriedWrong === 0) {
-          // Enough tries on this question: show the right balloon, then move on by itself.
-          setRevealCorrect(true);
-          advanceTimerRef.current = setTimeout(() => {
+        advanceTimerRef.current = setTimeout(() => {
+          audioService.stop();
+          setOutOfLives(true);
+          setIsGameOver(true);
+          recordScore(gameType, scoreRef.current, questions.length);
+        }, isBalloonPop ? BALLOON_ADVANCE_MS : 1800);
+        return;
+      }
+    }
+
+    if (isBalloonPop) {
+      const tried = [...triedOptionIdsRef.current, option.id];
+      triedOptionIdsRef.current = tried;
+      setTriedOptionIds(tried);
+      const untriedWrong = currentQ.options.filter(
+        (o) => o.id !== currentQ.correctOptionId && !tried.includes(o.id)
+      ).length;
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+      if (tried.length >= BALLOON_MAX_WRONG_TRIES || untriedWrong === 0) {
+        // Enough tries on this question: show the right balloon, then move on by itself.
+        setRevealCorrect(true);
+        advanceTimerRef.current = setTimeout(() => {
+          advanceTimerRef.current = null;
+          handleNextQuestion();
+        }, BALLOON_ADVANCE_MS);
+      } else {
+        // Let the child genuinely try again after the "oops" moment.
+        advanceTimerRef.current = setTimeout(() => {
+          advanceTimerRef.current = null;
+          isAnsweredRef.current = false;
+          setIsAnswered(false);
+          setSelectedOptionId(null);
+          setFeedback(null);
+        }, BALLOON_RETRY_MS);
+      } else {
+        let hasAdvanced = false;
+        const skipSafely = () => {
+          if (hasAdvanced) return;
+          hasAdvanced = true;
+          if (advanceTimerRef.current) {
+            clearTimeout(advanceTimerRef.current);
             advanceTimerRef.current = null;
-            handleNextQuestion();
-          }, BALLOON_ADVANCE_MS);
-        } else {
-          // Let the child genuinely try again after the "oops" moment.
-          advanceTimerRef.current = setTimeout(() => {
-            advanceTimerRef.current = null;
-            isAnsweredRef.current = false;
-            setIsAnswered(false);
-            setSelectedOptionId(null);
-            setFeedback(null);
-          }, BALLOON_RETRY_MS);
-        }
+          }
+          handleNextQuestion();
+        };
+
+        if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
+        speechTimerRef.current = setTimeout(() => {
+          speak(wrongLabel, language, () => {
+            if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+            advanceTimerRef.current = setTimeout(skipSafely, 500);
+          });
+        }, 140);
+
+        if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = setTimeout(skipSafely, 2200);
       }
     }
   };
@@ -605,8 +644,8 @@ export default function GameRunnerScreen() {
         language === 'gu'
           ? `શાબાશ! એકદમ સાચો જવાબ છે!`
           : language === 'hi'
-          ? `शाबाश! बिल्कुल सही उत्तर!`
-          : `Super! That is right!`;
+            ? `शाबाश! बिल्कुल सही उत्तर!`
+            : `Super! That is right!`;
 
       let hasAdvanced = false;
       const advanceSafely = () => {
@@ -633,8 +672,8 @@ export default function GameRunnerScreen() {
         (language === 'gu'
           ? `આ તો ${option.label} છે! ફરી ધ્યાનથી શોધો`
           : language === 'hi'
-          ? `यह तो ${option.label} है! फिर से ध्यान से खोजें`
-          : `That is a ${option.label}! Try again`);
+            ? `यह तो ${option.label} है! फिर से ध्यान से खोजें`
+            : `That is a ${option.label}! Try again`);
 
       setFeedback({
         isCorrect: false,
@@ -715,8 +754,8 @@ export default function GameRunnerScreen() {
           language === 'gu'
             ? 'શાબાશ! તમે પઝલ પૂર્ણ કરી લીધી!'
             : language === 'hi'
-            ? 'शाबाश! आपने पहेली पूरी कर ली!'
-            : 'Super! You completed the puzzle!';
+              ? 'शाबाश! आपने पहेली पूरी कर ली!'
+              : 'Super! You completed the puzzle!';
         speak(praise, language);
         recordScore('picture-puzzle', earnedStars, 10);
       }
@@ -828,14 +867,14 @@ export default function GameRunnerScreen() {
         return language === 'gu'
           ? 'તાર્કિક વિચારણા'
           : language === 'hi'
-          ? 'तार्किक विचार'
-          : 'Logical Reasoning';
+            ? 'तार्किक विचार'
+            : 'Logical Reasoning';
       case 'odd-one-out':
         return language === 'gu'
           ? 'અસંગત અલગ તારવો'
           : language === 'hi'
-          ? 'विषम को अलग करें'
-          : 'Odd One Out';
+            ? 'विषम को अलग करें'
+            : 'Odd One Out';
       default:
         return t('games.title');
     }
@@ -856,7 +895,7 @@ export default function GameRunnerScreen() {
           }, 150);
           return;
         }
-      } catch {}
+      } catch { }
       router.replace('/games');
       return;
     }
@@ -866,7 +905,7 @@ export default function GameRunnerScreen() {
         router.back();
         return;
       }
-    } catch {}
+    } catch { }
     router.replace('/games');
   };
 
@@ -879,8 +918,8 @@ export default function GameRunnerScreen() {
             {language === 'gu'
               ? 'પ્રશ્નો લોડ થઈ રહ્યા છે...'
               : language === 'hi'
-              ? 'प्रश्न लोड हो रहे हैं...'
-              : 'Loading questions...'}
+                ? 'प्रश्न लोड हो रहे हैं...'
+                : 'Loading questions...'}
           </Text>
         </View>
       </SafeAreaView>
@@ -942,8 +981,8 @@ export default function GameRunnerScreen() {
               {language === 'gu'
                 ? 'જોડી શોધો - ૨ સરખા કાર્ડ મેળવો'
                 : language === 'hi'
-                ? 'जोड़ी खोजें - २ समान कार्ड मिलाएं'
-                : 'Match Pairs - Flip 2 cards'}
+                  ? 'जोड़ी खोजें - २ समान कार्ड मिलाएं'
+                  : 'Match Pairs - Flip 2 cards'}
             </Text>
             <View style={styles.memoryGrid}>
               {memoryCards.map((card, idx) => (
@@ -979,8 +1018,8 @@ export default function GameRunnerScreen() {
                   mode === 4
                     ? t('games.pieces4') || '4 Pieces'
                     : mode === 6
-                    ? t('games.pieces6') || '6 Pieces'
-                    : t('games.pieces9') || '9 Pieces';
+                      ? t('games.pieces6') || '6 Pieces'
+                      : t('games.pieces9') || '9 Pieces';
                 return (
                   <TouchableOpacity
                     key={mode}
@@ -1002,8 +1041,8 @@ export default function GameRunnerScreen() {
                 {language === 'gu'
                   ? PUZZLE_PICTURES[puzzleIndex].titleGu
                   : language === 'hi'
-                  ? PUZZLE_PICTURES[puzzleIndex].titleHi
-                  : PUZZLE_PICTURES[puzzleIndex].titleEn}
+                    ? PUZZLE_PICTURES[puzzleIndex].titleHi
+                    : PUZZLE_PICTURES[puzzleIndex].titleEn}
               </Text>
               <TouchableOpacity
                 style={styles.puzzlePeekBtn}
@@ -1018,13 +1057,13 @@ export default function GameRunnerScreen() {
                     ? language === 'gu'
                       ? 'છુપાવો'
                       : language === 'hi'
-                      ? 'छिपाएं'
-                      : 'Hide'
+                        ? 'छिपाएं'
+                        : 'Hide'
                     : language === 'gu'
-                    ? '👁️ ઝલક (Peek)'
-                    : language === 'hi'
-                    ? '👁️ झलक (Peek)'
-                    : '👁️ Original (Peek)'}
+                      ? '👁️ ઝલક (Peek)'
+                      : language === 'hi'
+                        ? '👁️ झलक (Peek)'
+                        : '👁️ Original (Peek)'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1041,8 +1080,8 @@ export default function GameRunnerScreen() {
                   {language === 'gu'
                     ? 'આ ચિત્ર મુજબ ટુકડા ગોઠવો!'
                     : language === 'hi'
-                    ? 'इस चित्र के अनुसार टुकड़े व्यवस्थित करें!'
-                    : 'Arrange pieces to match this picture!'}
+                      ? 'इस चित्र के अनुसार टुकड़े व्यवस्थित करें!'
+                      : 'Arrange pieces to match this picture!'}
                 </Text>
               </View>
             )}
@@ -1133,8 +1172,8 @@ export default function GameRunnerScreen() {
                   {language === 'gu'
                     ? `ખૂબ સરસ! તમે ${formatNumberDigits(puzzleMoveCount, language)} ચાલમાં પઝલ ઉકેલી!`
                     : language === 'hi'
-                    ? `शानदार! आपने ${formatNumberDigits(puzzleMoveCount, language)} चालों में पहेली हल की!`
-                    : `Great job! You solved the puzzle in ${puzzleMoveCount} moves!`}
+                      ? `शानदार! आपने ${formatNumberDigits(puzzleMoveCount, language)} चालों में पहेली हल की!`
+                      : `Great job! You solved the puzzle in ${puzzleMoveCount} moves!`}
                 </Text>
               </View>
             )}
@@ -1235,7 +1274,11 @@ export default function GameRunnerScreen() {
                       shadows.soft,
                     ]}
                   >
-                    {option.visual && <VisualArt value={option.visual} size={54} textStyle={styles.findObjectCardEmoji} />}
+                    {option.visual ? (
+                      <VisualArt value={option.visual} size={54} textStyle={styles.findObjectCardEmoji} />
+                    ) : (
+                      <EmojiArt emoji={splitEmojiLabel(option.label || '').emoji} size={52} />
+                    )}
                     <Text style={styles.findObjectCardLabel}>{splitEmojiLabel(option.label).label}</Text>
                   </TouchableOpacity>
                 );
@@ -1301,95 +1344,95 @@ export default function GameRunnerScreen() {
                   />
                 </View>
               ) : (
-              <>
-              <Text style={styles.promptText}>
-                {getLocalizedPrompt(currentQ)}
-              </Text>
+                <>
+                  <Text style={styles.promptText}>
+                    {getLocalizedPrompt(currentQ)}
+                  </Text>
 
-              {/* Display Real Image, Visual, or Repeated Counting Items */}
-              {currentQ.displayImageSource || currentQ.displayImage ? (
-                <View style={styles.gameImageBox}>
-                  <Image
-                    source={resolveOfflineMediaSource(
-                      currentQ.displayImageSource || {
-                        uri: currentQ.displayImage,
-                      }
-                    )}
-                    style={styles.gameImage}
-                    resizeMode="cover"
-                  />
-                </View>
-              ) : currentQ.countTarget ? (
-                <View style={styles.counterRow}>
-                  {Array.from({ length: currentQ.countTarget }).map((_, i) => {
-                    const singleEmoji = currentQ.displayVisual
-                      ? currentQ.displayVisual.trim().split(/\s+/)[0]
-                      : '⭐';
-                    return (
-                      <VisualArt key={i} value={singleEmoji} size={50} textStyle={styles.counterItem} />
-                    );
-                  })}
-                </View>
-              ) : currentQ.displayVisual && currentQ.displayVisual.includes('_') ? (
-                <View style={styles.sequenceContainer}>
-                  <View style={styles.sequenceRow}>
-                    {currentQ.displayVisual.split(/\s+/).filter(Boolean).map((part, pIdx) => {
-                      const isBlank = part.includes('_');
-                      if (!isBlank) {
+                  {/* Display Real Image, Visual, or Repeated Counting Items */}
+                  {currentQ.displayImageSource || currentQ.displayImage ? (
+                    <View style={styles.gameImageBox}>
+                      <Image
+                        source={resolveOfflineMediaSource(
+                          currentQ.displayImageSource || {
+                            uri: currentQ.displayImage,
+                          }
+                        )}
+                        style={styles.gameImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  ) : currentQ.countTarget ? (
+                    <View style={styles.counterRow}>
+                      {Array.from({ length: currentQ.countTarget }).map((_, i) => {
+                        const singleEmoji = currentQ.displayVisual
+                          ? currentQ.displayVisual.trim().split(/\s+/)[0]
+                          : '⭐';
                         return (
-                          <View key={pIdx} style={styles.sequenceTileCard}>
-                            <VisualArt value={part} size={40} textStyle={styles.sequenceTileText} />
-                          </View>
+                          <VisualArt key={i} value={singleEmoji} size={50} textStyle={styles.counterItem} />
                         );
-                      }
+                      })}
+                    </View>
+                  ) : currentQ.displayVisual && currentQ.displayVisual.includes('_') ? (
+                    <View style={styles.sequenceContainer}>
+                      <View style={styles.sequenceRow}>
+                        {currentQ.displayVisual.split(/\s+/).filter(Boolean).map((part, pIdx) => {
+                          const isBlank = part.includes('_');
+                          if (!isBlank) {
+                            return (
+                              <View key={pIdx} style={styles.sequenceTileCard}>
+                                <VisualArt value={part} size={40} textStyle={styles.sequenceTileText} />
+                              </View>
+                            );
+                          }
 
-                      const selectedOpt = currentQ.options.find((o) => o.id === selectedOptionId);
-                      const isCorrect = isAnswered && selectedOptionId === currentQ.correctOptionId;
-                      const isWrong = isAnswered && selectedOptionId !== currentQ.correctOptionId;
+                          const selectedOpt = currentQ.options.find((o) => o.id === selectedOptionId);
+                          const isCorrect = isAnswered && selectedOptionId === currentQ.correctOptionId;
+                          const isWrong = isAnswered && selectedOptionId !== currentQ.correctOptionId;
 
-                      return (
-                        <View
-                          key={pIdx}
-                          style={[
-                            styles.sequenceSlotCard,
-                            isCorrect && styles.sequenceSlotCorrect,
-                            isWrong && styles.sequenceSlotWrong,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.sequenceSlotText,
-                              isCorrect && styles.sequenceSlotTextCorrect,
-                              isWrong && styles.sequenceSlotTextWrong,
-                            ]}
-                          >
-                            {isAnswered && selectedOpt ? selectedOpt.label : '?'}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              ) : currentQ.displayVisual ? (
-                <View
-                  style={[
-                    styles.visualBox,
-                    currentQ.displayVisualColor
-                      ? { backgroundColor: currentQ.displayVisualColor }
-                      : null,
-                  ]}
-                >
-                  <VisualArt value={currentQ.displayVisual} size={54} textStyle={styles.visualText} />
-                </View>
-              ) : null}
+                          return (
+                            <View
+                              key={pIdx}
+                              style={[
+                                styles.sequenceSlotCard,
+                                isCorrect && styles.sequenceSlotCorrect,
+                                isWrong && styles.sequenceSlotWrong,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.sequenceSlotText,
+                                  isCorrect && styles.sequenceSlotTextCorrect,
+                                  isWrong && styles.sequenceSlotTextWrong,
+                                ]}
+                              >
+                                {isAnswered && selectedOpt ? selectedOpt.label : '?'}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  ) : currentQ.displayVisual ? (
+                    <View
+                      style={[
+                        styles.visualBox,
+                        currentQ.displayVisualColor
+                          ? { backgroundColor: currentQ.displayVisualColor }
+                          : null,
+                      ]}
+                    >
+                      <VisualArt value={currentQ.displayVisual} size={54} textStyle={styles.visualText} />
+                    </View>
+                  ) : null}
 
-              {/* Speaker for Listen & Choose or Prompt Audio */}
-              <AudioSpeakerButton
-                onPress={() => speak(getLocalizedAudioText(currentQ), language)}
-                size={50}
-                label={t('lesson.repeatAudio')}
-              />
-              </>
+                  {/* Speaker for Listen & Choose or Prompt Audio */}
+                  <AudioSpeakerButton
+                    onPress={() => speak(getLocalizedAudioText(currentQ), language)}
+                    size={50}
+                    label={t('lesson.repeatAudio')}
+                  />
+                </>
               )}
             </View>
 
@@ -1626,8 +1669,8 @@ export default function GameRunnerScreen() {
                 ? language === 'gu'
                   ? 'સરસ પ્રયત્ન!'
                   : language === 'hi'
-                  ? 'बहुत अच्छी कोशिश!'
-                  : 'Great try!'
+                    ? 'बहुत अच्छी कोशिश!'
+                    : 'Great try!'
                 : t('games.gameOver')
             }
           >
@@ -1656,8 +1699,8 @@ export default function GameRunnerScreen() {
                 {language === 'gu'
                   ? 'દિલ ખતમ થઈ ગયા. ફરી રમીને વધુ તારા જીતો!'
                   : language === 'hi'
-                  ? 'दिल खत्म हो गए। फिर से खेलकर और तारे जीतें!'
-                  : 'Out of hearts. Play again to win more stars!'}
+                    ? 'दिल खत्म हो गए। फिर से खेलकर और तारे जीतें!'
+                    : 'Out of hearts. Play again to win more stars!'}
               </Text>
             ) : null}
             <View style={styles.modalBtnRow}>

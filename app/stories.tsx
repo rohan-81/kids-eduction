@@ -37,6 +37,7 @@ import { resolveOfflineMediaSource } from '../src/utils/remoteAssets';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { kidTones, kidPalette, kidBackdrops, kidRadii, clayShadow, toneAt, KidTone } from '../src/theme/kidTheme';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
+import { SkeletonGrid } from '../src/components/common/SkeletonCard';
 import { spacing, radii, shadows } from '../src/theme/spacing';
 import { AppLanguage } from '../src/types';
 import * as Art from '../src/components/art3d/Art3D';
@@ -435,6 +436,7 @@ export default function StoryModeScreen() {
   const { dialog: kidDialog, notify } = useKidDialog();
 
   const [stories, setStories] = useState<StoryBook[]>(STORIES_DATA);
+  const [isLoadingStories, setIsLoadingStories] = useState<boolean>(STORIES_DATA.length === 0);
   const [selectedStory, setSelectedStory] = useState<StoryBook | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [choiceFeedback, setChoiceFeedback] = useState<{ text: string; good: boolean } | null>(null);
@@ -524,11 +526,16 @@ export default function StoryModeScreen() {
 
   useEffect(() => {
     let isMounted = true;
-    apiService.fetchStories(language).then((fetched) => {
-      if (isMounted && fetched && fetched.length > 0) {
-        setStories(fetched);
-      }
-    });
+    apiService
+      .fetchStories(language)
+      .then((fetched) => {
+        if (isMounted && fetched && fetched.length > 0) {
+          setStories(fetched);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingStories(false);
+      });
     return () => {
       isMounted = false;
     };
@@ -656,11 +663,11 @@ export default function StoryModeScreen() {
     soundEffects.playTadaaa();
     // Like rhymes and word builder: the completion bonus is paid on the first read only.
     if (!progress.completedLessons?.includes(selectedStory.id)) {
-      addCoins(20);
+      // markLessonCompleted awards +10 coins & +1 star; add +10 more coins for 20 total.
+      addCoins(10);
     }
     try {
       completeLesson(selectedStory.id);
-      completeLesson('story-' + selectedStory.id);
     } catch { }
     setIsStoryFinished(true);
     flipIn();
@@ -886,17 +893,21 @@ export default function StoryModeScreen() {
             </Text>
 
             <View style={styles.shelfGrid}>
-              {stories.map((s, i) => (
-                <BookCover
-                  key={s.id}
-                  story={s}
-                  index={i}
-                  lang={activeLang}
-                  isRead={completed.has('story-' + s.id)}
-                  width={coverWidth}
-                  onOpen={() => startStory(s)}
-                />
-              ))}
+              {isLoadingStories && stories.length === 0 ? (
+                <SkeletonGrid count={4} columns={2} cardHeight={170} />
+              ) : (
+                stories.map((s, i) => (
+                  <BookCover
+                    key={s.id}
+                    story={s}
+                    index={i}
+                    lang={activeLang}
+                    isRead={completed.has(s.id) || completed.has('story-' + s.id)}
+                    width={coverWidth}
+                    onOpen={() => startStory(s)}
+                  />
+                ))
+              )}
             </View>
           </View>
         ) : (
@@ -1145,15 +1156,16 @@ export default function StoryModeScreen() {
 
                       {/* Page navigation */}
                       <View style={styles.pageNavRow}>
-                        <ClayButton
-                          tone="white"
-                          size="md"
-                          sound={false}
-                          disabled={currentPage <= 1}
-                          onPress={prevPage}
-                          style={styles.navBtn}
-                          title={tr(activeLang, { gu: '◀ પાછળ', hi: '◀ पिछला', en: '◀ Back' })}
-                        />
+                        {currentPage > 1 ? (
+                          <ClayButton
+                            tone="white"
+                            size="md"
+                            sound={false}
+                            onPress={prevPage}
+                            style={styles.navBtn}
+                            title={tr(activeLang, { gu: '◀ પાછળ', hi: '◀ पिछला', en: '◀ Back' })}
+                          />
+                        ) : null}
                         <ClayButton
                           tone={isLastPage ? 'sun' : readerTone}
                           size="md"

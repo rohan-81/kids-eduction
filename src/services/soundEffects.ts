@@ -321,7 +321,7 @@ class SoundEffectsService {
     }
   }
   public startBgm(): void {
-    if (this.isBgmPlaying || this.bgmMuted) return;
+    if (!this.soundEnabled || this.isBgmPlaying || this.bgmMuted) return;
     this.isBgmPlaying = true;
 
     // Play next note every 450ms in a soft musical chime
@@ -612,6 +612,7 @@ class SoundEffectsService {
               return true;
             }
           } catch (err) {
+            this.releaseAnimalPlayers();
             console.warn('[soundEffects] Local native animal sound threw, trying remote:', err);
           }
         }

@@ -191,7 +191,7 @@ if TESTING:
     REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {k: '100000/min' for k in REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']}
 
 # CORS Configuration
-cors_origins_env = os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS', '')
+cors_origins_env = os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS') or os.environ.get('CORS_ALLOWED_ORIGINS', '')
 if cors_origins_env:
     CORS_ALLOWED_ORIGINS = [o.strip() for o in cors_origins_env.split(',') if o.strip()]
     CORS_ALLOW_ALL_ORIGINS = False

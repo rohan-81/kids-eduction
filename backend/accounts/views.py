@@ -1,3 +1,4 @@
+from django.contrib.auth import logout as django_logout
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -7,6 +8,7 @@ from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 
 class RegisterView(APIView):
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'register'
@@ -28,6 +30,7 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = 'login'
@@ -61,6 +64,7 @@ class LogoutView(APIView):
 
     def post(self, request):
         Token.objects.filter(user=request.user).delete()
+        django_logout(request)
         return Response({'message': 'Logged out successfully.'}, status=status.HTTP_200_OK)
 
 

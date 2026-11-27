@@ -600,9 +600,13 @@ export default function RhymesScreen() {
 
             {/* Chunky arcade controls */}
             <View style={styles.controlsRow}>
-              <ClayButton tone="white" size="lg" sound={false} onPress={handlePreviousLine} accessibilityLabel="Previous line" style={styles.sideCtrl}>
-                <Glyph name="back" size={24} color={kidPalette.ink} strokeWidth={3.4} />
-              </ClayButton>
+              {currentLineIndex > 0 ? (
+                <ClayButton tone="white" size="lg" sound={false} onPress={handlePreviousLine} accessibilityLabel="Previous line" style={styles.sideCtrl}>
+                  <Glyph name="back" size={24} color={kidPalette.ink} strokeWidth={3.4} />
+                </ClayButton>
+              ) : (
+                <View style={styles.sideCtrl} />
+              )}
               <ClayButton
                 tone={isPlaying ? 'coral' : 'mint'}
                 size="lg"

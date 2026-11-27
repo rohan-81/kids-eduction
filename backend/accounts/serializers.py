@@ -10,12 +10,16 @@ from child_profiles.serializers import ChildProfileSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
-    child_profiles = ChildProfileSerializer(many=True, read_only=True)
+    child_profiles = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'child_profiles']
         read_only_fields = ['id', 'date_joined']
+
+    def get_child_profiles(self, obj):
+        active_profiles = obj.child_profiles.filter(is_active=True).order_by('created_at')
+        return ChildProfileSerializer(active_profiles, many=True).data
 
 
 class RegisterSerializer(serializers.ModelSerializer):

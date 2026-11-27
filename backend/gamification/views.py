@@ -60,24 +60,26 @@ class DailyStreakView(APIView):
         if not child:
             return Response({'detail': 'Child profile not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        today = date.today()
-        streak, _ = DailyStreak.objects.get_or_create(child_profile=child)
+        today = timezone.localdate()
+        with transaction.atomic():
+            DailyStreak.objects.get_or_create(child_profile=child)
+            streak = DailyStreak.objects.select_for_update().get(child_profile=child)
 
-        if streak.last_active_date == today:
-            # Already checked in today
-            pass
-        elif streak.last_active_date and (today - streak.last_active_date).days == 1:
-            streak.current_streak += 1
-            if streak.current_streak > streak.longest_streak:
-                streak.longest_streak = streak.current_streak
-            streak.last_active_date = today
-            streak.save()
-        else:
-            streak.current_streak = 1
-            if streak.longest_streak < 1:
-                streak.longest_streak = 1
-            streak.last_active_date = today
-            streak.save()
+            if streak.last_active_date == today:
+                # Already checked in today
+                pass
+            elif streak.last_active_date and (today - streak.last_active_date).days == 1:
+                streak.current_streak += 1
+                if streak.current_streak > streak.longest_streak:
+                    streak.longest_streak = streak.current_streak
+                streak.last_active_date = today
+                streak.save()
+            else:
+                streak.current_streak = 1
+                if streak.longest_streak < 1:
+                    streak.longest_streak = 1
+                streak.last_active_date = today
+                streak.save()
 
         return Response(DailyStreakSerializer(streak).data)
 
@@ -103,14 +105,14 @@ class LuckySpinView(APIView):
         ]
         won_prize = random.choice(prizes)
 
-        ChildWallet.objects.get_or_create(child_profile=child)
         with transaction.atomic():
             # Lock the child's wallet row first, then check the daily limit inside the same
             # transaction: two concurrent requests can no longer both pass the check (double
             # spin) or overwrite each other's `+=` (lost update). PostgreSQL honours the row
             # lock; SQLite serialises writers, which gives the same outcome.
+            ChildWallet.objects.get_or_create(child_profile=child)
             wallet = ChildWallet.objects.select_for_update().get(child_profile=child)
-            today = timezone.now().date()
+            today = timezone.localdate()
             if LuckySpinHistory.objects.filter(child_profile=child, spun_at__date=today).exists():
                 return Response(
                     {

@@ -91,7 +91,7 @@ export default function HomeScreen() {
 
   const handleConfirmGuestName = async (name: string, age: AgeGroup, avatar: string) => {
     setShowGuestNameModal(false);
-    await continueAsGuest(name, age, avatar);
+    await continueAsGuest(name, age, avatar, true);
   };
 
   useEffect(() => {

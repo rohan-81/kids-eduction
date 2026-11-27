@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../src/theme/colors';
 import { spacing, radii, shadows } from '../src/theme/spacing';
@@ -30,7 +30,7 @@ import { AppGlobalBackground } from '../src/components/common/AppGlobalBackgroun
 import * as Art from '../src/components/art3d/Art3D';
 import { Glyph } from '../src/components/fun/KidIcons';
 import { ICON_3D_STAR } from '../src/utils/imageHelper';
-import { screenWellnessService } from '../src/services/screenWellnessService';
+import { screenWellnessService, formatLocalDateKey } from '../src/services/screenWellnessService';
 import { webStyle } from '../src/utils/webStyle';
 import type { AppRoute } from '../src/utils/navigationHelper';
 
@@ -39,6 +39,22 @@ export default function ProgressScreen() {
   const { progress, language, ageGroup, isAuthenticated, isGuest } = useApp();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
+  const isNarrow = width < 360;
+  const [, setUsageRefreshTick] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = screenWellnessService.subscribeUsage(() => {
+      setUsageRefreshTick((t) => t + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      screenWellnessService.flushActiveTime();
+      setUsageRefreshTick((t) => t + 1);
+    }, [])
+  );
 
   if (!isAuthenticated && !isGuest) {
     return (
@@ -128,8 +144,14 @@ export default function ProgressScreen() {
   const langLessons = filterLessonsForClass(rawLangLessons, ageGroup, langCatIds[0]);
   const langDone = langLessons.filter((l) => completedSet.has(l.id)).length;
 
-  const rawMathLessons = LESSONS.filter((l) => l.categoryId === 'numbers');
-  const mathLessons = filterLessonsForClass(rawMathLessons, ageGroup, 'numbers');
+  const rawMathLessons = LESSONS.filter((l) =>
+    ['numbers', 'math', 'ghadiya'].includes(l.categoryId)
+  );
+  const mathLessons = [
+    ...filterLessonsForClass(rawMathLessons.filter((l) => l.categoryId === 'numbers'), ageGroup, 'numbers'),
+    ...filterLessonsForClass(rawMathLessons.filter((l) => l.categoryId === 'math'), ageGroup, 'math'),
+    ...filterLessonsForClass(rawMathLessons.filter((l) => l.categoryId === 'ghadiya'), ageGroup, 'ghadiya'),
+  ];
   const mathDone = mathLessons.filter((l) => completedSet.has(l.id)).length;
 
   const rawEnglishLessons = LESSONS.filter((l) => l.categoryId === 'en-alphabet');
@@ -155,7 +177,7 @@ export default function ProgressScreen() {
   // Rhyme ids come from the bundled catalogue (same `rhyme-${id}` key rhymes.tsx saves), so a
   // renamed or replaced rhyme can never leave a progress slot that is impossible to complete.
   const allStoryRhymeIds = [
-    'story-clever-crow',
+    'story-crow',
     'story-lion-mouse',
     'story-tortoise-hare',
     ...RHYMES_DATA.map((r) => `rhyme-${r.id.replace(/^rhyme-/, '')}`),
@@ -170,7 +192,12 @@ export default function ProgressScreen() {
 
   const storyDone = targetStoryRhymeIds.filter((id) => {
     const clean = id.replace(/^rhyme-/, '');
-    return completedSet.has(id) || completedSet.has(clean) || completedSet.has(`rhyme_${clean}`);
+    return (
+      completedSet.has(id) ||
+      completedSet.has(clean) ||
+      completedSet.has(`rhyme_${clean}`) ||
+      (id === 'story-crow' && completedSet.has('story-clever-crow'))
+    );
   }).length;
   const storyTotal = targetStoryRhymeIds.length;
 
@@ -272,7 +299,7 @@ export default function ProgressScreen() {
       done: artDone,
       total: Math.max(artLessons.length, 1),
       color: '#10B981',
-      route: '/coloring',
+      route: '/lessons?categoryId=colors-shapes',
     },
   ];
 
@@ -299,20 +326,10 @@ export default function ProgressScreen() {
     }
   };
 
-  // Real Learning Time Calculation based on completed lessons and played games
-  const totalGamesPlayed = Object.values(progress.gameStats || {}).reduce(
-    (acc, curr) => acc + (curr.timesPlayed || 0),
-    0
-  );
-  // Aligned with parents.tsx: 2 mins per completed lesson, 1.5 mins per game round
-  const totalLearningMinutes = Math.max(
-    completedCount > 0 || totalGamesPlayed > 0
-      ? Math.round(completedCount * 2 + totalGamesPlayed * 1.5)
-      : 0,
-    0
-  );
+  // Real active foreground learning time tracked by screenWellnessService (exact minutes per calendar date)
+  const totalLearningMinutes = screenWellnessService.getTotalTrackedMinutes();
 
-  // Dynamic Weekly Activity based on actual streak and active school week
+  // Real Weekly Activity (Mon–Sun of the current calendar week)
   const dayNamesGu = ['સોમ', 'મંગળ', 'બુધ', 'ગુરુ', 'શુક્ર', 'શનિ', 'રવિ'];
   const dayNamesHi = ['सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि', 'रवि'];
   const dayNamesEn = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -329,40 +346,32 @@ export default function ProgressScreen() {
 
   const now = new Date();
   const currentDayOfWeek = (now.getDay() + 6) % 7; // 0=Mon, ..., 5=Sat, 6=Sun
-  const activeStreak = Math.min(Math.max(streak, 1), 7);
-  const activeStartDay = Math.max(0, currentDayOfWeek - activeStreak + 1);
+  const mondayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - currentDayOfWeek);
 
   const todayDayNameGu = ['સોમવાર', 'મંગળવાર', 'બુધવાર', 'ગુરુવાર', 'શુક્રવાર', 'શનિવાર', 'રવિવાર'][currentDayOfWeek];
   const todayDayNameHi = ['सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार', 'रविवार'][currentDayOfWeek];
   const todayDayNameEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][currentDayOfWeek];
 
   const DAILY_GOAL_MINUTES = 15;
-  const todayTrackedMinutes = screenWellnessService.getTodayUsageMinutes();
-  const todaySessionMinutes = totalLearningMinutes > 0
-    ? Math.max(todayTrackedMinutes, Math.min(totalLearningMinutes, 15))
-    : 0;
-
-  // Distribute realistic, healthy kid study sessions (12-16m) across active streak days
-  const remainingBudget = Math.max(0, totalLearningMinutes - todaySessionMinutes);
-  const pastStreakCount = Math.max(0, currentDayOfWeek - activeStartDay);
-  const avgPastDayMins = pastStreakCount > 0
-    ? Math.min(16, Math.max(10, Math.round(remainingBudget / pastStreakCount)))
-    : 0;
+  const todaySessionMinutes = screenWellnessService.getTodayUsageMinutes();
 
   const weeklyDays = dayNamesEn.map((dayEn, idx) => {
     const isToday = idx === currentDayOfWeek;
     const isFuture = idx > currentDayOfWeek;
-    const isActive = !isFuture && idx >= activeStartDay && totalLearningMinutes > 0;
     const theme = DAY_THEMES[idx];
 
-    let dayMins = 0;
-    if (isToday) {
-      dayMins = isActive ? todaySessionMinutes : 0;
-    } else if (isActive) {
-      // Deterministic slight variance for past days: e.g. 15m, 14m, 16m
-      const variance = (idx % 2 === 0 ? 1 : -1) * (idx % 3 === 0 ? 1 : 0);
-      dayMins = Math.max(8, Math.min(remainingBudget, avgPastDayMins + variance));
-    }
+    const dayDate = new Date(
+      mondayDate.getFullYear(),
+      mondayDate.getMonth(),
+      mondayDate.getDate() + idx
+    );
+    const dayKey = formatLocalDateKey(dayDate);
+    const dayMins = isFuture
+      ? 0
+      : isToday
+        ? todaySessionMinutes
+        : screenWellnessService.getUsageMinutesForDate(dayKey);
+    const isActive = !isFuture && dayMins > 0;
 
     const label =
       language === 'gu'
@@ -600,6 +609,7 @@ export default function ProgressScreen() {
                     <View
                       style={[
                         styles.barTrack,
+                        isNarrow && styles.barTrackNarrow,
                         {
                           backgroundColor: d.isFuture ? '#F8FAFC' : d.theme.track,
                           borderColor: d.isFuture ? '#E2E8F0' : d.theme.border,
@@ -1041,6 +1051,10 @@ const styles = StyleSheet.create({
     ...Platform.select({
       web: webStyle({ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)' }),
     }),
+  },
+  barTrackNarrow: {
+    width: 22,
+    borderRadius: 11,
   },
   barTrackFuture: {
     borderStyle: 'dashed',

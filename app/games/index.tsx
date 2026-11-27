@@ -746,7 +746,8 @@ export default function GamesHubScreen() {
                     <View style={[styles.scorePill, { backgroundColor: '#FFFFFF', borderColor: game.borderColor, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
                       <StarGlyph />
                       <Text style={[styles.highScoreText, { color: game.accentColor }]}>
-                        {formatNumberDigits(stats.highScore, language)} pts
+                        {formatNumberDigits(stats.highScore, language)}{' '}
+                        {language === 'gu' ? 'પોઇન્ટ્સ' : language === 'hi' ? 'पॉइंट्स' : 'pts'}
                       </Text>
                     </View>
                   ) : (

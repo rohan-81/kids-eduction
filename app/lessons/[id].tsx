@@ -9,6 +9,7 @@ import {
   Image,
   Platform,
   Animated,
+  useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,6 +31,7 @@ import { renderLesson3DVisual } from '../../src/components/Lesson3DVisuals';
 import { soundEffects } from '../../src/services/soundEffects';
 import { audioService } from '../../src/services/audioService';
 import { apiService, findBundledLesson, mergeLesson } from '../../src/services/apiService';
+import { filterLessonSiblings, getMathOperationKey } from '../../src/utils/lessonNavigation';
 import { ClayButton, ImageFrame } from '../../src/components/clay';
 import { KidModal, Glyph } from '../../src/components/fun';
 import { ConfettiCelebration } from '../../src/components/common/ConfettiCelebration';
@@ -122,7 +124,9 @@ const CoinCounter: React.FC<{ amount: number; active: boolean; language: string 
 
 export default function LessonDetailScreen() {
   const router = useRouter();
-  const { id, dir } = useLocalSearchParams<{ id: string; dir?: string }>();
+  const { id, dir, scope } = useLocalSearchParams<{ id: string; dir?: string; scope?: string }>();
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 360;
   const { speak, completeLesson, addCoins, t, language, ageGroup } = useApp();
   const cardSlideX = useRef(
     new Animated.Value(dir === 'prev' ? -70 : dir === 'next' ? 70 : 0)
@@ -281,11 +285,14 @@ export default function LessonDetailScreen() {
     );
   }
 
-  // Find index in category list for Previous/Next matching ageGroup
-  const currentIndex = categoryLessons.findIndex((l) => l.id === currentLesson.id);
-  const prevLesson = currentIndex > 0 ? categoryLessons[currentIndex - 1] : null;
+  // Find index in scoped sibling list for Previous/Next matching ageGroup & active tab/sub-group
+  const scopedLessons = filterLessonSiblings(categoryLessons, currentLesson, scope);
+  const currentIndex = scopedLessons.findIndex((l) => l.id === currentLesson.id);
+  const prevLesson = currentIndex > 0 ? scopedLessons[currentIndex - 1] : null;
   const nextLesson =
-    currentIndex < categoryLessons.length - 1 ? categoryLessons[currentIndex + 1] : null;
+    currentIndex >= 0 && currentIndex < scopedLessons.length - 1
+      ? scopedLessons[currentIndex + 1]
+      : null;
 
   const handleSpeak = () => {
     if (!currentLesson) return;
@@ -383,11 +390,35 @@ export default function LessonDetailScreen() {
     setShowCelebration(true);
   };
 
+  const navigateToLesson = (targetId: string, direction: 'prev' | 'next') => {
+    soundEffects.stopAnimalSound();
+    router.replace({
+      pathname: '/lessons/[id]',
+      params: {
+        id: targetId,
+        dir: direction,
+        ...(scope ? { scope } : {}),
+      },
+    });
+  };
+
+  const handleNext = () => {
+    if (currentLesson) {
+      // Pressing Next completes the current lesson before moving to the next sibling.
+      void completeLesson(currentLesson.id).catch(() => undefined);
+    }
+    if (nextLesson) {
+      navigateToLesson(nextLesson.id, 'next');
+    } else {
+      void handleFinish();
+    }
+  };
+
   const goToNext = () => {
     audioService.stop();
     soundEffects.stopAnimalSound();
     if (nextLesson) {
-      router.replace({ pathname: '/lessons/[id]', params: { id: nextLesson.id, dir: 'next' } });
+      navigateToLesson(nextLesson.id, 'next');
     } else if (router.canGoBack()) {
       router.back();
     } else {
@@ -532,9 +563,25 @@ export default function LessonDetailScreen() {
     }
     if (currentLesson.categoryId === 'math') {
       const formatted = formatMathExpression(currentLesson.exampleWord || currentLesson.symbol, language);
-      return `${language === 'gu' ? 'સરવાળો' : language === 'hi' ? 'जोड़' : 'Addition'} • ${formatted}`;
+      const opKey = getMathOperationKey(currentLesson.id);
+      const opTitles: Record<string, { gu: string; hi: string; en: string }> = {
+        add: { gu: 'સરવાળો', hi: 'जोड़', en: 'Addition' },
+        sub: { gu: 'બાદબાકી', hi: 'घटाव', en: 'Subtraction' },
+        mul: { gu: 'ગુણાકાર', hi: 'गुणा', en: 'Multiplication' },
+        div: { gu: 'ભાગાકાર', hi: 'भाग', en: 'Division' },
+        frac: { gu: 'અપૂર્ણાંક', hi: 'भिन्न', en: 'Fractions' },
+        meas: { gu: 'માપન', hi: 'मापन', en: 'Measurement' },
+        dec: { gu: 'દશાંશ', hi: 'दशमलव', en: 'Decimals' },
+      };
+      const opInfo = (opKey && opTitles[opKey]) || opTitles.add;
+      const opLabel = language === 'gu' ? opInfo.gu : language === 'hi' ? opInfo.hi : opInfo.en;
+      return `${opLabel} • ${formatted}`;
     }
-    if (currentLesson.categoryId === 'math-missing' || currentLesson.id.startsWith('cs-pattern')) {
+    if (
+      currentLesson.categoryId === 'math-missing' ||
+      currentLesson.categoryId === 'math-word-problems' ||
+      currentLesson.id.startsWith('cs-pattern')
+    ) {
       return primaryWord;
     }
     if (secondaryTranslation) {
@@ -582,15 +629,19 @@ export default function LessonDetailScreen() {
         onBack={handleBack}
       />
 
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+      <ScrollView
+        contentContainerStyle={[styles.container, isNarrow && styles.containerNarrow]}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      >
         {/* Progress indicator */}
         <View style={styles.progressBarBg}>
           <View
             style={[
               styles.progressBarFill,
               {
-                width: `${categoryLessons.length > 0
-                    ? ((currentIndex + 1) / categoryLessons.length) * 100
+                width: `${scopedLessons.length > 0 && currentIndex >= 0
+                    ? ((currentIndex + 1) / scopedLessons.length) * 100
                     : 100
                   }%`,
               },
@@ -602,6 +653,7 @@ export default function LessonDetailScreen() {
         <Animated.View
           style={[
             styles.card,
+            isNarrow && styles.cardNarrow,
             { transform: [{ translateX: cardSlideX }] },
             webStyle({
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.05)',
@@ -636,7 +688,19 @@ export default function LessonDetailScreen() {
             {(() => {
               // For all Alphabet / Varnamala / Phonics lessons: NO image, only BIG SIZE ALPHABET!
               if (isLetterCategory) {
-                return <Text style={styles.hugeSymbol}>{displayedSymbol}</Text>;
+                return (
+                  <Text
+                    style={[
+                      styles.hugeSymbol,
+                      isNarrow && {
+                        fontSize: Math.max(76, Math.round(width * 0.28)),
+                        lineHeight: Math.max(98, Math.round(width * 0.36)),
+                      },
+                    ]}
+                  >
+                    {displayedSymbol}
+                  </Text>
+                );
               }
 
               const visual3D = renderLesson3DVisual(currentLesson, 110, language);
@@ -682,23 +746,52 @@ export default function LessonDetailScreen() {
                   />
                 );
               }
-              return <Text style={styles.hugeSymbol}>{displayedSymbol}</Text>;
+              return (
+                <Text
+                  style={[
+                    styles.hugeSymbol,
+                    isNarrow && {
+                      fontSize: Math.max(76, Math.round(width * 0.28)),
+                      lineHeight: Math.max(98, Math.round(width * 0.36)),
+                    },
+                  ]}
+                >
+                  {displayedSymbol}
+                </Text>
+              );
             })()}
           </TouchableOpacity>
 
           {/* Example Word & Meaning Bubble */}
           {primaryWord ? (
-            <View style={[styles.wordBox, shadows.soft]}>
-              <Text style={styles.exampleWord}>{primaryWord}</Text>
+            <View style={[styles.wordBox, isNarrow && styles.wordBoxNarrow, shadows.soft]}>
+              <Text style={[styles.exampleWord, isNarrow && styles.exampleWordNarrow]}>{primaryWord}</Text>
               {secondaryTranslation ? (
                 <Text style={styles.exampleMeaning}>{secondaryTranslation}</Text>
               ) : null}
+              {currentLesson.categoryId === 'math-word-problems' ? (() => {
+                const storyPrompt =
+                  language === 'gu'
+                    ? currentLesson.exampleMeaningGu
+                    : language === 'hi'
+                      ? currentLesson.exampleMeaningHi
+                      : currentLesson.subtitle;
+                if (!storyPrompt) return null;
+                return (
+                  <View style={styles.sentenceBox}>
+                    <Text style={styles.sentenceLabel}>
+                      {language === 'gu' ? 'કોયડો:' : language === 'hi' ? 'सवाल:' : 'Story Problem:'}
+                    </Text>
+                    <Text style={styles.sentenceText}>{storyPrompt}</Text>
+                  </View>
+                );
+              })() : null}
             </View>
           ) : null}
 
           {/* Class 3-5: In-Depth Educational Fun Fact Card */}
           {adaptation?.funFact ? (
-            <View style={[styles.funFactCard, shadows.soft]}>
+            <View style={[styles.funFactCard, isNarrow && styles.funFactCardNarrow, shadows.soft]}>
               <View style={styles.funFactHeaderRow}>
                 <Text style={styles.funFactTitle}>
                   {language === 'gu'
@@ -740,17 +833,11 @@ export default function LessonDetailScreen() {
             hasNext={Boolean(nextLesson)}
             onPrevious={() => {
               if (prevLesson) {
-                soundEffects.stopAnimalSound();
-                router.replace({ pathname: '/lessons/[id]', params: { id: prevLesson.id, dir: 'prev' } });
+                navigateToLesson(prevLesson.id, 'prev');
               }
             }}
             onComplete={() => handleFinish()}
-            onNext={() => {
-              if (nextLesson) {
-                soundEffects.stopAnimalSound();
-                router.replace({ pathname: '/lessons/[id]', params: { id: nextLesson.id, dir: 'next' } });
-              }
-            }}
+            onNext={handleNext}
           />
         </Animated.View>
 
@@ -996,6 +1083,11 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
+  containerNarrow: {
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingBottom: spacing.xxxl + 16,
+  },
   progressBarBg: {
     width: '100%',
     height: 8,
@@ -1024,6 +1116,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 14,
     elevation: 4,
+  },
+  cardNarrow: {
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    minHeight: 240,
   },
   cardHeaderTag: {
     backgroundColor: '#FEF3C7',
@@ -1100,6 +1198,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     width: '90%',
   },
+  wordBoxNarrow: {
+    width: '100%',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   exampleWord: {
     fontSize: 32,
     fontWeight: '900',
@@ -1108,6 +1211,10 @@ const styles = StyleSheet.create({
     lineHeight: 46,
     paddingVertical: 4,
     includeFontPadding: true,
+  },
+  exampleWordNarrow: {
+    fontSize: 24,
+    lineHeight: 34,
   },
   exampleMeaning: {
     fontSize: 18,
@@ -1162,16 +1269,24 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginBottom: spacing.lg,
   },
+  funFactCardNarrow: {
+    width: '100%',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   funFactHeaderRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 6,
     marginBottom: 6,
   },
   funFactTitle: {
     fontSize: 14,
     fontWeight: '800',
     color: '#B45309',
+    flexShrink: 1,
   },
   funFactBadge: {
     backgroundColor: '#FEF3C7',

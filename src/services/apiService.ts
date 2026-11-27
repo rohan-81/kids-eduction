@@ -346,7 +346,7 @@ export const apiService = {
       }
       fetch(`${safeGetApiBaseUrl()}/lessons/categories/`, {
         method: 'GET',
-        headers: authService.getAuthHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
       })
         .catch(() => {})
@@ -365,7 +365,7 @@ export const apiService = {
       const timeoutId = setTimeout(() => controller.abort(), 3000);
       try {
         const res = await fetch(`${API_BASE_URL}/lessons/by-slug/${encodeURIComponent(candidate)}/`, {
-          headers: authService.getAuthHeaders(),
+          headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,
         });
         if (res.ok) {
@@ -426,7 +426,7 @@ export const apiService = {
           if (category) params.append('category', category);
 
           const response = await fetch(`${API_BASE_URL}/lessons/?${params.toString()}`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
 
@@ -483,7 +483,7 @@ export const apiService = {
         const timeoutId = setTimeout(() => controller.abort(), 3500);
         try {
           const res = await fetch(`${safeGetApiBaseUrl()}/lessons/categories/`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
           if (res.ok) {
@@ -520,7 +520,7 @@ export const apiService = {
         const timeoutId = setTimeout(() => controller.abort(), 3500);
         try {
           const res = await fetch(`${safeGetApiBaseUrl()}/stories/`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
           if (res.ok) {
@@ -568,7 +568,7 @@ export const apiService = {
           if (ageGroup) params.append('age_group', ageGroup);
 
           const res = await fetch(`${API_BASE_URL}/questions/game-questions/?${params.toString()}`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
 
@@ -623,7 +623,7 @@ export const apiService = {
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         try {
           const res = await fetch(`${API_BASE_URL}/rewards/badges/`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
 
@@ -666,7 +666,7 @@ export const apiService = {
         const timeoutId = setTimeout(() => controller.abort(), 3500);
         try {
           const res = await fetch(`${API_BASE_URL}/rhymes/`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
           if (res.ok) {
@@ -709,7 +709,7 @@ export const apiService = {
         const timeoutId = setTimeout(() => controller.abort(), 3500);
         try {
           const res = await fetch(`${API_BASE_URL}/rewards/stickers/`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
           if (res.ok) {
@@ -745,7 +745,7 @@ export const apiService = {
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         try {
           const res = await fetch(`${safeGetApiBaseUrl()}/gamification/levels/`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
           if (res.ok) {
@@ -784,7 +784,7 @@ export const apiService = {
         const timeoutId = setTimeout(() => controller.abort(), 3000);
         try {
           const res = await fetch(`${safeGetApiBaseUrl()}/creative/coloring/`, {
-            headers: authService.getAuthHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             signal: controller.signal,
           });
           if (res.ok) {
@@ -823,19 +823,30 @@ export const apiService = {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3500);
     try {
-      const res = await fetch(`${safeGetApiBaseUrl()}/questions/submit/`, {
+      const url = `${safeGetApiBaseUrl()}/questions/submit/`;
+      const body = JSON.stringify({
+        question_id: questionId,
+        selected_answer: selectedAnswer,
+        child_profile_id: childProfileId,
+      });
+      let res = await fetch(url, {
         signal: controller.signal,
         method: 'POST',
         headers: {
           ...authService.getAuthHeaders(),
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          question_id: questionId,
-          selected_answer: selectedAnswer,
-          child_profile_id: childProfileId,
-        }),
+        body,
       });
+      if (res.status === 401) {
+        await authService.logout();
+        res = await fetch(url, {
+          signal: controller.signal,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+        });
+      }
       if (res.ok) {
         return (await res.json()) as QuestionSubmitResult;
       }
@@ -859,6 +870,10 @@ export const apiService = {
         body: JSON.stringify(progressData),
         signal: controller.signal,
       });
+      if (res.status === 401) {
+        await authService.logout();
+        return false;
+      }
       return res.ok;
     } catch {
       return false;
@@ -879,6 +894,10 @@ export const apiService = {
         body: JSON.stringify(resultData),
         signal: controller.signal,
       });
+      if (res.status === 401) {
+        await authService.logout();
+        return false;
+      }
       return res.ok;
     } catch {
       return false;
@@ -902,6 +921,10 @@ export const apiService = {
         body: JSON.stringify(syncPayload),
         signal: controller.signal,
       });
+      if (res.status === 401) {
+        await authService.logout();
+        return null;
+      }
       if (res.ok) {
         return (await res.json()) as CloudSyncResponse;
       }

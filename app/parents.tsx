@@ -14,7 +14,7 @@ import {
   TopicPlantsBadge,
   TopicOurWorldBadge,
 } from '../src/components/SubjectBadgeIcons';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -26,8 +26,9 @@ import {
   Alert,
   Platform,
   Image,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../src/theme/colors';
 import { spacing, radii, shadows } from '../src/theme/spacing';
@@ -38,6 +39,7 @@ import { soundEffects } from '../src/services/soundEffects';
 import { screenWellnessService } from '../src/services/screenWellnessService';
 import { storageService } from '../src/services/storageService';
 import { normalizeAvatarEmoji, is3DAvatar, AVATAR_3D_BOY } from '../src/utils/avatarHelper';
+import { formatChildName } from '../src/utils/nameTransliterator';
 import { ChildProfile, AgeGroup } from '../src/types';
 import { CATEGORIES } from '../src/data/categories';
 import { LESSONS } from '../src/data/lessons';
@@ -97,6 +99,7 @@ export default function ParentsScreen() {
   const [newNickname, setNewNickname] = useState('');
   const [newAgeGroup, setNewAgeGroup] = useState<AgeGroup>('2-4');
   const [selectedAvatar, setSelectedAvatar] = useState('avatar_3d_boy');
+  const [isProfileBusy, setIsProfileBusy] = useState(false);
 
   // Screen time & Eye care settings state
   const [selectedScreenTime, setSelectedScreenTime] = useState('unlimited');
@@ -106,6 +109,21 @@ export default function ParentsScreen() {
   const [isVerified, setIsVerified] = useState(false);
   // Kid-styled confirm/notify dialogs (Alert.alert is a no-op on web).
   const { dialog, confirm, notify } = useKidDialog();
+  const [, setUsageRefreshTick] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = screenWellnessService.subscribeUsage(() => {
+      setUsageRefreshTick((t) => t + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      screenWellnessService.flushActiveTime();
+      setUsageRefreshTick((t) => t + 1);
+    }, [])
+  );
 
   useEffect(() => {
     loadProfiles();
@@ -127,7 +145,10 @@ export default function ParentsScreen() {
       if (currentChildName) {
         let matched = false;
         list = list.map((p) => {
-          if (p.nickname === 'Little Star' || p.nickname === 'નાનો તારો' || p.nickname === 'छोटा तारा') {
+          if (
+            String(p.id) === String(activeId) &&
+            (p.nickname === 'Little Star' || p.nickname === 'નાનો તારો' || p.nickname === 'छोटा तारा')
+          ) {
             matched = true;
             return { ...p, nickname: currentChildName };
           }
@@ -141,16 +162,11 @@ export default function ParentsScreen() {
         storageService.setPrimaryProfileId(list[0].id);
       }
       setActiveProfileId(activeId);
-      let activeObj = list.find((p) => p.id === activeId);
-      if (activeObj) {
-        if (ageGroup && activeObj.age_group !== ageGroup) {
-          activeObj.age_group = ageGroup;
-          list = list.map((p) => (p.id === activeObj!.id ? { ...p, age_group: ageGroup } : p));
-          backendService.updateProfileAgeGroup(activeObj.id, ageGroup).catch(() => {});
-        }
-        if (switchProfile) {
-          await switchProfile(activeObj.id, activeObj.age_group, activeObj.nickname);
-        }
+      const activeObj = list.find((p) => p.id === activeId);
+      if (activeObj && ageGroup && activeObj.age_group !== ageGroup) {
+        activeObj.age_group = ageGroup;
+        list = list.map((p) => (p.id === activeObj.id ? { ...p, age_group: ageGroup } : p));
+        backendService.updateProfileAgeGroup(activeObj.id, ageGroup).catch(() => {});
       }
       setProfiles(list);
     } catch {
@@ -159,13 +175,19 @@ export default function ParentsScreen() {
   };
 
   const handleSelectProfile = async (profile: ChildProfile) => {
+    if (isProfileBusy) return;
     soundEffects.playBubblePop();
-    setActiveProfileId(profile.id);
-    await backendService.setActiveProfileId(profile.id);
-    if (switchProfile) {
-      await switchProfile(profile.id, profile.age_group, profile.nickname);
-    } else {
-      await setAgeGroup(profile.age_group);
+    setIsProfileBusy(true);
+    try {
+      setActiveProfileId(profile.id);
+      await backendService.setActiveProfileId(profile.id);
+      if (switchProfile) {
+        await switchProfile(profile.id, profile.age_group, profile.nickname);
+      } else {
+        await setAgeGroup(profile.age_group);
+      }
+    } finally {
+      setIsProfileBusy(false);
     }
   };
 
@@ -187,8 +209,9 @@ export default function ParentsScreen() {
   };
 
   const handleCreateProfile = async () => {
-    if (!newNickname.trim()) return;
+    if (!newNickname.trim() || isProfileBusy) return;
     soundEffects.playBubblePop();
+    setIsProfileBusy(true);
     try {
       const created = await backendService.createProfile(
         newNickname.trim(),
@@ -207,6 +230,8 @@ export default function ParentsScreen() {
       soundEffects.playTadaaa();
     } catch {
       // Ignore
+    } finally {
+      setIsProfileBusy(false);
     }
   };
 
@@ -256,6 +281,8 @@ export default function ParentsScreen() {
   };
 
   const executeDeleteProfile = async (profileId: number) => {
+    if (isProfileBusy) return;
+    setIsProfileBusy(true);
     try {
       soundEffects.playBubblePop();
       await backendService.deleteProfile(profileId);
@@ -273,20 +300,23 @@ export default function ParentsScreen() {
       }
     } catch (e) {
       console.warn('Failed to delete profile:', e);
+    } finally {
+      setIsProfileBusy(false);
     }
   };
 
   // Active Profile details
   const rawActive = profiles.find((p) => p.id === activeProfileId) || profiles[0];
+  const rawNickname =
+    rawActive?.nickname &&
+    rawActive.nickname !== 'Little Star' &&
+    rawActive.nickname !== 'નાનો તારો' &&
+    rawActive.nickname !== 'छोटा तारा'
+      ? rawActive.nickname
+      : progress.childName?.trim() || rawActive?.nickname || 'Little Star';
   const activeProfile = {
     id: rawActive?.id || 1,
-    nickname:
-      (rawActive?.nickname &&
-      rawActive.nickname !== 'Little Star' &&
-      rawActive.nickname !== 'નાનો તારો' &&
-      rawActive.nickname !== 'छोटा तारा')
-        ? rawActive.nickname
-        : (progress.childName?.trim() || rawActive?.nickname || (language === 'gu' ? 'નાનો તારો' : language === 'hi' ? 'छोटा तारा' : 'Little Star')),
+    nickname: formatChildName(rawNickname, language) || (language === 'gu' ? 'નાનો તારો' : language === 'hi' ? 'छोटा तारा' : 'Little Star'),
     age_group: ageGroup || rawActive?.age_group || '2-4',
     avatar: rawActive?.avatar || 'avatar_3d_boy',
   };
@@ -373,14 +403,8 @@ export default function ParentsScreen() {
     ['colors-shapes', 'animals', 'fruits', 'objects'].includes(c.category.id)
   );
 
-  // Calculate estimated learning time (each lesson ~2 mins, each game round ~1.5 min)
-  const totalGamesPlayed = Object.values(progress.gameStats || {}).reduce(
-    (acc, curr) => acc + (curr.timesPlayed || 0),
-    0
-  );
-  const estimatedMins = Math.round(
-    progress.completedLessons.length * 2 + totalGamesPlayed * 1.5
-  );
+  // Real active foreground learning time tracked across active sessions
+  const activeLearningMins = screenWellnessService.getTotalTrackedMinutes();
 
 
 
@@ -566,16 +590,16 @@ export default function ParentsScreen() {
     if (language === 'gu') {
       if (ag === '2-4') return '૨ થી ૪ વર્ષ (બાલવાટિકા/નર્સરી)';
       if (ag === '4-6') return '૪ થી ૬ વર્ષ (ધોરણ ૧-૨ પાયો)';
-      return '૬ થી ૮ વર્ષ (ધોરણ ૩-૪ માસ્ટરી)';
+      return '૬ થી ૮ વર્ષ (ધોરણ ૩-૫ માસ્ટરી)';
     }
     if (language === 'hi') {
       if (ag === '2-4') return '२ से ४ वर्ष (नर्सरी/केजी)';
       if (ag === '4-6') return '४ से ६ वर्ष (कक्षा १-२ नींव)';
-      return '६ से ८ वर्ष (कक्षा ३-४ मास्टरी)';
+      return '६ से ८ वर्ष (कक्षा ३-५ मास्टरी)';
     }
     if (ag === '2-4') return '2 to 4 Years (Nursery / KG)';
     if (ag === '4-6') return '4 to 6 Years (Class 1-2 Foundation)';
-    return '6 to 8 Years (Class 3-4 Mastery)';
+    return '6 to 8 Years (Class 3-5 Mastery)';
   };
 
   return (
@@ -1015,10 +1039,10 @@ export default function ParentsScreen() {
                         style={[styles.profileName, isActive && styles.activeProfileText]}
                         numberOfLines={1}
                       >
-                        {p.nickname}
+                        {formatChildName(p.nickname, language) || p.nickname}
                       </Text>
                       <Text style={styles.profileAgeGroup}>
-                        {p.age_group} {language === 'gu' ? 'વર્ષ' : language === 'hi' ? 'वर्ष' : 'Yrs'}
+                        {formatNumberDigits(p.age_group, language)} {language === 'gu' ? 'વર્ષ' : language === 'hi' ? 'वर्ष' : 'Yrs'}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -1058,7 +1082,7 @@ export default function ParentsScreen() {
                 <View style={styles.statIconCircle}>
                   <Art.ClockArt size={36} />
                 </View>
-                <Text style={styles.statNumber}>{formatNumberDigits(estimatedMins, language)} {language === 'gu' ? 'મિનિટ' : language === 'hi' ? 'मिनट' : 'm'}</Text>
+                <Text style={styles.statNumber}>{formatNumberDigits(activeLearningMins, language)} {language === 'gu' ? 'મિનિટ' : language === 'hi' ? 'मिनट' : 'm'}</Text>
                 <Text style={styles.statLabel}>
                   {language === 'gu' ? 'અભ્યાસ સમય' : language === 'hi' ? 'अध्ययन समय' : 'Learning Time'}
                 </Text>
@@ -1601,8 +1625,16 @@ export default function ParentsScreen() {
             size="lg"
             style={{ width: '100%', marginTop: 6 }}
             onPress={handleCreateProfile}
-            disabled={!newNickname.trim()}
-            title={`${language === 'gu' ? 'પ્રોફાઇલ સાચવો' : language === 'hi' ? 'प्रोफ़ाइल सहेजें' : 'Save Profile'}`}
+            disabled={!newNickname.trim() || isProfileBusy}
+            title={
+              isProfileBusy
+                ? language === 'gu'
+                  ? 'સાચવી રહ્યા છીએ...'
+                  : language === 'hi'
+                  ? 'सहेज रहे हैं...'
+                  : 'Saving...'
+                : `${language === 'gu' ? 'પ્રોફાઇલ સાચવો' : language === 'hi' ? 'प्रोफ़ाइल सहेजें' : 'Save Profile'}`
+            }
           />
         </View>
       </KidModal>
@@ -1734,6 +1766,23 @@ export default function ParentsScreen() {
 
       {/* Kid-styled confirm / notify dialogs */}
       {dialog}
+
+      {isProfileBusy && (
+        <Modal visible transparent animationType="fade">
+          <View style={styles.profileBusyOverlay}>
+            <View style={styles.profileBusyCard}>
+              <ActivityIndicator size="large" color="#3B82F6" />
+              <Text style={styles.profileBusyText}>
+                {language === 'gu'
+                  ? 'પ્રોફાઇલ અપડેટ થઈ રહી છે...'
+                  : language === 'hi'
+                  ? 'प्रोफ़ाइल अपडेट हो रही है...'
+                  : 'Updating profile...'}
+              </Text>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
@@ -3525,5 +3574,33 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontSize: 13,
     fontWeight: '700',
+  },
+  profileBusyOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  profileBusyCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingVertical: 22,
+    paddingHorizontal: 28,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 2,
+    borderColor: '#DBEAFE',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  profileBusyText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#1E3A8A',
+    textAlign: 'center',
   },
 });

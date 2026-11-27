@@ -32,6 +32,7 @@ import { renderMathCardVisual } from '../../src/components/MathCardVisuals';
 import { renderLesson3DVisual } from '../../src/components/Lesson3DVisuals';
 import { VisualArt } from '../../src/components/art3d/ContentArt';
 import { GhadiyaTableView } from '../../src/components/GhadiyaTableView';
+import { SkeletonGrid } from '../../src/components/common/SkeletonCard';
 import { soundEffects } from '../../src/services/soundEffects';
 import { audioService } from '../../src/services/audioService';
 import { AppIcon } from '../../src/components/AppIcon';
@@ -96,6 +97,7 @@ import {
   ENGLISH_NUMBERS,
 } from '../../src/utils/languageData';
 import { filterLessonsForClass, getAgeClassBadgeInfo } from '../../src/utils/ageDetailHelper';
+import { isBirdLesson } from '../../src/utils/lessonNavigation';
 import * as Art from '../../src/components/art3d/Art3D';
 import { webStyle } from '../../src/utils/webStyle';
 import type { ImageAsset } from '../../src/utils/remoteAssets';
@@ -465,6 +467,7 @@ export default function CategoryLessonsScreen() {
   const classBadge = getAgeClassBadgeInfo(ageGroup, language, activeSubject);
 
   const [lessons, setLessons] = useState<LessonItem[]>([]);
+  const [isLoadingLessons, setIsLoadingLessons] = useState<boolean>(true);
   const [filterMode, setFilterMode] = useState<'all' | 'remaining' | 'done'>('all');
   const [mathOperation, setMathOperation] = useState<MathOperation>(() =>
     resolveInitialOp(subcategoryId, op)
@@ -564,13 +567,20 @@ export default function CategoryLessonsScreen() {
   useEffect(() => {
     let isMounted = true;
     const initialLocal = LESSONS.filter((l) => l.categoryId === currentCategory.id);
-    setLessons(applyCurriculumFilters(initialLocal));
+    const filteredLocal = applyCurriculumFilters(initialLocal);
+    setLessons(filteredLocal);
+    setIsLoadingLessons(filteredLocal.length === 0);
 
-    apiService.fetchLessons(language, ageGroup, currentCategory.id).then((fetched) => {
-      if (isMounted && fetched && fetched.length > 0) {
-        setLessons(applyCurriculumFilters(fetched));
-      }
-    });
+    apiService
+      .fetchLessons(language, ageGroup, currentCategory.id)
+      .then((fetched) => {
+        if (isMounted && fetched && fetched.length > 0) {
+          setLessons(applyCurriculumFilters(fetched));
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingLessons(false);
+      });
 
     return () => {
       isMounted = false;
@@ -615,31 +625,10 @@ export default function CategoryLessonsScreen() {
     }
 
     if (currentCategory.id === 'animals') {
-      const isBird =
-        l.subType === 'bird' ||
-        [
-          'an-peacock',
-          'an-parrot',
-          'an-sparrow',
-          'an-duck',
-          'an-pigeon',
-          'an-rooster',
-          'an-crow',
-          'an-koel',
-          'an-owl',
-          'an-eagle',
-          'an-swan',
-          'an-flamingo',
-          'an-crane',
-          'an-woodpecker',
-          'an-kingfisher',
-          'an-penguin',
-          'an-ostrich',
-          'an-vulture',
-        ].includes(l.id);
+      const bird = isBirdLesson(l);
 
-      if (activeTopicTab === 'animals' && isBird) return false;
-      if (activeTopicTab === 'birds' && !isBird) return false;
+      if (activeTopicTab === 'animals' && bird) return false;
+      if (activeTopicTab === 'birds' && !bird) return false;
     }
 
     return true;
@@ -1189,31 +1178,8 @@ export default function CategoryLessonsScreen() {
       topicTabs = [];
     }
   } else if (currentCategory.id === 'animals') {
-    const isBird = (l: LessonItem) =>
-      l.subType === 'bird' ||
-      [
-        'an-peacock',
-        'an-parrot',
-        'an-sparrow',
-        'an-duck',
-        'an-pigeon',
-        'an-rooster',
-        'an-crow',
-        'an-koel',
-        'an-owl',
-        'an-eagle',
-        'an-swan',
-        'an-flamingo',
-        'an-crane',
-        'an-woodpecker',
-        'an-kingfisher',
-        'an-penguin',
-        'an-ostrich',
-        'an-vulture',
-      ].includes(l.id);
-
-    const birdsCount = lessons.filter(isBird).length;
-    const animalsCount = lessons.filter((l) => !isBird(l)).length;
+    const birdsCount = lessons.filter(isBirdLesson).length;
+    const animalsCount = lessons.filter((l) => !isBirdLesson(l)).length;
 
     topicTabs = [
       {
@@ -1708,8 +1674,10 @@ export default function CategoryLessonsScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Empty State when no lessons match filter */}
-            {displayedLessons.length === 0 ? (
+            {/* Skeleton or Empty State when no lessons match filter */}
+            {isLoadingLessons && displayedLessons.length === 0 ? (
+              <SkeletonGrid count={4} columns={2} cardHeight={145} />
+            ) : displayedLessons.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <View style={{ marginBottom: 8 }}><Art.StarArt size={57} /></View>
                 <Text style={styles.emptyTitle}>
@@ -1780,7 +1748,25 @@ export default function CategoryLessonsScreen() {
                         soundEffects.stopAnimalSound();
                         soundEffects.stopBgm();
                         soundEffects.playBubblePop();
-                        router.push(`/lessons/${item.id}`);
+                        const activeScope =
+                          currentCategory.id === 'math'
+                            ? mathOperation
+                            : [
+                                'gu-varnamala',
+                                'hi-varnamala',
+                                'en-alphabet',
+                                'numbers',
+                                'animals',
+                              ].includes(currentCategory.id)
+                              ? activeTopicTab
+                              : undefined;
+                        router.push({
+                          pathname: '/lessons/[id]',
+                          params: {
+                            id: item.id,
+                            ...(activeScope ? { scope: activeScope } : {}),
+                          },
+                        });
                       }}
                       activeOpacity={0.85}
                       accessibilityRole={Platform.OS === 'web' ? undefined : 'button'}
@@ -1875,18 +1861,18 @@ export default function CategoryLessonsScreen() {
                                 </View>
                               ) : null}
                               {gkTitleInfo.localSub ? (
-                                <Text style={styles.cardSecondaryTitle} numberOfLines={1}>
+                                <Text style={styles.cardSecondaryTitle} numberOfLines={2} ellipsizeMode="tail">
                                   {gkTitleInfo.localSub}
                                 </Text>
                               ) : null}
                             </>
                           ) : (
                             <>
-                              <Text style={styles.cardPrimaryTitle} numberOfLines={2}>
+                              <Text style={styles.cardPrimaryTitle} numberOfLines={2} ellipsizeMode="tail">
                                 {primaryLabel}
                               </Text>
                               {secondaryBracket ? (
-                                <Text style={styles.cardSecondaryTitle} numberOfLines={1}>
+                                <Text style={styles.cardSecondaryTitle} numberOfLines={2} ellipsizeMode="tail">
                                   {secondaryBracket}
                                 </Text>
                               ) : null}

@@ -592,6 +592,7 @@ export default function RegisterScreen() {
             <View style={styles.switchAuthRow}>
               <Text style={styles.switchAuthPrompt}>{t('auth.alreadyHaveAccount')}</Text>
               <TouchableOpacity
+                disabled={isLoading}
                 onPress={() => {
                   soundEffects.playBubblePop();
                   router.push('/login');
@@ -605,6 +606,7 @@ export default function RegisterScreen() {
 
           {/* Continue as Guest Button */}
           <TouchableOpacity
+            disabled={isLoading}
             style={styles.guestButton}
             onPress={handleContinueAsGuest}
             activeOpacity={0.75}

@@ -25,8 +25,11 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         difficulty = self.request.query_params.get('difficulty')
 
         if lesson_id:
-            # A non-numeric id used to raise ValueError (HTTP 500); unknown ids simply match nothing.
-            queryset = queryset.filter(lesson_id=lesson_id) if str(lesson_id).isdigit() else queryset.none()
+            # Bound integer IDs to 63-bit signed range so huge query params never trigger OverflowError/DataError (500).
+            if str(lesson_id).isdigit() and 0 < int(lesson_id) <= 2**62:
+                queryset = queryset.filter(lesson_id=int(lesson_id))
+            else:
+                queryset = queryset.none()
         if question_type:
             queryset = queryset.filter(question_type=question_type)
         if category:
@@ -37,7 +40,11 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(age_group__in=[age_group, 'all'])
         if difficulty:
             try:
-                queryset = queryset.filter(difficulty=int(difficulty))
+                diff_val = int(difficulty)
+                if 0 <= diff_val <= 32767:
+                    queryset = queryset.filter(difficulty=diff_val)
+                else:
+                    queryset = queryset.none()
             except (ValueError, TypeError):
                 pass
 
@@ -63,8 +70,12 @@ class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
         selected = str(serializer.validated_data['selected_answer']).strip()
         child_profile_id = serializer.validated_data.get('child_profile_id')
 
-        # Find question by ID or stable_id
-        question = Question.objects.filter(id=qid).first() if str(qid).isdigit() else None
+        # Find question by bounded ID or stable_id
+        question = (
+            Question.objects.filter(id=int(qid)).first()
+            if str(qid).isdigit() and 0 < int(qid) <= 2**62
+            else None
+        )
         if not question:
             question = Question.objects.filter(stable_id=qid).first()
 

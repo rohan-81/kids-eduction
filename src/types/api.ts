@@ -232,6 +232,7 @@ export interface CloudSyncPayload {
     unlocked_items: string[];
   };
   screen_time?: { minutes_used: number };
+  game_stats?: Record<string, { highScore: number; timesPlayed: number }>;
 }
 
 export interface CloudSyncLessonState {

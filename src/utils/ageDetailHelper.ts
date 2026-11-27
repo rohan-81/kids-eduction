@@ -985,7 +985,7 @@ const EDUCATIONAL_FACTS_MAP: Record<string, EducationalFactEntry> = {
   'everest': {
     aliases: ['geo-everest', 'માઉન્ટ એવરેસ્ટ', 'એવરેસ્ટ', 'माउंट एवरेस्ट', 'एवरेस्ट'],
     gu: 'માઉન્ટ એવરેસ્ટ ૮,૮૪૮.૮૬ મીટરની ઊંચાઈ સાથે વિશ્વનું સૌથી ઊંચું શિખર છે, જે હિમાલય પર્વતમાળામાં આવેલું છે.',
-    hi: 'माउंट एवरेस्ट ८,८४८.૮६ मीटर ऊंचाई के साथ दुनिया की सबसे ऊंची पर्वत चोटी है, जो हिमालय में स्थित है।',
+    hi: 'माउंट एवरेस्ट ८,८४८.८६ मीटर ऊंचाई के साथ दुनिया की सबसे ऊंची पर्वत चोटी है, जो हिमालय में स्थित है।',
     en: 'Mount Everest reaches 8,848.86 meters above sea level, standing proud as the highest point on our planet.',
   },
 

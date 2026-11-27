@@ -498,7 +498,8 @@ export default function TapToFillColoringScreen() {
     if (isFinishingRef.current) return;
     isFinishingRef.current = true;
     soundEffects.playTadaaa();
-    await updateProgress({ stars: (progress.stars || 0) + 10 });
+    // recordScore('coloring', 10) also awards +1 star; add +9 here for +10 stars total matching modal.
+    await updateProgress({ stars: (progress.stars || 0) + 9 });
     await recordScore('coloring', 10);
     setShowCelebration(true);
     const tplName =

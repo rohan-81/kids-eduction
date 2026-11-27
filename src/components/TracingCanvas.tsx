@@ -8,6 +8,7 @@ import {
   GestureResponderEvent,
   Platform,
   Dimensions,
+  useWindowDimensions,
   PanResponderGestureState,
   type PointerEvent
 } from 'react-native';
@@ -102,12 +103,15 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [livePct, setLivePct] = useState<number>(0);
   const [liveStars, setLiveStars] = useState<number>(0);
+  const { width: viewportWidth } = useWindowDimensions();
+  const isNarrow = viewportWidth < 360;
+  const targetCanvasHeight = isNarrow ? 260 : 350;
   const [canvasDims, setCanvasDims] = useState<{ width: number; height: number }>(() => {
     const winWidth = Dimensions.get('window').width;
-    const initialW = Math.max(280, Math.min(600, Math.round(winWidth - 32)));
+    const initialW = Math.max(180, Math.min(600, Math.round(winWidth - 48)));
     return {
       width: initialW,
-      height: 350,
+      height: targetCanvasHeight,
     };
   });
   // PanResponder handlers are created once (first render); read the live size through a ref so
@@ -601,7 +605,12 @@ export const TracingCanvas: React.FC<TracingCanvasProps> = ({
             });
           }
         }}
-        style={[styles.canvas, isComplete && styles.canvasComplete, shadows.card]}
+        style={[
+          styles.canvas,
+          isNarrow && styles.canvasNarrow,
+          isComplete && styles.canvasComplete,
+          shadows.card,
+        ]}
       >
         {/* Notebook guide lines */}
         <View pointerEvents="none" style={styles.guideLinesLayer}>
@@ -872,6 +881,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
+  },
+  canvasNarrow: {
+    height: 260,
+    minHeight: 240,
   },
   canvasComplete: {
     borderColor: '#10B981',

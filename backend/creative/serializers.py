@@ -1,7 +1,11 @@
 from rest_framework import serializers
+from lessons.serializers import AbsoluteMediaUrlMixin
 from .models import ColoringTemplate, Worksheet
 
-class ColoringTemplateSerializer(serializers.ModelSerializer):
+
+class ColoringTemplateSerializer(AbsoluteMediaUrlMixin, serializers.ModelSerializer):
+    absolute_media_fields = ('thumbnail',)
+
     class Meta:
         model = ColoringTemplate
         fields = [
@@ -19,7 +23,9 @@ class ColoringTemplateSerializer(serializers.ModelSerializer):
         ]
 
 
-class WorksheetSerializer(serializers.ModelSerializer):
+class WorksheetSerializer(AbsoluteMediaUrlMixin, serializers.ModelSerializer):
+    absolute_media_fields = ('image_url', 'pdf_url')
+
     class Meta:
         model = Worksheet
         fields = [

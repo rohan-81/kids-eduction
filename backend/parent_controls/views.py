@@ -1,4 +1,4 @@
-from datetime import date
+from django.utils import timezone
 from rest_framework import viewsets, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -44,15 +44,17 @@ class ScreenTimeLogView(APIView):
             return _not_found()
 
         minutes = safe_int(request.data.get('minutes'), default=1, lo=0, hi=24 * 60)
-        log, created = ScreenTimeLog.objects.get_or_create(
-            child_profile=child,
-            date=date.today(),
-            defaults={'minutes_used': minutes, 'session_count': 1}
-        )
-        if not created:
-            log.minutes_used += minutes
-            log.session_count += 1
-            log.save()
+        today = timezone.localdate()
+        with transaction.atomic():
+            log, created = ScreenTimeLog.objects.select_for_update().get_or_create(
+                child_profile=child,
+                date=today,
+                defaults={'minutes_used': minutes, 'session_count': 1}
+            )
+            if not created:
+                log.minutes_used += minutes
+                log.session_count += 1
+                log.save()
 
         return Response(ScreenTimeLogSerializer(log).data)
 

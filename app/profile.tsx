@@ -24,7 +24,7 @@ import { Header } from '../src/components/Header';
 import { BottomNav } from '../src/components/BottomNav';
 import { soundEffects } from '../src/services/soundEffects';
 import { AppGlobalBackground } from '../src/components/common/AppGlobalBackground';
-import { AVATAR_3D_BOY } from '../src/utils/imageHelper';
+import { getAvatarImageSource, normalizeAvatarEmoji } from '../src/utils/avatarHelper';
 import { AppIcon } from '../src/components/AppIcon';
 import { formatNumberDigits } from '../src/utils/languageData';
 import { formatChildName } from '../src/utils/nameTransliterator';
@@ -117,7 +117,18 @@ export default function ProfileScreen() {
         {/* Child Profile Card */}
         <View style={[styles.profileCard, shadows.card]}>
           <View style={styles.avatarWrap}>
-            <Image source={AVATAR_3D_BOY} style={styles.avatarImg} resizeMode="cover" />
+            {(() => {
+              const avatarChar = progress.currentAvatar?.character || 'avatar_3d_boy';
+              const avatarSource = getAvatarImageSource(avatarChar);
+              if (avatarSource) {
+                return <Image source={avatarSource} style={styles.avatarImg} resizeMode="cover" />;
+              }
+              return (
+                <View style={[styles.avatarImg, { alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF2FF' }]}>
+                  <Text style={{ fontSize: 44 }}>{normalizeAvatarEmoji(avatarChar)}</Text>
+                </View>
+              );
+            })()}
             <TouchableOpacity
               style={styles.avatarEditBadge}
               onPress={() => {
@@ -338,7 +349,7 @@ export default function ProfileScreen() {
               <Text style={styles.createAccountBtnText}>
                 {language === 'gu' ? 'નવું ખાતું બનાવો' : language === 'hi' ? 'नया खाता बनाएं' : 'Create New Account'}
               </Text>
-              <Text style={[styles.btnChevron, { color: '#7E22CE' }]}>➔</Text>
+              <Glyph name="next" size={14} color={'#7E22CE'} strokeWidth={3} />
             </TouchableOpacity>
 
             {/* 3. Log Out & Open Login Page (or Sign In if guest) */}
@@ -711,6 +722,7 @@ const styles = StyleSheet.create({
   parentsCornerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
@@ -735,6 +747,7 @@ const styles = StyleSheet.create({
   createAccountBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     backgroundColor: '#F3E8FF',
     borderWidth: 1.5,
     borderColor: '#C084FC',

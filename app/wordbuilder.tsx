@@ -144,14 +144,25 @@ export default function WordBuilderScreen() {
   );
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isWrong, setIsWrong] = useState(false);
   const [awardedPuzzles, setAwardedPuzzles] = useState<Record<string, boolean>>({});
   const resultTimerRef = useRef<TimerHandle | null>(null);
+  const retryTimerRef = useRef<TimerHandle | null>(null);
+
+  const clearPendingTimers = () => {
+    if (resultTimerRef.current) {
+      clearTimeout(resultTimerRef.current);
+      resultTimerRef.current = null;
+    }
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     return () => {
-      if (resultTimerRef.current) {
-        clearTimeout(resultTimerRef.current);
-      }
+      clearPendingTimers();
       audioService.stop();
       soundEffects.stopAnimalSound();
     };
@@ -161,9 +172,7 @@ export default function WordBuilderScreen() {
   useFocusEffect(
     useCallback(() => {
       return () => {
-        if (resultTimerRef.current) {
-          clearTimeout(resultTimerRef.current);
-        }
+        clearPendingTimers();
         audioService.stop();
         soundEffects.stopAnimalSound();
       };
@@ -172,36 +181,34 @@ export default function WordBuilderScreen() {
 
   // Sync when language changes
   useEffect(() => {
+    clearPendingTimers();
     setCurrentIndex(0);
     const p = puzzles[0];
     if (p) {
       setAvailableLetters([...p.letters].sort(() => Math.random() - 0.5));
       setSelectedLetters([]);
       setIsSuccess(false);
+      setIsWrong(false);
       speak(p.spokenWord, activeLang);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
 
   const initPuzzle = (index: number) => {
-    if (resultTimerRef.current) {
-      clearTimeout(resultTimerRef.current);
-      resultTimerRef.current = null;
-    }
+    clearPendingTimers();
     const p = puzzles[index];
     if (!p) return;
     setCurrentIndex(index);
     setAvailableLetters([...p.letters].sort(() => Math.random() - 0.5));
     setSelectedLetters([]);
     setIsSuccess(false);
+    setIsWrong(false);
     speak(p.spokenWord, activeLang);
   };
 
   const handleSelectLetter = (letter: string, indexInAvailable: number) => {
-    if (resultTimerRef.current) {
-      clearTimeout(resultTimerRef.current);
-      resultTimerRef.current = null;
-    }
+    clearPendingTimers();
+    setIsWrong(false);
 
     soundEffects.playBubblePop();
     speak(letter, activeLang);
@@ -219,24 +226,29 @@ export default function WordBuilderScreen() {
         if (builtWord === currentPuzzle.word) {
           soundEffects.playTadaaa();
           setIsSuccess(true);
+          setIsWrong(false);
           speak(tUI.successMsg(currentPuzzle.word), activeLang);
           if (!awardedPuzzles[currentPuzzle.id]) {
             addCoins(10);
             setAwardedPuzzles((prev) => ({ ...prev, [currentPuzzle.id]: true }));
           }
         } else {
+          setIsWrong(true);
           soundEffects.playBuzzer();
           speak(tUI.errorMsg, activeLang);
+          retryTimerRef.current = setTimeout(() => {
+            setIsWrong(false);
+            setSelectedLetters([]);
+            setAvailableLetters([...currentPuzzle.letters].sort(() => Math.random() - 0.5));
+          }, 1100);
         }
       }, 750);
     }
   };
 
   const handleRemoveLetter = (indexInSelected: number) => {
-    if (resultTimerRef.current) {
-      clearTimeout(resultTimerRef.current);
-      resultTimerRef.current = null;
-    }
+    clearPendingTimers();
+    setIsWrong(false);
     soundEffects.playBubblePop();
     const removed = selectedLetters[indexInSelected];
     setSelectedLetters(selectedLetters.filter((_, idx) => idx !== indexInSelected));
@@ -288,6 +300,7 @@ export default function WordBuilderScreen() {
                   styles.slotBox,
                   letter && styles.slotBoxFilled,
                   isSuccess && styles.slotBoxSuccess,
+                  isWrong && styles.slotBoxWrong,
                   shadows.soft,
                 ]}
                 onPress={() => letter && handleRemoveLetter(idx)}
@@ -399,6 +412,10 @@ const styles = StyleSheet.create({
   slotBoxSuccess: {
     borderColor: '#27AE60',
     backgroundColor: '#D4EFDF',
+  },
+  slotBoxWrong: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEE2E2',
   },
   slotLetter: {
     fontSize: 32,
