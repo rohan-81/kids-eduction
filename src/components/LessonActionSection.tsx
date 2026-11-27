@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, type ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions, type ImageSourcePropType } from 'react-native';
 import { AppLanguage } from '../types';
 import { AppIcon } from './AppIcon';
-import { PastelButton } from './PastelButton';
+import { ClayButton } from './clay';
+import { Glyph } from './fun';
 import { radii, shadows, spacing } from '../theme/spacing';
 import { colors } from '../theme/colors';
 import { Image } from 'react-native';
@@ -141,27 +142,23 @@ export const LessonActionSection: React.FC<LessonActionSectionProps> = ({
     ? 'उंगली से ट्रेस करें'
     : 'Finger Trace';
 
-  // Localized nav button labels
-  const prevLabel =
-    language === 'gu'
-      ? '← પાછળ'
-      : language === 'hi'
-      ? '← पिछला'
-      : '← Prev';
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 360;
 
-  const completeLabel =
+  // Localized nav button accessibility labels (rendered as arrow-only icons)
+  const prevA11y =
     language === 'gu'
-      ? 'પૂરું થયું'
+      ? 'પાછળ'
       : language === 'hi'
-      ? 'पूरा हुआ'
-      : 'Complete';
+      ? 'पिछला'
+      : 'Previous';
 
-  const nextLabel = hasNext
+  const nextA11y = hasNext
     ? language === 'gu'
-      ? 'આગળ →'
+      ? 'આગળ'
       : language === 'hi'
-      ? 'अगला →'
-      : 'Next →'
+      ? 'अगला'
+      : 'Next'
     : language === 'gu'
     ? 'સમાપ્ત'
     : language === 'hi'
@@ -171,7 +168,7 @@ export const LessonActionSection: React.FC<LessonActionSectionProps> = ({
   return (
     <View style={styles.actionContainer}>
       {/* 1. PRIMARY AUDIO CONTROLS (Single or Dual Symmetrical Circular Buttons) */}
-      <View style={styles.audioRow}>
+      <View style={[styles.audioRow, isNarrow && styles.audioRowNarrow]}>
         {/* Listen / Pronounce Button */}
         <View style={styles.audioItemCol}>
           <TouchableOpacity
@@ -284,41 +281,33 @@ export const LessonActionSection: React.FC<LessonActionSectionProps> = ({
         </View>
       )}
 
-      {/* 5. NAVIGATION ROW (Previous, Complete, Next) */}
-      <View style={styles.navRow}>
+      {/* 5. NAVIGATION ROW (Arrow-only Previous & Next; Next triggers completion) */}
+      <View style={[styles.navRow, isNarrow && styles.navRowNarrow]}>
         {hasPrevious && onPrevious ? (
-          <PastelButton
-            title={prevLabel}
+          <ClayButton
+            tone="white"
+            size="md"
+            sound={false}
             onPress={onPrevious}
-            variant="secondary"
-            style={styles.navBtnSide}
-          />
+            accessibilityLabel={prevA11y}
+            style={[styles.navArrowBtn, isNarrow && styles.navArrowBtnNarrow]}
+          >
+            <Glyph name="back" size={isNarrow ? 22 : 26} color="#1E293B" strokeWidth={3.4} />
+          </ClayButton>
         ) : (
-          <View style={styles.navBtnPlaceholder} />
+          <View style={[styles.navArrowPlaceholder, isNarrow && styles.navArrowBtnNarrow]} />
         )}
 
-        <PastelButton
-          title={completeLabel}
-          onPress={onComplete}
-          variant="primary"
-          style={styles.navBtnCenter}
-        />
-
-        {hasNext && onNext ? (
-          <PastelButton
-            title={nextLabel}
-            onPress={onNext}
-            variant="mint"
-            style={styles.navBtnSide}
-          />
-        ) : (
-          <PastelButton
-            title={nextLabel}
-            onPress={onComplete}
-            variant="mint"
-            style={styles.navBtnSide}
-          />
-        )}
+        <ClayButton
+          tone="mint"
+          size="md"
+          sound={false}
+          onPress={hasNext && onNext ? onNext : onComplete}
+          accessibilityLabel={nextA11y}
+          style={[styles.navArrowBtn, isNarrow && styles.navArrowBtnNarrow]}
+        >
+          <Glyph name="next" size={isNarrow ? 22 : 26} color="#FFFFFF" strokeWidth={3.4} />
+        </ClayButton>
       </View>
     </View>
   );
@@ -332,16 +321,20 @@ const styles = StyleSheet.create({
   },
   audioRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 32,
     marginVertical: spacing.sm,
     width: '100%',
   },
+  audioRowNarrow: {
+    gap: 16,
+  },
   audioItemCol: {
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 80,
+    minWidth: 72,
   },
   circleBtn: {
     width: 64,
@@ -390,6 +383,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 22,
     gap: 8,
+    maxWidth: '100%',
   },
   phonemeBadge: {
     backgroundColor: '#E9D5FF',
@@ -408,6 +402,7 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: '800',
     color: '#6B21A8',
+    flexShrink: 1,
   },
   speechBubble: {
     marginTop: spacing.sm + 4,
@@ -417,7 +412,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 16,
-    maxWidth: '92%',
+    maxWidth: '95%',
     alignItems: 'center',
   },
   speechBubbleText: {
@@ -434,19 +429,21 @@ const styles = StyleSheet.create({
   },
   traceBtn: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 10,
     borderRadius: radii.full,
     borderWidth: 1.5,
     borderColor: '#0284C7',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 180,
+    width: '100%',
+    maxWidth: 240,
   },
   traceBtnText: {
     fontSize: 14,
     fontWeight: '800',
     color: '#0284C7',
+    textAlign: 'center',
   },
   navRow: {
     flexDirection: 'row',
@@ -454,18 +451,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginTop: spacing.lg,
-    gap: 10,
+    gap: 12,
   },
-  navBtnSide: {
+  navRowNarrow: {
+    gap: 8,
+    marginTop: spacing.md,
+  },
+  navArrowBtn: {
     flex: 1,
-    minHeight: 48,
+    maxWidth: 150,
+    minWidth: 0,
+    minHeight: 50,
   },
-  navBtnCenter: {
-    flex: 1.25,
-    minHeight: 48,
+  navArrowBtnNarrow: {
+    maxWidth: 112,
+    minHeight: 46,
   },
-  navBtnPlaceholder: {
+  navArrowPlaceholder: {
     flex: 1,
+    maxWidth: 150,
+    minWidth: 0,
   },
 });
 

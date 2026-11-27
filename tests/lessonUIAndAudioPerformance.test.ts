@@ -67,13 +67,15 @@ describe('BUG 1: Unified Learning Module Action Buttons Consistency', () => {
     expect(actionCode).toContain("'Finger Trace'");
     expect(actionCode).not.toContain('✏️');
 
-    // Consistent navigation row with Prev, Complete, Next
-    expect(actionCode).toContain("'← પાછળ'");
-    expect(actionCode).toContain("'← पिछला'");
-    expect(actionCode).toContain("'← Prev'");
-    expect(actionCode).toContain("'પૂરું થયું'");
-    expect(actionCode).toContain("'पूरा हुआ'");
-    expect(actionCode).toContain("'Complete'");
+    // Arrow-only Previous/Next navigation; Complete button removed (Next handles completion)
+    expect(actionCode).toContain('<Glyph name="back"');
+    expect(actionCode).toContain('<Glyph name="next"');
+    expect(actionCode).toContain('onPress={hasNext && onNext ? onNext : onComplete}');
+    expect(actionCode).not.toContain("'પૂરું થયું'");
+    expect(actionCode).not.toContain("'पूरा हुआ'");
+    expect(actionCode).not.toContain("'← પાછળ'");
+    expect(actionCode).not.toContain("'← पिछला'");
+    expect(actionCode).not.toContain("'← Prev'");
   });
 
   test('formatChildName filters raw avatar slugs and displays friendly child names', () => {

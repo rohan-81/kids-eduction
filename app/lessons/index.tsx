@@ -96,6 +96,7 @@ import {
   ENGLISH_NUMBERS,
 } from '../../src/utils/languageData';
 import { filterLessonsForClass, getAgeClassBadgeInfo } from '../../src/utils/ageDetailHelper';
+import { isBirdLesson } from '../../src/utils/lessonNavigation';
 import * as Art from '../../src/components/art3d/Art3D';
 import { webStyle } from '../../src/utils/webStyle';
 import type { ImageAsset } from '../../src/utils/remoteAssets';
@@ -615,31 +616,10 @@ export default function CategoryLessonsScreen() {
     }
 
     if (currentCategory.id === 'animals') {
-      const isBird =
-        l.subType === 'bird' ||
-        [
-          'an-peacock',
-          'an-parrot',
-          'an-sparrow',
-          'an-duck',
-          'an-pigeon',
-          'an-rooster',
-          'an-crow',
-          'an-koel',
-          'an-owl',
-          'an-eagle',
-          'an-swan',
-          'an-flamingo',
-          'an-crane',
-          'an-woodpecker',
-          'an-kingfisher',
-          'an-penguin',
-          'an-ostrich',
-          'an-vulture',
-        ].includes(l.id);
+      const bird = isBirdLesson(l);
 
-      if (activeTopicTab === 'animals' && isBird) return false;
-      if (activeTopicTab === 'birds' && !isBird) return false;
+      if (activeTopicTab === 'animals' && bird) return false;
+      if (activeTopicTab === 'birds' && !bird) return false;
     }
 
     return true;
@@ -1189,31 +1169,8 @@ export default function CategoryLessonsScreen() {
       topicTabs = [];
     }
   } else if (currentCategory.id === 'animals') {
-    const isBird = (l: LessonItem) =>
-      l.subType === 'bird' ||
-      [
-        'an-peacock',
-        'an-parrot',
-        'an-sparrow',
-        'an-duck',
-        'an-pigeon',
-        'an-rooster',
-        'an-crow',
-        'an-koel',
-        'an-owl',
-        'an-eagle',
-        'an-swan',
-        'an-flamingo',
-        'an-crane',
-        'an-woodpecker',
-        'an-kingfisher',
-        'an-penguin',
-        'an-ostrich',
-        'an-vulture',
-      ].includes(l.id);
-
-    const birdsCount = lessons.filter(isBird).length;
-    const animalsCount = lessons.filter((l) => !isBird(l)).length;
+    const birdsCount = lessons.filter(isBirdLesson).length;
+    const animalsCount = lessons.filter((l) => !isBirdLesson(l)).length;
 
     topicTabs = [
       {
@@ -1780,7 +1737,25 @@ export default function CategoryLessonsScreen() {
                         soundEffects.stopAnimalSound();
                         soundEffects.stopBgm();
                         soundEffects.playBubblePop();
-                        router.push(`/lessons/${item.id}`);
+                        const activeScope =
+                          currentCategory.id === 'math'
+                            ? mathOperation
+                            : [
+                                'gu-varnamala',
+                                'hi-varnamala',
+                                'en-alphabet',
+                                'numbers',
+                                'animals',
+                              ].includes(currentCategory.id)
+                              ? activeTopicTab
+                              : undefined;
+                        router.push({
+                          pathname: '/lessons/[id]',
+                          params: {
+                            id: item.id,
+                            ...(activeScope ? { scope: activeScope } : {}),
+                          },
+                        });
                       }}
                       activeOpacity={0.85}
                       accessibilityRole={Platform.OS === 'web' ? undefined : 'button'}

@@ -1145,15 +1145,16 @@ export default function StoryModeScreen() {
 
                       {/* Page navigation */}
                       <View style={styles.pageNavRow}>
-                        <ClayButton
-                          tone="white"
-                          size="md"
-                          sound={false}
-                          disabled={currentPage <= 1}
-                          onPress={prevPage}
-                          style={styles.navBtn}
-                          title={tr(activeLang, { gu: '◀ પાછળ', hi: '◀ पिछला', en: '◀ Back' })}
-                        />
+                        {currentPage > 1 ? (
+                          <ClayButton
+                            tone="white"
+                            size="md"
+                            sound={false}
+                            onPress={prevPage}
+                            style={styles.navBtn}
+                            title={tr(activeLang, { gu: '◀ પાછળ', hi: '◀ पिछला', en: '◀ Back' })}
+                          />
+                        ) : null}
                         <ClayButton
                           tone={isLastPage ? 'sun' : readerTone}
                           size="md"
