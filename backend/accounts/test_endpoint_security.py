@@ -242,3 +242,66 @@ class AvatarPurchaseTests(_ParentFixture):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['base_avatar']), 50)
         self.assertEqual(response.json()['unlocked_items'], ['hat'])
+
+
+class BackendBugFixRegressionTests(_ParentFixture):
+    def test_nested_progress_routes_not_shadowed(self):
+        for url in ('/api/progress/lessons/', '/api/progress/games/', '/api/progress/activity/'):
+            res = self.client.get(url)
+            self.assertEqual(res.status_code, 200, f'Expected 200 for {url}, got {res.status_code}')
+
+    def test_animal_audio_path_traversal_rejected(self):
+        res = self.client.get('/api/lessons/animal-audio/../../settings.py/')
+        self.assertIn(res.status_code, (400, 404))
+        res_direct = self.client.get('/api/lessons/animal-audio/..%5C..%5Csettings/')
+        self.assertEqual(res_direct.status_code, 400)
+
+    def test_unbounded_int_params_do_not_500(self):
+        res_q = self.client.get('/api/questions/game-questions/', {'lesson_id': '9' * 40, 'difficulty': '9' * 20})
+        self.assertEqual(res_q.status_code, 200)
+        res_l = self.client.get('/api/lessons/', {'difficulty': '9' * 20})
+        self.assertEqual(res_l.status_code, 200)
+
+    def test_garden_plant_idor_returns_404(self):
+        other_user = User.objects.create_user(username='other_parent', password='x')
+        other_child = ChildProfile.objects.create(parent=other_user, nickname='Other')
+        res = self.client.post(
+            '/api/personalization/garden/',
+            {'child_profile_id': other_child.id, 'slot_index': 0, 'plant_type': 'rose', 'stage': 'seed', 'water_count': 1},
+            format='json',
+        )
+        self.assertEqual(res.status_code, 404)
+
+    def test_login_ignores_session_csrf(self):
+        csrf_user = User.objects.create_user(username='csrf_parent', password='StrongPassword123!')
+        csrf_client = APIClient(enforce_csrf_checks=True)
+        csrf_client.force_login(csrf_user)
+        res = csrf_client.post('/api/auth/login/', {'username': 'csrf_parent', 'password': 'StrongPassword123!'}, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('token', res.json())
+
+    def test_cloud_sync_reset_and_game_stats_and_last_active(self):
+        GardenPlant.objects.create(child_profile=self.child, slot_index=0, plant_type='tulip', stage='seedling', water_count=3)
+        ChildAvatar.objects.create(child_profile=self.child, base_avatar='boy', unlocked_items=['crown'])
+        res_reset = self.client.post(
+            '/api/sync/',
+            {'child_profile_id': self.child.id, 'is_reset': True},
+            format='json',
+        )
+        self.assertEqual(res_reset.status_code, 200)
+        self.assertEqual(GardenPlant.objects.filter(child_profile=self.child).count(), 0)
+        self.assertEqual(ChildAvatar.objects.get(child_profile=self.child).unlocked_items, [])
+
+        res_sync = self.client.post(
+            '/api/sync/',
+            {
+                'child_profile_id': self.child.id,
+                'streak': 4,
+                'last_active_date': '2026-11-26',
+                'game_stats': {'math-quiz': {'highScore': 95, 'timesPlayed': 3}},
+            },
+            format='json',
+        )
+        self.assertEqual(res_sync.status_code, 200)
+        self.assertEqual(GameResult.objects.filter(child_profile=self.child, game_type='math-quiz').count(), 1)
+        self.assertEqual(GameResult.objects.get(child_profile=self.child, game_type='math-quiz').score, 95)

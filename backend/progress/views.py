@@ -1,5 +1,5 @@
-from datetime import date
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.db import transaction, models
 from rest_framework import viewsets, status, permissions
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
@@ -11,7 +11,7 @@ from lessons.models import Lesson
 from .models import LessonProgress, GameResult, DailyActivity
 from .serializers import LessonProgressSerializer, GameResultSerializer, DailyActivitySerializer
 
-from gamification.models import ChildWallet, CoinTransaction, DailyStreak, AdventureLevel, ChildAdventureProgress
+from gamification.models import ChildWallet, CoinTransaction, DailyStreak, AdventureLevel, ChildAdventureProgress, LuckySpinHistory
 from gamification.serializers import ChildWalletSerializer, DailyStreakSerializer
 from personalization.models import ChildAvatar, GardenPlant
 from personalization.serializers import ChildAvatarSerializer, GardenPlantSerializer
@@ -89,16 +89,20 @@ class LessonProgressViewSet(_ParentScopedQuerysetMixin, viewsets.ModelViewSet):
         if not child:
             return _profile_not_found()
 
-        lesson_obj = Lesson.objects.filter(id=int(lesson_slug)).first() if lesson_slug.isdigit() else None
+        lesson_obj = (
+            Lesson.objects.filter(id=int(lesson_slug)).first()
+            if lesson_slug.isdigit() and 0 < int(lesson_slug) <= 2**62
+            else None
+        )
         if not lesson_obj:
             lesson_obj = Lesson.objects.filter(stable_id=lesson_slug).first()
 
         completed = _flag(request.data.get('completed'), True)
-        stars = safe_int(request.data.get('stars'), default=MAX_STARS, lo=0, hi=MAX_STARS)
+        stars = safe_int(request.data.get('stars'), default=MAX_STARS if completed else 0, lo=0, hi=MAX_STARS)
         best_score = safe_int(request.data.get('best_score'), default=1, lo=0, hi=MAX_SCORE)
 
         with transaction.atomic():
-            progress, created = LessonProgress.objects.get_or_create(
+            progress, created = LessonProgress.objects.select_for_update().get_or_create(
                 child_profile=child,
                 lesson_slug=lesson_slug,
                 defaults={
@@ -109,6 +113,7 @@ class LessonProgressViewSet(_ParentScopedQuerysetMixin, viewsets.ModelViewSet):
                     'times_played': 1,
                 }
             )
+            was_completed_before = not created and progress.completed
             if not created:
                 progress.completed = progress.completed or completed
                 progress.stars = max(progress.stars, stars)
@@ -118,10 +123,13 @@ class LessonProgressViewSet(_ParentScopedQuerysetMixin, viewsets.ModelViewSet):
                     progress.lesson = lesson_obj
                 progress.save()
 
-            activity, _ = DailyActivity.objects.get_or_create(child_profile=child, date=date.today())
-            activity.lessons_completed += 1
-            activity.stars_earned += stars
-            activity.save()
+            if completed and not was_completed_before:
+                activity, _ = DailyActivity.objects.select_for_update().get_or_create(
+                    child_profile=child, date=timezone.localdate()
+                )
+                activity.lessons_completed += 1
+                activity.stars_earned += stars
+                activity.save()
 
         return Response(LessonProgressSerializer(progress).data, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
 
@@ -150,7 +158,9 @@ class GameResultViewSet(_ParentScopedQuerysetMixin, viewsets.ModelViewSet):
                 total_questions=total_questions,
                 time_spent_seconds=time_spent,
             )
-            activity, _ = DailyActivity.objects.get_or_create(child_profile=child, date=date.today())
+            activity, _ = DailyActivity.objects.select_for_update().get_or_create(
+                child_profile=child, date=timezone.localdate()
+            )
             activity.games_played += 1
             activity.save()
 
@@ -198,6 +208,9 @@ class CloudSyncView(APIView):
                 GameResult.objects.filter(child_profile=child).delete()
                 DailyActivity.objects.filter(child_profile=child).delete()
                 ChildAdventureProgress.objects.filter(child_profile=child).delete()
+                GardenPlant.objects.filter(child_profile=child).delete()
+                LuckySpinHistory.objects.filter(child_profile=child).delete()
+                CoinTransaction.objects.filter(child_profile=child).delete()
 
             # 1. Lessons: one read + bulk writes instead of 1-2 queries per lesson (500-lesson syncs).
             incoming = {}
@@ -277,31 +290,49 @@ class CloudSyncView(APIView):
 
             # 3. Daily streak
             streak_data = request.data.get('streak')
-            streak, _ = DailyStreak.objects.get_or_create(child_profile=child)
+            DailyStreak.objects.get_or_create(child_profile=child)
+            streak = DailyStreak.objects.select_for_update().get(child_profile=child)
             if isinstance(streak_data, dict):
                 local_curr = safe_int(streak_data.get('current_streak'), default=0, lo=0, hi=MAX_STREAK_DAYS)
                 local_long = safe_int(streak_data.get('longest_streak'), default=local_curr, lo=0, hi=MAX_STREAK_DAYS)
                 local_long = max(local_long, local_curr)
+                raw_last_date = streak_data.get('last_active_date')
+                parsed_last_date = parse_date(str(raw_last_date)) if raw_last_date else None
                 if is_reset:
                     streak.current_streak = max(local_curr, 1)
                     streak.longest_streak = max(local_long, 1)
+                    streak.last_active_date = parsed_last_date or timezone.localdate()
                 else:
                     streak.current_streak = max(streak.current_streak, local_curr)
                     streak.longest_streak = max(streak.longest_streak, local_long, streak.current_streak)
+                    if parsed_last_date and (not streak.last_active_date or parsed_last_date > streak.last_active_date):
+                        streak.last_active_date = parsed_last_date
+                streak.save()
+            elif is_reset:
+                streak.current_streak = 1
+                streak.longest_streak = 1
+                streak.last_active_date = timezone.localdate()
                 streak.save()
 
             # 4. Avatar
             avatar_data = request.data.get('avatar')
-            avatar, _ = ChildAvatar.objects.get_or_create(child_profile=child)
+            ChildAvatar.objects.get_or_create(child_profile=child)
+            avatar = ChildAvatar.objects.select_for_update().get(child_profile=child)
             if isinstance(avatar_data, dict):
                 for field in AVATAR_TEXT_FIELDS:
                     if field in avatar_data:
                         setattr(avatar, field, str(avatar_data[field] or '')[:ChildAvatar._meta.get_field(field).max_length])
-                incoming_unlocked = avatar_data.get('unlocked_items') or []
-                if isinstance(incoming_unlocked, list) and incoming_unlocked:
+                incoming_unlocked = avatar_data.get('unlocked_items')
+                if is_reset:
+                    clean_items = sorted({str(i)[:60] for i in (incoming_unlocked or [])[:MAX_UNLOCKED_ITEMS]}) if isinstance(incoming_unlocked, list) else []
+                    avatar.unlocked_items = clean_items
+                elif isinstance(incoming_unlocked, list) and incoming_unlocked:
                     current_items = set(avatar.unlocked_items or [])
                     current_items.update(str(i)[:60] for i in incoming_unlocked[:MAX_UNLOCKED_ITEMS])
                     avatar.unlocked_items = sorted(current_items)[:MAX_UNLOCKED_ITEMS]
+                avatar.save()
+            elif is_reset:
+                avatar.unlocked_items = []
                 avatar.save()
 
             # 5. Screen time
@@ -309,9 +340,36 @@ class CloudSyncView(APIView):
             if isinstance(screen_time_data, dict):
                 mins = safe_int(screen_time_data.get('minutes_used'), default=0, lo=0, hi=MAX_SCREEN_MINUTES_PER_SYNC)
                 if mins > 0:
-                    log, _ = ScreenTimeLog.objects.get_or_create(child_profile=child, date=date.today())
+                    log, _ = ScreenTimeLog.objects.select_for_update().get_or_create(
+                        child_profile=child, date=timezone.localdate()
+                    )
                     log.minutes_used += mins
                     log.save()
+
+            # 5b. Offline game stats sync (ensures offline games aren't lost)
+            game_stats_data = request.data.get('game_stats')
+            if isinstance(game_stats_data, dict):
+                for raw_game_type, st in list(game_stats_data.items())[:50]:
+                    if not isinstance(st, dict):
+                        continue
+                    gtype = str(raw_game_type or '')[:60]
+                    if not gtype:
+                        continue
+                    device_played = safe_int(st.get('timesPlayed'), default=0, lo=0, hi=10_000)
+                    device_high = safe_int(st.get('highScore'), default=0, lo=0, hi=MAX_SCORE)
+                    server_played = GameResult.objects.filter(child_profile=child, game_type=gtype).count()
+                    if device_played > server_played:
+                        GameResult.objects.create(
+                            child_profile=child,
+                            game_type=gtype,
+                            score=device_high,
+                            total_questions=max(device_high, 10),
+                        )
+                        act, _ = DailyActivity.objects.select_for_update().get_or_create(
+                            child_profile=child, date=timezone.localdate()
+                        )
+                        act.games_played += (device_played - server_played)
+                        act.save()
 
             # 6. Adventure progress: bounded set-based writes (no per-level loop driven by client input)
             if adv_level_in > 1:

@@ -63,11 +63,11 @@ def run_seed():
         Category.objects.update_or_create(
             slug=slug,
             defaults={
-                'title': c.get('title') or c.get('name') or slug,
+                'title': c.get('defaultTitle') or c.get('title') or c.get('name') or slug,
                 'title_gujarati': c.get('titleGujarati') or c.get('title_gujarati', ''),
                 'title_hindi': c.get('titleHindi') or c.get('title_hindi', ''),
-                'icon': c.get('icon', 'star'),
-                'color': c.get('color', '#4F46E5'),
+                'icon': c.get('iconName') or c.get('icon', 'star'),
+                'color': c.get('bgColor') or c.get('color', '#4F46E5'),
                 'order': c.get('order', idx),
                 'is_active': True,
             }
@@ -397,16 +397,19 @@ def run_seed():
     print("\n[7/10] Seeding Adventure Island Levels...")
     adv_levels = data.get('adventure_levels', [])
     for idx, adv in enumerate(adv_levels):
-        lvl_num = adv.get('levelNumber') or adv.get('id') or (idx + 1)
+        lvl_num = adv.get('level') or adv.get('levelNumber') or adv.get('id') or (idx + 1)
+        raw_questions = adv.get('questions')
+        if raw_questions is None and adv.get('question'):
+            raw_questions = [adv.get('question')]
         AdventureLevel.objects.update_or_create(
             level_number=lvl_num,
             defaults={
-                'world_name': adv.get('world') or adv.get('world_name', f"World {((lvl_num - 1) // 10) + 1}"),
-                'title': adv.get('title', f"Island Stage {lvl_num}"),
+                'world_name': adv.get('worldNameEn') or adv.get('world') or adv.get('world_name', f"World {((lvl_num - 1) // 10) + 1}"),
+                'title': adv.get('titleEn') or adv.get('title', f"Island Stage {lvl_num}"),
                 'required_stars': adv.get('requiredStars', 0),
                 'reward_coins': adv.get('rewardCoins', 10),
                 'reward_stars': adv.get('rewardStars', 3),
-                'questions_data': adv.get('questions', []),
+                'questions_data': raw_questions or [],
                 'is_active': True,
             }
         )
@@ -419,13 +422,13 @@ def run_seed():
         ColoringTemplate.objects.update_or_create(
             slug=c_slug,
             defaults={
-                'title': col.get('title', c_slug.capitalize()),
+                'title': col.get('nameEn') or col.get('title', c_slug.capitalize()),
                 'category': col.get('category', 'animals'),
-                'svg_path': col.get('svgPath', ''),
+                'svg_path': col.get('svgUri') or col.get('svgPath', ''),
                 'view_box': col.get('viewBox', '0 0 200 200'),
                 'difficulty': col.get('difficulty', 1),
                 'default_color': col.get('defaultColor', '#FFD54F'),
-                'palette': col.get('palette', []),
+                'palette': col.get('recommendedColors') or col.get('palette', []),
                 'order': idx,
                 'is_active': True,
             }
@@ -452,12 +455,16 @@ def run_seed():
         )
     print(f"  ✅ {AvatarItem.objects.count()} Avatar Items ready in DB.")
 
-    # 11. Create Superuser if not exists
+    # 11. Create Superuser if not exists (uses DJANGO_ADMIN_PASSWORD env var in dev/staging)
     print("\n[10/10] Verifying Admin Account...")
     User = get_user_model()
+    admin_password = os.environ.get('DJANGO_ADMIN_PASSWORD')
     if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'admin@kidszone.local', 'admin123')
-        print("  ✅ Superuser created: Username='admin', Password='admin123'")
+        if admin_password:
+            User.objects.create_superuser('admin', 'admin@kidszone.local', admin_password)
+            print("  ✅ Superuser 'admin' created from DJANGO_ADMIN_PASSWORD.")
+        else:
+            print("  ⚠️ Skipping default superuser creation (set DJANGO_ADMIN_PASSWORD to create).")
     else:
         print("  ✅ Superuser 'admin' already exists.")
 

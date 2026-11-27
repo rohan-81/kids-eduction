@@ -81,8 +81,9 @@ function isProfileLike(p: unknown): p is BackendChildProfile {
 
 function classifyStatus(status: number, ok: boolean): SendOutcome {
   if (ok) return 'ok';
+  if (status === 401) return 'rejected';
   if (status === 404 || status === 410) return 'gone';
-  if (status === 408 || status === 429 || status >= 500 || status === 401) return 'retry';
+  if (status === 408 || status === 429 || status >= 500) return 'retry';
   return 'rejected'; // 400/403/409...: replaying will never succeed
 }
 
@@ -94,6 +95,7 @@ class BackendService {
   private profileRefresh: Promise<ChildProfile[] | null> | null = null;
   private outboxLock: Promise<unknown> = Promise.resolve();
   private flushing: Promise<void> | null = null;
+  private remappedProfileIds = new Map<number, number>();
 
   private normalizeProfiles(list: unknown[]): ChildProfile[] {
     return list
@@ -213,6 +215,7 @@ class BackendService {
 
   /** Replaces a local (offline) profile id with the server id everywhere it is referenced. */
   private async remapProfileId(localId: number, serverId: number, serverProfile: BackendChildProfile): Promise<void> {
+    this.remappedProfileIds.set(localId, serverId);
     const cached = await this.readCachedProfiles(LOCAL_PROFILES_KEY);
     const updated = cached.map((p) =>
       p.id === localId
@@ -260,6 +263,9 @@ class BackendService {
                 if (Object.keys(diff).length > 0) extraPatchForCreate = diff;
                 return false;
               }
+              if (op.kind === 'create' && outcome === 'rejected' && o.kind !== 'create' && o.id === op.localId) {
+                return false;
+              }
               return JSON.stringify(o) !== JSON.stringify(op);
             });
             if (op.kind === 'create' && outcome === 'ok' && serverProfile?.id) {
@@ -274,6 +280,10 @@ class BackendService {
 
           if (op.kind === 'create' && outcome === 'ok' && serverProfile?.id) {
             await this.remapProfileId(op.localId, Number(serverProfile.id), serverProfile);
+          } else if (op.kind === 'create' && outcome === 'rejected') {
+            const cached = await this.readCachedProfiles(LOCAL_PROFILES_KEY);
+            const cleaned = cached.filter((p) => p.id !== op.localId);
+            await this.writeProfiles(LOCAL_PROFILES_KEY, cleaned);
           }
         }
       } finally {
@@ -296,9 +306,7 @@ class BackendService {
       .filter((p) => !deleted.has(p.id))
       .map((p) => {
         const patch = patches.get(p.id);
-        const localCopy = local.find((l) => l.id === p.id);
-        // Keep the device's avatar emoji form when the server stores a slug.
-        return { ...p, ...(localCopy?.avatar ? { avatar: localCopy.avatar } : {}), ...(patch || {}) };
+        return { ...p, ...(patch || {}) };
       });
     local
       .filter((l) => pendingCreates.has(l.id) && !merged.some((m) => m.id === l.id))
@@ -316,13 +324,16 @@ class BackendService {
         const res = await fetchJson(`${safeGetApiBaseUrl()}/profiles/`, {
           headers: authService.getAuthHeaders(),
         });
+        if (res.status === 401) {
+          await authService.logout();
+          return null;
+        }
         if (!res.ok) return null;
         const server = this.normalizeProfiles(listFrom<unknown>(res.data));
         // Logged out, or edited locally, while the request was in flight: keep local state.
         if (!authService.isAuthenticated() || this.profileWriteGen !== startGen) return null;
         const [local, ops] = await Promise.all([this.readCachedProfiles(LOCAL_PROFILES_KEY), this.readOutbox()]);
         const merged = this.mergeWithPending(server, local, ops);
-        if (merged.length === 0) return null;
         await this.writeProfiles(LOCAL_PROFILES_KEY, merged);
         return merged;
       } catch {
@@ -398,6 +409,8 @@ class BackendService {
         createdProfile = { ...serverProfile, id: Number(serverProfile.id), avatar: normAvatar };
       } else if (outcome === 'retry') {
         queued = true;
+      } else if (outcome === 'rejected') {
+        throw new Error('Profile creation rejected by server.');
       }
     }
 
@@ -428,10 +441,11 @@ class BackendService {
     const isAuthed = authService.isAuthenticated();
     const storageKey = this.storageKey();
     const existing = await this.getLocalProfiles();
+    const targetProfileId = matchAll && existing.length === 1 ? existing[0].id : profileId;
     if (existing.length === 0 && patch.age_group) {
       await this.writeProfiles(storageKey, [
         {
-          id: profileId || 1,
+          id: targetProfileId || 1,
           nickname: 'Little Star',
           age_group: patch.age_group,
           avatar: 'avatar_3d_boy',
@@ -440,21 +454,24 @@ class BackendService {
       ]);
     } else {
       const updated = existing.map((p) =>
-        matchAll && existing.length === 1 ? { ...p, ...patch } : p.id === profileId ? { ...p, ...patch } : p
+        p.id === targetProfileId ? { ...p, ...patch } : p
       );
       await this.writeProfiles(storageKey, updated);
     }
 
-    if (!isAuthed || !profileId || isNaN(profileId)) return;
+    if (!isAuthed || !targetProfileId || isNaN(targetProfileId)) return;
 
     const ops = await this.readOutbox();
-    const isLocalOnly = ops.some((o) => o.kind === 'create' && o.localId === profileId);
+    const isLocalOnly = ops.some((o) => o.kind === 'create' && o.localId === targetProfileId);
     if (!isLocalOnly) {
       await this.flushOutbox();
-      const { outcome } = await this.sendOp({ kind: 'patch', id: profileId, body: patch });
+      const resolvedId = this.remappedProfileIds.get(targetProfileId) ?? targetProfileId;
+      const { outcome } = await this.sendOp({ kind: 'patch', id: resolvedId, body: patch });
       if (outcome !== 'retry') return;
+      await this.enqueue({ kind: 'patch', id: resolvedId, body: patch });
+      return;
     }
-    await this.enqueue({ kind: 'patch', id: profileId, body: patch });
+    await this.enqueue({ kind: 'patch', id: targetProfileId, body: patch });
   }
 
   // 2b. Update profile nickname
@@ -482,8 +499,12 @@ class BackendService {
     const updated = existing.filter((p) => p.id !== profileId);
     await this.writeProfiles(storageKey, updated);
     const active = await this.getActiveProfileId();
-    if (active === profileId && updated.length > 0) {
-      await this.setActiveProfileId(updated[0].id);
+    if (active === profileId) {
+      if (updated.length > 0) {
+        await this.setActiveProfileId(updated[0].id);
+      } else {
+        await AsyncStorage.removeItem(ACTIVE_PROFILE_KEY);
+      }
     }
 
     if (!isAuthed) return;
@@ -615,13 +636,23 @@ class BackendService {
       }
       if (!profileId) return null;
 
-      const resetKey = `${PENDING_RESET_PREFIX}${profileId}`;
+      let resetKey = `${PENDING_RESET_PREFIX}${profileId}`;
       if (isReset) {
         // Persist first: if this request fails, the next sync must still reset the server.
         await AsyncStorage.setItem(resetKey, new Date().toISOString());
       }
 
       await this.flushOutbox();
+      const remappedId = this.remappedProfileIds.get(profileId);
+      if (remappedId) {
+        const oldResetKey = resetKey;
+        profileId = remappedId;
+        resetKey = `${PENDING_RESET_PREFIX}${profileId}`;
+        if (isReset) {
+          await AsyncStorage.setItem(resetKey, new Date().toISOString());
+          await AsyncStorage.removeItem(oldResetKey);
+        }
+      }
       if (await this.isPendingLocalProfile(profileId)) return null; // server profile not created yet
 
       const sendReset = isReset || (await this.hasPendingReset(profileId));
@@ -653,6 +684,7 @@ class BackendService {
           equipped_backpack: localProgress.currentAvatar?.accessory || '',
           unlocked_items: localProgress.unlockedAvatarItems || [],
         },
+        ...(localProgress.gameStats ? { game_stats: localProgress.gameStats } : {}),
       };
 
       const serverState = await apiService.syncCloudState(payload);

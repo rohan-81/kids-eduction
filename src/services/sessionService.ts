@@ -9,6 +9,14 @@ class SessionService {
   private currentSession: SessionData | null = null;
   private initialized: boolean = false;
 
+  constructor() {
+    authService.onLogout?.(() => {
+      this.currentSession = null;
+      this.initialized = false;
+      AsyncStorage.removeItem(SESSION_KEY).catch(() => {});
+    });
+  }
+
   async init(): Promise<SessionData | null> {
     if (this.initialized) {
       return this.currentSession;
@@ -97,10 +105,9 @@ class SessionService {
       return { isValid: false };
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-
       const res = await fetch(`${safeGetApiBaseUrl()}/auth/session/`, {
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +115,6 @@ class SessionService {
         },
         signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
@@ -126,6 +132,8 @@ class SessionService {
     } catch {
       // In offline mode, treat local active session as valid
       return { isValid: true, user: this.currentSession.user };
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     return { isValid: true, user: this.currentSession.user };

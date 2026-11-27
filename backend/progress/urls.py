@@ -1,8 +1,8 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter, SimpleRouter
 from .views import LessonProgressViewSet, GameResultViewSet, DailyActivityViewSet, CloudSyncView
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register(r'lessons', LessonProgressViewSet, basename='lesson-progress-nested')
 router.register(r'games', GameResultViewSet, basename='game-results-nested')
 router.register(r'activity', DailyActivityViewSet, basename='daily-activity')
@@ -14,6 +14,6 @@ root_router.register(r'game-results', GameResultViewSet, basename='game-results-
 
 urlpatterns = [
     path('sync/', CloudSyncView.as_view(), name='cloud-sync'),
-    path('', include(root_router.urls)),
     path('progress/', include(router.urls)),
+    path('', include(root_router.urls)),
 ]

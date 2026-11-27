@@ -80,10 +80,10 @@ class PurchaseAvatarItemView(APIView):
         if not item:
             return Response({'detail': 'Avatar item not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        ChildAvatar.objects.get_or_create(child_profile=child)
-        ChildWallet.objects.get_or_create(child_profile=child)
-        # Lock both rows so a double tap (or two devices) cannot pass the checks twice and charge twice.
+        # Lock both rows inside atomic transaction so concurrent first-time requests cannot race.
         with transaction.atomic():
+            ChildAvatar.objects.get_or_create(child_profile=child)
+            ChildWallet.objects.get_or_create(child_profile=child)
             wallet = ChildWallet.objects.select_for_update().get(child_profile=child)
             avatar = ChildAvatar.objects.select_for_update().get(child_profile=child)
             if item_id in (avatar.unlocked_items or []):
@@ -124,6 +124,14 @@ class GardenPlantViewSet(viewsets.ModelViewSet):
         if child_id:
             queryset = queryset.filter(child_profile_id=safe_int(child_id, default=-1, lo=-1, hi=2**62))
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        # Verify child ownership BEFORE serializer UniqueTogetherValidator runs, preventing cross-tenant slot probing.
+        raw_child_id = request.data.get('child_profile')
+        child = resolve_child_profile(request, raw_child_id)
+        if not child:
+            raise NotFound('Child profile not found.')
+        return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         child = serializer.validated_data.get('child_profile')

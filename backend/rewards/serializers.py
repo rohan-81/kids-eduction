@@ -45,6 +45,7 @@ class BadgeSerializer(serializers.ModelSerializer):
 
 class RewardSerializer(serializers.ModelSerializer):
     badge_details = BadgeSerializer(source='badge', read_only=True)
+    points = serializers.IntegerField(min_value=0, max_value=100_000, required=False, default=0)
 
     class Meta:
         model = Reward

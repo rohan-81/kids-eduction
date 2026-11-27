@@ -10,6 +10,14 @@ class AuthService {
   private token: string | null = null;
   private user: AuthUser | null = null;
   private initialized: boolean = false;
+  private logoutListeners: Set<() => void> = new Set();
+
+  onLogout(listener: () => void): () => void {
+    this.logoutListeners.add(listener);
+    return () => {
+      this.logoutListeners.delete(listener);
+    };
+  }
 
   async init(): Promise<{ token: string | null; user: AuthUser | null }> {
     if (this.initialized) {
@@ -60,17 +68,15 @@ class AuthService {
   }
 
   async register(payload: RegisterPayload): Promise<AuthResult> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-
       const res = await fetch(`${safeGetApiBaseUrl()}/auth/register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
 
@@ -109,21 +115,21 @@ class AuthService {
         success: false,
         error: 'Unable to connect to the authentication server. Please try again.',
       };
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
   async login(payload: LoginPayload): Promise<AuthResult> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-
       const res = await fetch(`${safeGetApiBaseUrl()}/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       const data = await res.json();
 
@@ -165,6 +171,8 @@ class AuthService {
         success: false,
         error: 'Unable to reach the authentication service. Please verify your connection.',
       };
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -173,6 +181,11 @@ class AuthService {
     this.token = null;
     this.user = null;
     this.initialized = false;
+    this.logoutListeners.forEach((cb) => {
+      try {
+        cb();
+      } catch {}
+    });
 
     try {
       await Promise.all([
@@ -205,15 +218,13 @@ class AuthService {
 
   async fetchCurrentUser(): Promise<AuthUser | null> {
     if (!this.token) return null;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
       const res = await fetch(`${safeGetApiBaseUrl()}/auth/me/`, {
         headers: this.getAuthHeaders(),
         signal: controller.signal,
       });
-      clearTimeout(timeoutId);
 
       if (res.ok) {
         const data = await res.json();
@@ -228,6 +239,8 @@ class AuthService {
       }
     } catch {
       // Offline fallback: return existing cached user
+    } finally {
+      clearTimeout(timeoutId);
     }
     return this.user;
   }

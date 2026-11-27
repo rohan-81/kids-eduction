@@ -221,8 +221,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Trigger background cloud synchronization with Django backend
         if (activeSession && activeSession.token && activeSession.user) {
           const syncEpoch = profileEpochRef.current;
-          backendService.syncAllProgressWithCloud(activeProg, false, Number(resolvedActiveId)).then(async (serverState) => {
+          const expectedProfileId = Number(resolvedActiveId);
+          backendService.syncAllProgressWithCloud(activeProg, false, expectedProfileId).then(async (serverState) => {
             if (syncEpoch !== profileEpochRef.current) return;
+            const remappedId = serverState?.child_profile_id;
+            if (typeof remappedId === 'number' && Number.isFinite(remappedId) && remappedId !== expectedProfileId) {
+              setActiveProfileId(remappedId);
+              storageService.setProfile(remappedId);
+            }
             const latestLocal = await storageService.getProgress();
             if (syncEpoch !== profileEpochRef.current) return;
             const update = mergeServerProgress(latestLocal, serverState);
@@ -519,6 +525,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const targetChildId = result.user.child_profiles?.[0]?.id;
       backendService.syncAllProgressWithCloud(userProg, false, targetChildId).then(async (serverState) => {
         if (syncEpoch !== profileEpochRef.current) return;
+        const remappedId = serverState?.child_profile_id;
+        if (typeof remappedId === 'number' && Number.isFinite(remappedId) && remappedId !== targetChildId) {
+          setActiveProfileId(remappedId);
+          storageService.setProfile(remappedId);
+        }
         const latestLocal = await storageService.getProgress();
         if (syncEpoch !== profileEpochRef.current) return;
         const update = mergeServerProgress(latestLocal, serverState);
@@ -639,8 +650,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
     setProgress(profProgress);
-    backendService.syncAllProgressWithCloud(profProgress, false, Number(profileId)).then(async (serverState) => {
+    const expectedProfileId = Number(profileId);
+    backendService.syncAllProgressWithCloud(profProgress, false, expectedProfileId).then(async (serverState) => {
       if (syncEpoch !== profileEpochRef.current) return;
+      const remappedId = serverState?.child_profile_id;
+      if (typeof remappedId === 'number' && Number.isFinite(remappedId) && remappedId !== expectedProfileId) {
+        setActiveProfileId(remappedId);
+        storageService.setProfile(remappedId);
+      }
       const latestLocal = await storageService.getProgress();
       if (syncEpoch !== profileEpochRef.current) return;
       const update = mergeServerProgress(latestLocal, serverState);
