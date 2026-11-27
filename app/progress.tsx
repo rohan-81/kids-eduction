@@ -526,7 +526,11 @@ export default function ProgressScreen() {
             <View style={{ marginBottom: 6 }}>
               <AppIcon name="brain" size={32} />
             </View>
-            <Text style={[styles.metricVal, { color: '#1E293B' }]}>
+            <Text
+              style={[styles.metricVal, { color: '#1E293B' }, totalLearningMinutes >= 60 && { fontSize: 16.5 }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {formatDurationMinutes(totalLearningMinutes, language)}
             </Text>
             <Text style={styles.metricLabel}>
@@ -545,7 +549,7 @@ export default function ProgressScreen() {
                 </Text>
                 <View style={styles.targetGoalPill}>
                   <Text style={styles.targetGoalPillText}>
-                    {language === 'gu' ? '🎯 લક્ષ્ય: ૧૫m/દિવસ' : language === 'hi' ? '🎯 लक्ष्य: १५m/दिन' : '🎯 Target: 15m/Day'}
+                    {language === 'gu' ? '🎯 લક્ષ્ય: ૧૫ મિનિટ/દિવસ' : language === 'hi' ? '🎯 लक्ष्य: १५ मिनट/दिन' : '🎯 Target: 15m/Day'}
                   </Text>
                 </View>
               </View>
@@ -657,6 +661,7 @@ export default function ProgressScreen() {
                       ]}
                     >
                       <Text
+                        numberOfLines={1}
                         style={[
                           styles.dayMins,
                           d.isToday && styles.dayMinsToday,
@@ -681,8 +686,8 @@ export default function ProgressScreen() {
               </Text>
               <View style={styles.weeklyFooterValueRow}>
                 <Image source={ICON_3D_STAR} style={styles.footerStarIcon} resizeMode="contain" />
-                <Text style={styles.weeklyFooterValue}>
-                  {formatDurationMinutes(weeklyTotalMins, language, true)}
+                <Text style={styles.weeklyFooterValue} numberOfLines={1} adjustsFontSizeToFit>
+                  {formatDurationMinutes(weeklyTotalMins, language)}
                 </Text>
               </View>
             </View>
@@ -696,8 +701,8 @@ export default function ProgressScreen() {
               <View style={styles.weeklyFooterValueRow}>
                 <Text style={styles.weeklyGoalBadge}>
                   {todaySessionMinutes >= DAILY_GOAL_MINUTES
-                    ? (language === 'gu' ? `${formatNumberDigits(15, language)}m લક્ષ્ય પૂર્ણ! ⭐` : language === 'hi' ? `${formatNumberDigits(15, language)}m लक्ष्य पूर्ण! ⭐` : '15m Goal Met! ⭐')
-                    : (language === 'gu' ? `${formatNumberDigits(todaySessionMinutes, language)}/${formatNumberDigits(15, language)}m પ્રગતિ 🚀` : language === 'hi' ? `${formatNumberDigits(todaySessionMinutes, language)}/${formatNumberDigits(15, language)}m प्रगति 🚀` : `${todaySessionMinutes}/15m In Progress 🚀`)}
+                    ? (language === 'gu' ? `${formatNumberDigits(15, language)} મિનિટ લક્ષ્ય પૂર્ણ! ⭐` : language === 'hi' ? `${formatNumberDigits(15, language)} मिनट लक्ष्य पूर्ण! ⭐` : '15m Goal Met! ⭐')
+                    : (language === 'gu' ? `${formatNumberDigits(todaySessionMinutes, language)}/${formatNumberDigits(15, language)} મિનિટ પ્રગતિ 🚀` : language === 'hi' ? `${formatNumberDigits(todaySessionMinutes, language)}/${formatNumberDigits(15, language)} मिनट प्रगति 🚀` : `${todaySessionMinutes}/15m In Progress 🚀`)}
                 </Text>
               </View>
             </View>
@@ -902,6 +907,7 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     marginBottom: 2,
     letterSpacing: -0.3,
+    textAlign: 'center',
   },
   metricLabel: {
     fontSize: 12,

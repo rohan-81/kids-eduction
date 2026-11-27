@@ -31,16 +31,24 @@ export const formatDurationMinutes = (
 ): string => {
   const safeMins = Math.max(0, Math.round(totalMinutes));
   if (safeMins < 60) {
-    if (compact) return `${formatNumberDigits(safeMins, lang)}m`;
+    if (compact) {
+      const shortMin = lang === 'gu' ? ' મિ' : lang === 'hi' ? ' मि' : 'm';
+      return `${formatNumberDigits(safeMins, lang)}${shortMin}`;
+    }
     const minUnit = lang === 'gu' ? 'મિનિટ' : lang === 'hi' ? 'मिनट' : 'm';
     return `${formatNumberDigits(safeMins, lang)} ${minUnit}`;
   }
   const hrs = Math.floor(safeMins / 60);
   const remMins = safeMins % 60;
   if (compact) {
-    return remMins > 0
-      ? `${formatNumberDigits(hrs, lang)}h ${formatNumberDigits(remMins, lang)}m`
-      : `${formatNumberDigits(hrs, lang)}h`;
+    if (lang === 'en') {
+      return remMins > 0 ? `${hrs}h ${remMins}m` : `${hrs}h`;
+    }
+    const unit = lang === 'gu' ? ' ક' : ' घ';
+    const hh = formatNumberDigits(hrs, lang);
+    if (remMins === 0) return `${hh}${unit}`;
+    const mm = formatNumberDigits(remMins < 10 ? `0${remMins}` : remMins, lang);
+    return `${hh}:${mm}${unit}`;
   }
   const hrUnit = lang === 'gu' ? 'કલાક' : lang === 'hi' ? 'घंटा' : 'h';
   const minUnit = lang === 'gu' ? 'મિનિટ' : lang === 'hi' ? 'मिनट' : 'm';

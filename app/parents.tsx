@@ -1083,7 +1083,13 @@ export default function ParentsScreen() {
                 <View style={styles.statIconCircle}>
                   <Art.ClockArt size={36} />
                 </View>
-                <Text style={styles.statNumber}>{formatDurationMinutes(activeLearningMins, language)}</Text>
+                <Text
+                  style={[styles.statNumber, activeLearningMins >= 60 && { fontSize: 17 }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                >
+                  {formatDurationMinutes(activeLearningMins, language)}
+                </Text>
                 <Text style={styles.statLabel}>
                   {language === 'gu' ? 'અભ્યાસ સમય' : language === 'hi' ? 'अध्ययन समय' : 'Learning Time'}
                 </Text>
@@ -2619,10 +2625,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     color: '#0F172A',
     letterSpacing: -0.5,
+    textAlign: 'center',
   },
   statLabel: {
     fontSize: 13.5,
